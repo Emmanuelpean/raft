@@ -9,6 +9,7 @@ import os
 # -------------------------------------------------------- SETUP -------------------------------------------------------
 
 st.set_page_config('Raft', layout='wide')
+st.markdown("""<style> #MainMenu {visibility: hidden;} footer {visibility: hidden;} </style>""", unsafe_allow_html=True)  # hide main menu and footer
 st.markdown("""%s""" % utils.render_image(resources.logo_text_filename, 25), unsafe_allow_html=True)  # main logo
 st.sidebar.markdown("""%s""" % utils.render_image(resources.logo_filename, 30), unsafe_allow_html=True)  # sidebar logo
 if 'filetype' not in st.session_state:
