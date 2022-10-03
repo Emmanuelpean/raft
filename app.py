@@ -82,7 +82,7 @@ else:
 
 # ------------------------------------------------------ ANALYTICS -----------------------------------------------------
 
-components.html("""<script async defer data-website-id="62a61960-56c2-493b-90e0-20e6796ecfa4" 
+components.html("""<script async defer data-website-id="820a9cf5-cbf2-430f-aff1-c6b647194d74" 
 src="https://pears-tracking.herokuapp.com/umami.js"></script>""")
 
 # ------------------------------------------------------- FOOTER -------------------------------------------------------
