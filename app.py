@@ -112,6 +112,6 @@ text-align: center;
 </style>
 <div class="footer">
 <p>App created and maintained by <a href="mailto:emmanuel.pean@swansea.ac.uk" target="_blank">Emmanuel V. Péan</a>
-(<a href="https://twitter.com/emmanuel_pean" target="_blank">Twitter</a>) - Version 0.1.1
+(<a href="https://twitter.com/emmanuel_pean" target="_blank">Twitter</a>) - Version 0.1.2
 </div>"""
 st.markdown(footer, unsafe_allow_html=True)
