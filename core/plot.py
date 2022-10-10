@@ -26,6 +26,7 @@ def subplots(n, m=None, **kwargs):
         nb_cols = m
     nb_rows = int(math.ceil(n / nb_cols))
     positions = list(itertools.product(range(1, nb_rows + 1), range(1, nb_cols + 1)))[:n]
+    # noinspection PyArgumentList
     return ps.make_subplots(rows=nb_rows, cols=nb_cols, **kwargs), positions
 
 

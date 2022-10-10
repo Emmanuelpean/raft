@@ -4,6 +4,7 @@ import numpy as np
 from operator import itemgetter
 import streamlit as st
 import base64
+import scipy.interpolate as sci
 
 
 def matrix_to_string(arrays, header=None):
@@ -211,6 +212,74 @@ def sort(alist, *indices):
         indices = (0, )
     data_sorted = sorted(zip(*alist), key=itemgetter(*indices))
     return np.transpose(data_sorted)
+
+
+def merge_dicts(*dictionaries):
+    """ Merge multiple dictionaries. Last argument can be a boolean determining if the dicts can erase each other's content
+
+    Examples
+    --------
+    >>> dict1 = {'label': 'string'}
+    >>> dict2 = {'c': 'r', 'label': 'something'}
+
+    >>> merge_dicts(dict1, dict2, False)
+    {'label': 'string', 'c': 'r'}
+
+    >>> merge_dicts(dict1, dict2, True)
+    {'label': 'something', 'c': 'r'}
+
+    >>> merge_dicts(dict1, dict2)
+    {'label': 'string', 'c': 'r'}"""
+
+    # Argument for force rewriting the dictionaries
+    if isinstance(dictionaries[-1], bool):
+        force = dictionaries[-1]
+        dictionaries = dictionaries[:-1]
+    else:
+        force = False
+
+    merged_dictionary = {}
+    for dictionary in dictionaries:
+        if force:
+            merged_dictionary.update(dictionary)
+        else:
+            for key in dictionary.keys():
+                if key not in merged_dictionary:
+                    merged_dictionary[key] = dictionary[key]
+
+    return merged_dictionary
+
+
+def interpolate_point(x, y, index, nb_point=2, **kwargs):
+    """ Interpolate data around a given index
+    :param np.ndarray x: ndarray corresponding to the x axis
+    :param np.ndarray y: ndarray corresponding to the y axis
+    :param int index: index of the point
+    :param int nb_point: number of point to consider for the interpolation
+
+    Example
+    -------
+    >>> import matplotlib
+    >>> matplotlib.use('TkAgg')
+    >>> import matplotlib.pyplot as plt
+    >>> x1 = np.array([-10, -7, -5, -1, 5, 7, 10])
+    >>> y1 = x1 ** 2
+    >>> x_int, y_int = interpolate_point(x1, y1, 3, kind='cubic')
+    >>> ax = plt.figure().add_subplot(111)
+    >>> l1 = ax.plot(x1, y1, 'x', ms=30, mew=3)
+    >>> l2 = ax.plot(x_int, y_int, lw=5)
+    >>> t1 = ax.set_title('interpolate_point') """
+
+    index1 = max([0, index - nb_point])
+    index2 = min([len(x), index + nb_point + 1])
+    x = x[index1: index2]
+    y = y[index1: index2]
+    # Interpolate the ys with the new x
+    new_x = np.linspace(np.min(x), np.max(x), 1000)
+    # noinspection PyArgumentList
+    interp = sci.interp1d(x, y, **kwargs)
+    return new_x, interp(new_x)
+
 
 
 if __name__ == '__main__':

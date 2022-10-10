@@ -653,7 +653,7 @@ def ProDataSignal(filename):
     for i in range(len(z_data)):
 
         z_dict['z'] = Dimension(np.array([z.data[i]]), z.quantity, z.unit)
-        name = z_dict['z'].get_value_label()
+        name = z_dict['z'].get_value_label_html()
         signals.append(SignalData(x, Dimension(ys_data[i], y_quantity, y_unit), name, z_dict))
 
         if otb_data is not None:
