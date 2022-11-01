@@ -1037,7 +1037,7 @@ def WireFile(filename):
             filename = 'temp_'
 
     reader = WDFReader(filename)
-    x_data, y_data = reader.xdata[::-1], reader.spectra[::-1]
+    x_data, y_data = np.array(reader.xdata[::-1], dtype=float), np.array(reader.spectra[::-1], dtype=float)
     if reader.xlist_unit.name == 'RamanShift':
         x = Dimension(x_data, pc.wavenumber_qt, pc.cm_1_unit)
     else:
