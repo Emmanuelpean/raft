@@ -74,7 +74,10 @@ def BeamproFile(filename):
     content, name = read_datafile(filename)
     x_quantity, x_unit = pc.distance_qt, pc.micrometer_unit
     y_quantity, y_unit = pc.intensity_qt, pc.au_unit
-    data = pdp.stringcolumn_to_array(content[5:])
+    data_index = pdp.get_data_index(content)
+    if data_index != 5:
+        raise AssertionError()
+    data = pdp.stringcolumn_to_array(content[data_index:])
     signal1 = SignalData(Dimension(data[0], x_quantity, x_unit), Dimension(data[1], y_quantity, y_unit), name + ' (x)')
     signal2 = SignalData(Dimension(data[2], x_quantity, x_unit), Dimension(data[3], y_quantity, y_unit), name + ' (y)')
     return {'x': signal1, 'y': signal2}
@@ -822,9 +825,18 @@ def SimpleDataFile(filename, delimiter=None):
     data = pdp.stringcolumn_to_array(content[data_index:], delimiter)
     x_data, *ys_data = pdp.sort(data, 0)
 
+    # Get the data labels
+    header = content[:data_index]
+    labels = [name] * len(ys_data)
+    for line in header:
+        c = line.split(delimiter)
+        if len(np.unique(c)) > 2:
+            labels = c[1:]
+            break
+
     signals = []
-    for y_data in ys_data:
-        signals.append(SignalData(Dimension(x_data), Dimension(y_data), name))
+    for y_data, label in zip(ys_data, labels):
+        signals.append(SignalData(Dimension(x_data), Dimension(y_data), label))
     return signals
 
 
