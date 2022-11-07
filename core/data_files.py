@@ -72,6 +72,8 @@ def BeamproFile(filename):
     Dimension([0.        0.0976563 1.12305   ... 1.0498    1.26953   1.02539  ], intensity, a.u.)"""
 
     content, name = read_datafile(filename)
+    if content[0] != 'BeamPro 3.0 Crosshair file':
+        raise AssertionError()
     x_quantity, x_unit = pc.distance_qt, pc.micrometer_unit
     y_quantity, y_unit = pc.intensity_qt, pc.au_unit
     data_index = pdp.get_data_index(content)
@@ -826,7 +828,7 @@ def SimpleDataFile(filename, delimiter=None):
 
     # Get the data labels
     header = content[:data_index]
-    labels = [name] * len(ys_data)
+    labels = [''] * len(ys_data)
     for line in header:
         c = line.split(delimiter)
         if len(np.unique(c)) > 2:
@@ -1057,6 +1059,9 @@ def WireFile(filename):
     return SignalData(x, y, reader.title)
 
 
+# -------------------------------------------------------- ZEM3 --------------------------------------------------------
+
+
 def Zem3(filename):
     """ Read Zem3 files
     :param str filename: file path
@@ -1084,13 +1089,17 @@ def Zem3(filename):
         xcol = 0
     else:
         xcol = 1
-    return {h: SignalData(Dimension(data[xcol], headers[xcol]), Dimension(d, h), name) for d, h in zip(data[xcol + 1:], headers[xcol + 1:])}
+    data = {h: SignalData(Dimension(data[xcol], headers[xcol]), Dimension(d, h), name) for d, h in zip(data[xcol + 1:], headers[xcol + 1:])}
+    if not data:
+        raise AssertionError()
+    else:
+        return data
 
 
 functions = {'SpectraSuite (.txt)': SpectraSuiteFile,
              'FluorEssence (.txt)': FluorEssenceFile,
              'EasyLog (.txt)': EasyLogFile,
-             'Zem3 (tab)': Zem3,
+             'Beampro (.txt)': BeamproFile,
              'F980/Fluoracle (.txt, tab)': EdinstFile,
              'F980/Fluoracle (.csv, comma)': lambda filename: EdinstFile(filename, delimiter=','),
              'UvWinlab (.csv)': UvWinlabFile,
@@ -1101,10 +1110,10 @@ functions = {'SpectraSuite (.txt)': SpectraSuiteFile,
              'Diffrac (.brml)': DiffracBrmlFile,
              'Vesta (.xy)': VestaDiffractionFile,
              'LambdaSpx (.dsp)': LambdaSpxFile,
+             'Zem3 (tab)': Zem3,
              'SBTPS (.SEQ)': SbtpsSeqFile,
              'SBTPS (.IV)': SbtpsIvFile,
              'WiRE (.wdf)': WireFile,
-             'Beampro (.txt)': BeamproFile,
              'Spectrum (.csv)': SpectrumFile,
              'Simple (tab)': SimpleDataFile,
              'Simple (comma)': lambda filename: SimpleDataFile(filename, delimiter=','),
