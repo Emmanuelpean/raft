@@ -1084,7 +1084,7 @@ def Zem3(filename):
         xcol = 0
     else:
         xcol = 1
-    return {h: SignalData(Dimension(data[xcol], headers[xcol]), Dimension(d, h)) for d, h in zip(data[xcol + 1:], headers[xcol + 1:])}
+    return {h: SignalData(Dimension(data[xcol], headers[xcol]), Dimension(d, h), name) for d, h in zip(data[xcol + 1:], headers[xcol + 1:])}
 
 
 functions = {'SpectraSuite (.txt)': SpectraSuiteFile,
