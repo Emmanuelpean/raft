@@ -78,8 +78,8 @@ def BeamproFile(filename):
     if data_index != 5:
         raise AssertionError()
     data = pdp.stringcolumn_to_array(content[data_index:])
-    signal1 = SignalData(Dimension(data[0], x_quantity, x_unit), Dimension(data[1], y_quantity, y_unit), name + ' (x)')
-    signal2 = SignalData(Dimension(data[2], x_quantity, x_unit), Dimension(data[3], y_quantity, y_unit), name + ' (y)')
+    signal1 = SignalData(Dimension(data[0], x_quantity, x_unit), Dimension(data[1], y_quantity, y_unit), name, 'X')
+    signal2 = SignalData(Dimension(data[2], x_quantity, x_unit), Dimension(data[3], y_quantity, y_unit), name, 'Y')
     return {'x': signal1, 'y': signal2}
 
 
@@ -114,7 +114,7 @@ def DektakFile(filename):
     date = dt.datetime.strptime(date_str, date_format)
     z_dict = {pc.timestamp_id: Dimension(date, pc.time_qt)}
 
-    return SignalData(x, y, name, z_dict)
+    return SignalData(x, y, name, z_dict=z_dict)
 
 
 # ------------------------------------------------------ DIFFRAC -------------------------------------------------------
@@ -126,6 +126,7 @@ def read_brml_rawdata_file(brml, rawdata_file):
     :param zipfile.ZipInfo rawdata_file: rawdata file to read """
 
     z_dict = {}
+    name = os.path.splitext(os.path.basename(brml.filename))[0]
     root = etree.ElementTree(etree.fromstring(brml.read(rawdata_file.filename)))
     data_xml = root.findall("DataRoutes/DataRoute/Datum")
     data = pdp.stringcolumn_to_array([child.text for child in data_xml], ',')
@@ -184,7 +185,7 @@ def read_brml_rawdata_file(brml, rawdata_file):
         val = xml_d.find('Position').get('Value')
         z_dict[drive_name] = Dimension(float(val), drive_name, unit)
 
-    return SignalData(x, y, rawdata_file.filename, z_dict)
+    return SignalData(x, y, name, rawdata_file.filename.split('/')[1].strip('.xml'), z_dict)
 
 
 def DiffracBrmlFile(filename):
@@ -212,7 +213,6 @@ def DiffracBrmlFile(filename):
         filenames_nb = [float(os.path.splitext(os.path.basename(s.filename.strip('/')))[0].split('RawData')[-1]) for s in datafiles]
         datafiles_sorted = pdp.sort((datafiles, filenames_nb), 1)[0]
         signals = [read_brml_rawdata_file(brml, f) for f in datafiles_sorted]
-
     return signals
 
 
@@ -251,12 +251,12 @@ def EasyLogFile(filename):
     # Y dimension (temperature)
     y_temp_data = np.array([float(f[2]) for f in data_str])
     y_temp = Dimension(y_temp_data, pc.temperature_qt, pc.celsius_unit)
-    temperature = SignalData(x, y_temp, name + ' (temperature)', z_dict.copy())
+    temperature = SignalData(x, y_temp, name, 'Temperature', z_dict.copy())
 
     # Y dimension (humidity)
     y_hum_data = np.array([float(f[3]) for f in data_str])
     y_hum = Dimension(y_hum_data, pc.humidity_qt, pc.percent_unit)
-    humidity = SignalData(x, y_hum, name + ' (humidity)', z_dict.copy())
+    humidity = SignalData(x, y_hum, name, 'Humidity', z_dict.copy())
 
     return {'Temperature': temperature, 'Humidity': humidity}
 
@@ -353,7 +353,7 @@ def EdinstFile(filename, delimiter='\t'):
     signals = []
     for y_data, header in zip(ys_data, headers):
         y = Dimension(y_data, y_quantity, y_unit)
-        signals.append(SignalData(x, y, header['Labels'], header))
+        signals.append(SignalData(x, y, name, header['Labels'], header))
 
     return signals
 
@@ -432,8 +432,8 @@ def FluorEssenceFile(filename):
             names = [str(header[pc.timestamp_id]) for header in ys_headers]
 
         signals = []
-        for y_data, y_unit, name, y_dict in zip(ys_data, ys_unit, names, ys_headers):
-            signals.append(SignalData(x, Dimension(y_data, y_quantity, y_unit), name, y_dict))
+        for y_data, y_unit, name_, y_dict in zip(ys_data, ys_unit, names, ys_headers):
+            signals.append(SignalData(x, Dimension(y_data, y_quantity, y_unit), name, name_, y_dict))
         return signals
 
     else:
@@ -453,7 +453,7 @@ def FluorEssenceFile(filename):
         signals = {}
         for key in ys:
             if key != 'Wavelength':
-                signals[key] = SignalData(ys['Wavelength'], ys[key], name=name + ' (%s)' % key)
+                signals[key] = SignalData(ys['Wavelength'], ys[key], name, '(%s)' % key)
 
         return signals
 
@@ -483,7 +483,7 @@ def FlWinlabFile(filename):
     date = dt.datetime.strptime(content[3] + ' ' + content[4][:8], '%d/%m/%y %X')
     z_dict = {pc.timestamp_id: Dimension(date, pc.time_qt)}
 
-    return SignalData(x, y, name, z_dict)
+    return SignalData(x, y, name, z_dict=z_dict)
 
 
 # ------------------------------------------------------ LAMBDASPX -----------------------------------------------------
@@ -552,7 +552,7 @@ def LambdaSpxFile(filename):
         date = dt.datetime.strptime(content[16], date_format1)
     z_dict = {pc.timestamp_id: Dimension(date, pc.time_qt), pc.scan_speed_id: Dimension(float(content[62]), pc.speed_qt, pc.nm_min_unit)}
 
-    return SignalData(x, y, name, z_dict)
+    return SignalData(x, y, name, z_dict=z_dict)
 
 
 # ------------------------------------------------------ PRO-DATA ------------------------------------------------------
@@ -656,20 +656,19 @@ def ProDataSignal(filename):
     for i in range(len(z_data)):
 
         z_dict['z'] = Dimension(np.array([z.data[i]]), z.quantity, z.unit)
-        name = z_dict['z'].get_value_label_html()
-        signals.append(SignalData(x, Dimension(ys_data[i], y_quantity, y_unit), name, z_dict))
+        shortname = z_dict['z'].get_value_label_html()
+        signals.append(SignalData(x, Dimension(ys_data[i], y_quantity, y_unit), name, shortname, z_dict))
 
         if otb_data is not None:
-            otb_signals.append(SignalData(x, Dimension(otb_data[i], pc.intensity_qt, pc.volt_unit), name, z_dict))
+            otb_signals.append(SignalData(x, Dimension(otb_data[i], pc.intensity_qt, pc.volt_unit), name, shortname, z_dict))
 
         if huntb_data is not None:
-            huntb_signals.append(SignalData(x, Dimension(huntb_data[i], pc.intensity_qt, pc.volt_unit), name, z_dict))
+            huntb_signals.append(SignalData(x, Dimension(huntb_data[i], pc.intensity_qt, pc.volt_unit), name, shortname, z_dict))
 
         if rawabs_data is not None:
-            rawabs_signals.append(SignalData(x, Dimension(rawabs_data[i], pc.absorbance_qt), name, z_dict))
+            rawabs_signals.append(SignalData(x, Dimension(rawabs_data[i], pc.absorbance_qt), name, shortname, z_dict))
 
     data = {'dT/T': signals, '0 % T Baseline': otb_signals, '100 % T Baseline': huntb_signals, 'Raw data': rawabs_signals}
-    # noinspection PyTypeChecker
     return {key: value for key, value in data.items() if value}
 
 
@@ -735,7 +734,7 @@ def SbtpsSeqFile(filename):
         s_data = pdp.sort(data[index_start: index_end], 0)
         x = Dimension(s_data[0], pc.voltage_qt, pc.volt_unit)
         ys = [Dimension(y_data, pc.current_density_qt, pc.ma_cm2_unit) for y_data in s_data[1:]]
-        return [SignalData(x, y, name + '- %s (%s)' % (sname, s)) for s, y in zip(sweeps, ys)]
+        return [SignalData(x, y, name, '%s (%s)' % (sname, s)) for s, y in zip(sweeps, ys)]
 
     # Forward scan
     if fw_index >= 0:
@@ -790,10 +789,10 @@ def SbtpsIvFile(filename):
     x_data, y_data_cd, y_data_c, y_data_p, y_data_t = pdp.sort(data, 0)
 
     x = Dimension(x_data, pc.voltage_qt, pc.volt_unit)
-    current_density = SignalData(x, Dimension(y_data_cd, pc.current_density_qt, pc.ma_cm2_unit), name + ' (current density)')
-    current = SignalData(x, Dimension(y_data_c, pc.current_qt, pc.ma_unit), name + ' (current)')
-    power = SignalData(x, Dimension(y_data_p, pc.power_qt, pc.mw_unit), name + ' (power)')
-    time = SignalData(x, Dimension(y_data_t, pc.time_qt, pc.second_unit), name + ' (time)')
+    current_density = SignalData(x, Dimension(y_data_cd, pc.current_density_qt, pc.ma_cm2_unit), name, 'Current density')
+    current = SignalData(x, Dimension(y_data_c, pc.current_qt, pc.ma_unit), name, 'Current')
+    power = SignalData(x, Dimension(y_data_p, pc.power_qt, pc.mw_unit), name, 'Power')
+    time = SignalData(x, Dimension(y_data_t, pc.time_qt, pc.second_unit), name, 'Time')
 
     return {'Current density': current_density, 'Current': current, 'Power': power, 'Time': time}
 
@@ -836,7 +835,7 @@ def SimpleDataFile(filename, delimiter=None):
 
     signals = []
     for y_data, label in zip(ys_data, labels):
-        signals.append(SignalData(Dimension(x_data), Dimension(y_data), label))
+        signals.append(SignalData(Dimension(x_data), Dimension(y_data), name, label))
     return signals
 
 
@@ -888,7 +887,7 @@ def SpectraSuiteFile(filename):
     int_time = pdp.grep(content, "Integration Time (usec):", 0, "(", 'float')
     z_dict[pc.int_time_id] = Dimension(int_time / 1e6, pc.time_qt, pc.second_unit)
 
-    return SignalData(x, y, name, z_dict)
+    return SignalData(x, y, name, z_dict=z_dict)
 
 
 # ------------------------------------------------------ SPECTRUM ------------------------------------------------------
@@ -938,7 +937,7 @@ def SpectrumFile(filename):
         date = dt.datetime.strptime(content[0].split(',')[-1], ' %B %d %Y')
         z_dict = {pc.timestamp_id: Dimension(date, pc.time_qt)}
 
-        return SignalData(x, y, name, z_dict)
+        return SignalData(x, y, name, z_dict=z_dict)
 
     else:
 
@@ -948,7 +947,7 @@ def SpectrumFile(filename):
         else:
             x = Dimension(x_data, content[5])
 
-        return [SignalData(x, Dimension(y_data), name) for y_data in ys_data]
+        return [SignalData(x, Dimension(y_data), name, '%i' % i) for i, y_data in enumerate(ys_data)]
 
 
 # ------------------------------------------------------ UV WINLAB -----------------------------------------------------
@@ -1001,7 +1000,7 @@ def UVWinLabASCII(filename):
     x = Dimension(data[0], pc.wavelength_qt, pc.nm_unit)
     y = get_uvvis_dimension(data[1], content[80])
 
-    return SignalData(x, y, name, z_dict)
+    return SignalData(x, y, name, z_dict=z_dict)
 
 
 # ------------------------------------------------------- VESTA --------------------------------------------------------
@@ -1058,14 +1057,43 @@ def WireFile(filename):
     return SignalData(x, y, reader.title)
 
 
+def Zem3(filename):
+    """ Read Zem3 files
+    :param str filename: file path
+
+    Examples
+    --------
+    >>> a = Zem3(resources.zem3)
+    >>> a['Resistivity(Ohm m)'].print()
+    Dimension([ 44.16055  59.66502  77.633   ... 248.0079  267.0932  286.0288 ], Measurement temp.(C))
+    Dimension([3.276580e-06 3.357355e-06 3.403639e-06 ... 3.281571e-06 3.180939e-06
+     5.350202e-06], Resistivity(Ohm m))
+
+    >>> b = Zem3(resources.zem3_txt)
+    >>> b['Delta Temp(C)'].print()
+    Dimension([ 39.44201  42.1815   44.11031 ... 283.6468  286.4197  288.0198 ], Sample Temp.(C))
+    Dimension([-0.3088848  0.8997093  2.302329  ... -0.7177747  0.3782233  1.430436 ], Delta Temp(C))"""
+
+    content, name = read_datafile(filename)
+    data_index = pdp.get_data_index(content)
+    if data_index not in (2, 5):
+        raise AssertionError()
+    data = pdp.stringcolumn_to_array(content[data_index:])
+    headers = content[data_index - 1].split('\t')
+    if data_index == 2:
+        xcol = 0
+    else:
+        xcol = 1
+    return {h: SignalData(Dimension(data[xcol], headers[xcol]), Dimension(d, h)) for d, h in zip(data[xcol + 1:], headers[xcol + 1:])}
+
+
 functions = {'SpectraSuite (.txt)': SpectraSuiteFile,
              'FluorEssence (.txt)': FluorEssenceFile,
              'EasyLog (.txt)': EasyLogFile,
-             'Beampro (.txt)': BeamproFile,
+             'Zem3 (tab)': Zem3,
              'F980/Fluoracle (.txt, tab)': EdinstFile,
              'F980/Fluoracle (.csv, comma)': lambda filename: EdinstFile(filename, delimiter=','),
              'UvWinlab (.csv)': UvWinlabFile,
-             'Spectrum (.csv)': SpectrumFile,
              'Dektak (.csv)': DektakFile,
              'ProData (.csv)': ProDataSignal,
              'UVWinLab (.asc)': UVWinLabASCII,
@@ -1076,6 +1104,8 @@ functions = {'SpectraSuite (.txt)': SpectraSuiteFile,
              'SBTPS (.SEQ)': SbtpsSeqFile,
              'SBTPS (.IV)': SbtpsIvFile,
              'WiRE (.wdf)': WireFile,
+             'Beampro (.txt)': BeamproFile,
+             'Spectrum (.csv)': SpectrumFile,
              'Simple (tab)': SimpleDataFile,
              'Simple (comma)': lambda filename: SimpleDataFile(filename, delimiter=','),
              'Simple (semicolon)': lambda filename: SimpleDataFile(filename, delimiter=';')}
@@ -1083,10 +1113,10 @@ functions = {'SpectraSuite (.txt)': SpectraSuiteFile,
 extensions = {'SpectraSuite (.txt)': 'txt',
               'FluorEssence (.txt)': 'txt',
               'LambdaSpx (.dsp)': 'dsp',
+              'Zem3 (tab)': '',
               'UvWinlab (.csv)': 'csv',
               'UVWinLab (.asc)': 'asc',
               'FlWinlab': '',
-              'Spectrum (.csv)': 'csv',
               'Diffrac (.brml)': 'brml',
               'F980/Fluoracle (.txt, tab)': 'txt',
               'F980/Fluoracle (.csv, comma)': 'csv',
@@ -1098,6 +1128,7 @@ extensions = {'SpectraSuite (.txt)': 'txt',
               'WiRE (.wdf)': 'wdf',
               'SBTPS (.SEQ)': 'SEQ',
               'SBTPS (.IV)': 'IV',
+              'Spectrum (.csv)': 'csv',
               'Simple (comma)': '',
               'Simple (semicolon)': '',
               'Simple (tab)': ''}

@@ -81,10 +81,14 @@ vesta_diffraction = path.join(basepath, 'resources/test_files/Vesta/Vesta.xy')
 wire_wdf1 = path.join(basepath, 'resources/test_files/WiRE/WiRE_532.wdf')
 wire_wdf2 = path.join(basepath, 'resources/test_files/WiRE/WiRE_785.wdf')
 
+# Zem3
+zem3 = path.join(basepath, 'resources/test_files/Zem3/Zem3')
+zem3_txt = path.join(basepath, 'resources/test_files/Zem3/Zem3.txt')
+
 all_files = (beampro, dektak, diffrac_brml, diffrac_timelapse, diffrac_brml_psd, easylog_file, f980_irf, f980_emscan,
              f980_irts_comma, f980_multi_irts, fluoracle_absorbance, fluoracle_emission, fluoracle_emission_multiple,
              fluoressence_file, fluoressence_allcol, fluoressence_multiple, flwinlab_file, lambdaspx_absorbance,
              lambdaspx_reflectance, lambdaspx_absorbance2, lambdaspx_transmittance, prodata_tas_3prop, prodata_pll_12wl_1prop,
              sbtps_iv1, sbtps_iv2, sbtps_iv3, sbtps_seq1, sbtps_seq2, sbtps_seq3, simple_tab, simple_semicolon,
              spectrasuite_header, spectrasuite_header_bst, spectrum_file, spectrum_multiple, uvwinlab_csv, uvwinlab_ascii,
-             vesta_diffraction, wire_wdf2, wire_wdf1)
+             vesta_diffraction, wire_wdf2, wire_wdf1, zem3, zem3_txt)
