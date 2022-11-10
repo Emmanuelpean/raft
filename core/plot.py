@@ -30,14 +30,14 @@ def subplots(n, m=None, **kwargs):
     return ps.make_subplots(rows=nb_rows, cols=nb_cols, **kwargs), positions
 
 
-def plot(signals, position=None, figure=None):
+def plot(signals, position=None, figure=None, *args, **kwargs):
     """ Plot signals """
 
     # Dict: data type is different, plot in multiple subplots
     if isinstance(signals, dict):
         figure, positions = subplots(len(signals))
         for key, position in zip(signals, positions):
-            plot(signals[key], position, figure)
+            plot(signals[key], position, figure, *args, **kwargs)
 
     else:
 
@@ -47,10 +47,10 @@ def plot(signals, position=None, figure=None):
         # List/tuple of signals, plot all in the same figure
         if isinstance(signals, (list, tuple)):
             for signal in signals:
-                signal.plot(figure, position)
+                signal.plot(figure, position, *args, **kwargs)
 
         else:
-            signals.plot(figure, position)
+            signals.plot(figure, position, *args, **kwargs)
 
     figure.update_layout(height=800)
     return figure

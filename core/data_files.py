@@ -474,6 +474,8 @@ def FlWinlabFile(filename):
     Dimension([65.282    54.64567  44.866456 ...  5.854989  5.846911  5.84554 ], intensity, a.u.)"""
 
     content, name = read_datafile(filename)
+    if not content[0][:5] == 'PE FL':
+        raise AssertionError()
 
     # Data
     data_index = pdp.grep(content, '#DATA')[0][1] + 1
@@ -486,7 +488,6 @@ def FlWinlabFile(filename):
     z_dict = {pc.timestamp_id: Dimension(date, pc.time_qt)}
 
     return SignalData(x, y, name, z_dict=z_dict)
-
 
 # ------------------------------------------------------ LAMBDASPX -----------------------------------------------------
 
@@ -895,72 +896,23 @@ def SpectraSuiteFile(filename):
 # ------------------------------------------------------ SPECTRUM ------------------------------------------------------
 
 
-def SpectrumFile(filename):
+def PerkinElmerFile(filename):
     """ Read csv files generated from the Spectrum 10 software
     :param str filename: file path
 
     Examples
     --------
-    >>> a = SpectrumFile(resources.spectrum_file)
+    >>> a = PerkinElmerFile(resources.spectrum_file)
     >>> a.print()
     Dimension([ 650.   650.5  651.  ... 3999.  3999.5 4000. ], wavenumber, cm^-1)
     Dimension([80.18 80.25 80.27 ... 96.38 96.37 96.36], transmittance, %)
-    >>> a.z_dict[pc.timestamp_id]
-    Dimension(2018-02-16 00:00:00, time)
 
-    >>> b = SpectrumFile(resources.spectrum_multiple)
+    >>> b = PerkinElmerFile(resources.spectrum_multiple)
     >>> b[0].print()
     Dimension([ 450.  451.  452. ... 1048. 1049. 1050.], wavenumber, cm^-1)
-    Dimension([0.0168 0.0289 0.0151 ... 0.116  0.117  0.118 ])"""
+    Dimension([0.0168 0.0289 0.0151 ... 0.116  0.117  0.118 ])
 
-    content, name = read_datafile(filename)
-    index = pdp.get_data_index(content, ',')
-    data = pdp.stringcolumn_to_array(content[index:], ',')
-    x_data, *ys_data = pdp.sort(data, 0)
-
-    if index == 2:
-        x_q, y_q = content[1].split(',')
-
-        # X dimension
-        if x_q == 'cm-1':
-            x = Dimension(x_data, pc.wavenumber_qt, pc.cm_1_unit)
-        else:
-            x = Dimension(x_data, x_q)
-
-        # Y dimension
-        if y_q == '%T':
-            y = Dimension(ys_data[0], pc.transmittance_qt, pc.percent_unit)
-        elif y_q == 'A':
-            y = Dimension(ys_data[0], pc.absorbance_qt, pc.none_unit)
-        else:
-            y = Dimension(ys_data[0], y_q)
-
-        # Timestamp
-        date = dt.datetime.strptime(content[0].split(',')[-1], ' %B %d %Y')
-        z_dict = {pc.timestamp_id: Dimension(date, pc.time_qt)}
-
-        return SignalData(x, y, name, z_dict=z_dict)
-
-    else:
-
-        # X dimension
-        if content[5] == '"Wavenumber"':
-            x = Dimension(x_data, pc.wavenumber_qt, pc.cm_1_unit)
-        else:
-            x = Dimension(x_data, content[5])
-
-        return [SignalData(x, Dimension(y_data), name, '%i' % i) for i, y_data in enumerate(ys_data)]
-
-
-# ------------------------------------------------------ UV WINLAB -----------------------------------------------------
-
-
-def UvWinlabFile(filename):
-    """ Read a csv file generated with the UV Winlab software
-    :param str filename: file path
-    Example
-    -------
-    >>> a = UvWinlabFile(resources.uvwinlab_csv)
+    >>> a = PerkinElmerFile(resources.uvwinlab_csv)
     >>> a.print()
     Dimension([200. 201. 202. ... 698. 699. 700.], wavelength, nm)
     Dimension([1.00000e+01 2.74454e-01 1.74635e-01 ... 7.53000e-04 4.97000e-04
@@ -969,16 +921,43 @@ def UvWinlabFile(filename):
     content, name = read_datafile(filename)
     if 'Created as New Dataset,' in content[0]:
         content = content[1:]
-    data = pdp.stringcolumn_to_array(content[1:], ',')
-    x_data, y_data = pdp.sort(data, 0)
 
-    # X dimension
-    x = Dimension(x_data, pc.wavelength_qt, pc.nm_unit)
+    # Check if there is a header
+    index = pdp.get_data_index(content, ',')
+    if index is None:
+        raise AssertionError()
 
-    # Y dimension
-    y = get_uvvis_dimension(y_data, content[0].split(',')[1])
+    # Convert the data
+    data = pdp.stringcolumn_to_array(content[index:], ',')
+    x_data, *ys_data = pdp.sort(data, 0)
 
-    return SignalData(x, y, name)
+    if index == 1:
+        x_q, y_q = content[1].split(',')
+
+        # X dimension
+        if x_q == 'cm-1':
+            x = Dimension(x_data, pc.wavenumber_qt, pc.cm_1_unit)
+        elif x_q == 'nm':
+            x = Dimension(x_data, pc.wavelength_qt, pc.nm_unit)
+        else:
+            x = Dimension(x_data, x_q)
+
+        # Y dimension
+        y = get_uvvis_dimension(ys_data[0], y_q)
+
+        return SignalData(x, y, name)
+
+    else:
+
+        # X dimension
+        if content[index - 1] == '"Wavenumber"':
+            x = Dimension(x_data, pc.wavenumber_qt, pc.cm_1_unit)
+        elif content[index - 1] == '"Wavelength"':
+            x = Dimension(x_data, pc.wavelength_qt, pc.nm_unit)
+        else:
+            x = Dimension(x_data, content[5])
+
+        return [SignalData(x, Dimension(y_data), name, '%i' % i) for i, y_data in enumerate(ys_data)]
 
 
 def UVWinLabASCII(filename):
@@ -990,17 +969,18 @@ def UVWinLabASCII(filename):
     """
 
     content, name = read_datafile(filename)
-
-    # Date
-    date_format2 = '%d/%m/%y %H:%M:%S'
-    date = dt.datetime.strptime(content[3] + ' ' + content[4][:-3], date_format2)
-    z_dict = {pc.timestamp_id: Dimension(date, pc.time_qt)}
+    if not content[0][:5] == 'PE UV':
+        raise AssertionError()
 
     # Data
     data_index = pdp.grep(content, '#DATA')[0][1] + 1
     data = pdp.stringcolumn_to_array(content[data_index:])[:, ::-1]
     x = Dimension(data[0], pc.wavelength_qt, pc.nm_unit)
     y = get_uvvis_dimension(data[1], content[80])
+
+    # Date
+    date = dt.datetime.strptime(content[3] + ' ' + content[4][:-3], '%d/%m/%y %H:%M:%S')
+    z_dict = {pc.timestamp_id: Dimension(date, pc.time_qt)}
 
     return SignalData(x, y, name, z_dict=z_dict)
 
@@ -1096,51 +1076,28 @@ def Zem3(filename):
         return data
 
 
-functions = {'SpectraSuite (.txt)': SpectraSuiteFile,
-             'FluorEssence (.txt)': FluorEssenceFile,
-             'EasyLog (.txt)': EasyLogFile,
-             'Beampro (.txt)': BeamproFile,
-             'F980/Fluoracle (.txt, tab)': EdinstFile,
-             'F980/Fluoracle (.csv, comma)': lambda filename: EdinstFile(filename, delimiter=','),
-             'UvWinlab (.csv)': UvWinlabFile,
-             'Dektak (.csv)': DektakFile,
-             'ProData (.csv)': ProDataSignal,
-             'UVWinLab (.asc)': UVWinLabASCII,
-             'FlWinlab': FlWinlabFile,
-             'Diffrac (.brml)': DiffracBrmlFile,
-             'Vesta (.xy)': VestaDiffractionFile,
-             'LambdaSpx (.dsp)': LambdaSpxFile,
-             'Zem3 (tab)': Zem3,
-             'SBTPS (.SEQ)': SbtpsSeqFile,
-             'SBTPS (.IV)': SbtpsIvFile,
-             'WiRE (.wdf)': WireFile,
-             'Spectrum (.csv)': SpectrumFile,
-             'Simple (tab)': SimpleDataFile,
-             'Simple (comma)': lambda filename: SimpleDataFile(filename, delimiter=','),
-             'Simple (semicolon)': lambda filename: SimpleDataFile(filename, delimiter=';')}
-
-extensions = {'SpectraSuite (.txt)': 'txt',
-              'FluorEssence (.txt)': 'txt',
-              'LambdaSpx (.dsp)': 'dsp',
-              'Zem3 (tab)': '',
-              'UvWinlab (.csv)': 'csv',
-              'UVWinLab (.asc)': 'asc',
-              'FlWinlab': '',
-              'Diffrac (.brml)': 'brml',
-              'F980/Fluoracle (.txt, tab)': 'txt',
-              'F980/Fluoracle (.csv, comma)': 'csv',
-              'Vesta (.xy)': 'xy',
-              'Dektak (.csv)': 'csv',
-              'ProData (.csv)': 'csv',
-              'EasyLog (.txt)': 'txt',
-              'Beampro (.txt)': 'txt',
-              'WiRE (.wdf)': 'wdf',
-              'SBTPS (.SEQ)': 'SEQ',
-              'SBTPS (.IV)': 'IV',
-              'Spectrum (.csv)': 'csv',
-              'Simple (comma)': '',
-              'Simple (semicolon)': '',
-              'Simple (tab)': ''}
+functions = {'SpectraSuite (.txt)': (SpectraSuiteFile, 'txt'),
+             'FluorEssence (.txt)': (FluorEssenceFile, 'txt'),
+             'EasyLog (.txt)': (EasyLogFile, 'txt'),
+             'Beampro (.txt)': (BeamproFile, 'txt'),
+             'F980/Fluoracle (.txt, tab)': (EdinstFile, 'txt'),
+             'F980/Fluoracle (.csv, comma)': (lambda filename: EdinstFile(filename, delimiter=','), 'csv'),
+             'UvWinlab/Spectrum (.csv)': (PerkinElmerFile, 'csv'),
+             'Dektak (.csv)': (DektakFile, 'csv'),
+             'ProData (.csv)': (ProDataSignal, 'csv'),
+             'UVWinLab (.asc)': (UVWinLabASCII, 'asc'),
+             'FlWinlab': (FlWinlabFile, ''),
+             'Diffrac (.brml)': (DiffracBrmlFile, 'brml'),
+             'Vesta (.xy)': (VestaDiffractionFile, 'xy'),
+             'LambdaSpx (.dsp)': (LambdaSpxFile, 'dsp'),
+             'Zem3 (tab)': (Zem3, ''),
+             'SBTPS (.SEQ)': (SbtpsSeqFile, 'SEQ'),
+             'SBTPS (.IV)': (SbtpsIvFile, 'IV'),
+             'WiRE (.wdf)': (WireFile, 'wdf'),
+             'Spectrum (.csv)': (PerkinElmerFile, 'csv'),
+             'Simple (tab)': (SimpleDataFile, ''),
+             'Simple (comma)': (lambda filename: SimpleDataFile(filename, delimiter=','), ''),
+             'Simple (semicolon)': (lambda filename: SimpleDataFile(filename, delimiter=';'), '')}
 
 
 if __name__ == '__main__':

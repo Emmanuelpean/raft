@@ -281,6 +281,21 @@ def interpolate_point(x, y, index, nb_point=2, **kwargs):
     return new_x, interp(new_x)
 
 
+def concatenate_data(data):
+    """ Concatenate a list containing either lists, dicts or others """
+
+    # List of dicts
+    if isinstance(data[0], dict):
+        keys = np.unique(np.concatenate([list(s.keys()) for s in data]))
+        return {key: concatenate_data([s[key] for s in data if key in s]) for key in keys}
+
+    # List of list
+    elif isinstance(data[0], list):
+        return list(np.concatenate(data))
+
+    else:
+        return data
+
 
 if __name__ == '__main__':
     import doctest

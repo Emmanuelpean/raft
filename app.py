@@ -14,43 +14,44 @@ st.set_page_config('Raft', layout='wide')
 st.markdown("""<style> #MainMenu {visibility: hidden;} footer {visibility: hidden;} </style>""", unsafe_allow_html=True)  # hide main menu and footer
 st.markdown("""%s""" % utils.render_image(resources.logo_text_filename, 25), unsafe_allow_html=True)  # main logo
 st.sidebar.markdown("""%s""" % utils.render_image(resources.logo_filename, 30), unsafe_allow_html=True)  # sidebar logo
-if 'filetype' not in st.session_state:
-    st.session_state.filetype = 'Detect'
 
 # ----------------------------------------------------- DATA INPUT -----------------------------------------------------
 
 # File uploader
-filename = st.sidebar.file_uploader('a', on_change=lambda: setattr(st.session_state, 'filetype', 'Detect'), label_visibility='hidden')
+file = st.sidebar.file_uploader('File uploader', label_visibility='hidden')
+print('File is %s' % file)
 
 # File type
 filetypes = ['Detect'] + sorted(pdf.functions.keys())
-filetype_sb = st.sidebar.empty()
-filetype = filetype_sb.selectbox('Data file', filetypes, index=filetypes.index(st.session_state.filetype),
-                                 help="Select the file type. If 'Detect' is selected, the file type will be automatically detected")
+filetype_help = "Select the file type. If 'Detect' is selected, the file type will be automatically detected"
+filetype = st.sidebar.selectbox('Data file type', filetypes, help=filetype_help)
+filetype_message = st.sidebar.empty()
+print(filetype)
 
 signal = None
 
-if not filename:
-    st.info('Input a file')
+# If no file is provided or no signal is stored
+if not file:
+    st.info('Upload a file')
 
 else:
 
     # -------------------------------------------------- DATA LOADING --------------------------------------------------
+    print('loading file')
 
     # Attempt to load the data by testing every file types
     if filetype == 'Detect':
 
         # Only search through the filetypes matching the extension
-        extension = os.path.splitext(filename.name)[1]
-        functions = {key: value for key, value in pdf.functions.items() if
-                     extension.lower() == '.' + pdf.extensions[key].lower() or pdf.extensions[key] == ''}
+        extension = os.path.splitext(file.name)[1]
+        functions = {key: value[0] for key, value in pdf.functions.items() if
+                     extension.lower() == '.' + pdf.functions[key][1].lower() or pdf.functions[key][1] == ''}
 
-        for key in functions:
+        for filetype in functions:
             # noinspection PyBroadException
             try:
-                signal = pdf.functions[key](filename)
-                filetype = filetype_sb.selectbox('Data file', filetypes, index=filetypes.index(key))
-                st.session_state.filetype = key
+                signal = pdf.functions[filetype][0](file)
+                filetype_message.markdown('Detected: %s' % filetype)
                 break
             except:
                 pass
@@ -59,11 +60,16 @@ else:
     else:
         # noinspection PyBroadException
         try:
-            signal = pdf.functions[filetype](filename)
+            signal = pdf.functions[filetype][0](file)
         except:
             pass
 
-    if signal:
+    # If the signal could be loaded, display an error message, else store it in the session state
+    if signal is None:
+        st.warning("Unable to read that file. You can submit your file to emmanuel.pean@swansea.ac.uk and it will be added to the list")
+
+    # If signals are stored in the session state
+    else:
 
         plot_spot = st.empty()
 
@@ -71,7 +77,7 @@ else:
 
         # Select the data type to plot if signal is a dictionary
         if isinstance(signal, dict):
-            selection = st.sidebar.selectbox('Data to plot', ['All'] + list(signal.keys()))
+            selection = st.sidebar.selectbox('Data type to plot', ['All'] + list(signal.keys()))
             if selection != 'All':
                 signal = signal[selection]
 
@@ -81,9 +87,11 @@ else:
 
         # Select the signal in a list
         if isinstance(signal, (list, tuple)):
-            col_selection = st.sidebar.selectbox('Column to plot', ['All'] + list(range(1, len(signal) + 1)))
+            names = [s.get_name(False) for s in signal]
+            signal_dict = dict(zip(names, signal))
+            col_selection = st.sidebar.selectbox('Data to plot', ['All'] + sorted(signal_dict.keys()))
             if col_selection != 'All':
-                signal = signal[col_selection - 1]
+                signal = signal_dict[col_selection]
 
         # If only 1 signal is selected
         if isinstance(signal, SignalData):
@@ -92,14 +100,19 @@ else:
 
             header = [signal.x.get_label(), signal.y.get_label()]
             export_data = utils.matrix_to_string([signal.x.data, signal.y.data], header)
-            st.download_button('Download data', export_data, 'pears_fit_data.csv')
+            st.download_button('Download data', export_data, 'data.csv')
 
             # ----------------------------------------------- DATA RANGE -----------------------------------------------
 
-            st.sidebar.markdown('Data range (%s)' % signal.x.unit)
+            label = 'Data range'
+            if signal.x.unit:
+                label += ' (% s)' % signal.x.unit
+            st.sidebar.markdown(label)
             range_cols = st.sidebar.columns(2)
-            range_button1 = range_cols[0].number_input('', min_value=signal.x.data[0], max_value=signal.x.data[-2], value=signal.x.data[0], label_visibility='collapsed')
-            range_button2 = range_cols[1].number_input('', min_value=signal.x.data[1], max_value=signal.x.data[-1], value=signal.x.data[-1], label_visibility='collapsed')
+            range_button1 = range_cols[0].number_input('a', min_value=signal.x.data[0], max_value=signal.x.data[-2],
+                                                       value=signal.x.data[0], label_visibility='collapsed')
+            range_button2 = range_cols[1].number_input('a', min_value=signal.x.data[1], max_value=signal.x.data[-1],
+                                                       value=signal.x.data[-1], label_visibility='collapsed')
             signal = signal.reduce_range([range_button1, range_button2])
 
             figure = pp.plot(signal)  # plot the signal
@@ -112,7 +125,6 @@ else:
             smoothing_entry2 = smoothing_cols[1].number_input('Polynomial order', value=0, help="Order of the polynomial used to fit the samples")
             if smoothing_entry1 > 0 and smoothing_entry2 > 0:
                 signals_s = signal.smooth(smoothing_entry1, smoothing_entry2)
-                signals_s.name += ' - smoothed'
                 signals_s.plot(figure)
                 signal = signals_s
 
@@ -173,20 +185,19 @@ else:
 
         plot_spot.plotly_chart(figure, use_container_width=True)
 
-    else:
-        st.warning("Unable to read that file. You can submit your file to emmanuel.pean@swansea.ac.uk and it will be added to the list")
-
 
 with st.expander('Changelog'):
     st.markdown("""
-    #### Upcoming features
-    * Multiple files upload
+    #### November 2022 - Minor release
+    * Data labelling has been significantly improved.
+    * Bug fix and code optimisation.
+    * Added Zem3 file support.
     #### October 2022 - V 0.2
     * Added the following options when a single data set is displayed:
-        * Download button do download the data displayed
-        * Option to change the data range displayed
-        * Option to smooth the data using the Savitzky-Golay filter
-        * Option to determine the maximum and minimum point, and FWHM""")
+        * Download button do download the data displayed.
+        * Option to change the data range displayed.
+        * Option to smooth the data using the Savitzky-Golay filter.
+        * Option to determine the maximum and minimum point, and FWHM.""")
 
 
 # ------------------------------------------------------ ANALYTICS -----------------------------------------------------
@@ -220,9 +231,12 @@ text-align: center;
 }
 </style>
 <div class="footer">
-<p>App created and maintained by <a href="https://emmanuelpean.streamlitapp.com" target="_blank">Emmanuel V. Péan</a> - Version 0.2
+<p>App created and maintained by <a href="https://emmanuelpean.streamlitapp.com" target="_blank">Emmanuel V. Péan</a> - Version 0.2.3
 </div>"""
 st.markdown(footer, unsafe_allow_html=True)
 
+print('\n')
 
-# TODO optimise code to only plot and load data if file uploader changed
+# TODO check tests of data_files
+# TODO: LATER: add stricter check for file formats
+# TODO: generated new labels if already exist in memory

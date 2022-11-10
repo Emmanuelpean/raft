@@ -188,7 +188,7 @@ class Dimension(object):
 
 class SignalData(object):
 
-    def __init__(self, x, y, name='', z_dict=None):
+    def __init__(self, x, y, name='', shortname='', z_dict=None):
         """
         :param Dimension x: x dimension
         :param Dimension y: y dimension
@@ -198,10 +198,22 @@ class SignalData(object):
         self.x = x
         self.y = y
         self.name = name
+        self.shortname = shortname
+        self.longname = self.name + ': ' + shortname
         if z_dict is None:
             self.z_dict = {}
         else:
             self.z_dict = z_dict
+
+    def get_name(self, condition):
+        """ Get the name of the signal for display purpose """
+
+        if not self.shortname:
+            return self.name
+        if condition:
+            return self.longname
+        else:
+            return self.shortname
 
     def print(self):
         """ Print the signal dimensions """
@@ -209,13 +221,13 @@ class SignalData(object):
         print(self.x)
         print(self.y)
 
-    # noinspection PyArgumentList
-    def plot(self, figure, position=None):
+    def plot(self, figure, position=None, condition=False):
         """ Plot the signal data in a plotly figure
         :param figure: plotly figure object
-        :param None, tuple, list position: subplot position """
+        :param None, tuple, list position: subplot position
+        :param bool condition: argument passed to get_name """
 
-        trace = go.Scatter(x=self.x.data, y=self.y.data, name=self.name, showlegend=True)
+        trace = go.Scatter(x=self.x.data, y=self.y.data, name=self.get_name(condition), showlegend=True)
 
         if position:
             kwargs = dict(row=position[0], col=position[1])
@@ -233,7 +245,7 @@ class SignalData(object):
         # noinspection PyBroadException
         try:
             y = ss.savgol_filter(self.y.data, *args)
-            return SignalData(self.x, self.y(data=y), self.name, self.z_dict)
+            return SignalData(self.x, self.y(data=y), self.name, self.shortname + ' (smoothed)', self.z_dict)
         except:
             return self
 
@@ -242,7 +254,7 @@ class SignalData(object):
 
         index1 = np.abs(self.x.data - xrange[0]).argmin()
         index2 = np.abs(self.x.data - xrange[1]).argmin()
-        return SignalData(self.x(data=self.x.data[index1: index2]), self.y(data=self.y.data[index1: index2]), self.name, self.z_dict)
+        return SignalData(self.x(data=self.x.data[index1: index2]), self.y(data=self.y.data[index1: index2]), self.name, self.shortname, self.z_dict)
 
     def get_max(self):
         """ Get the maximum intensity signal """
