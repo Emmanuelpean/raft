@@ -32,7 +32,7 @@ signal = None
 
 # If no file is provided or no signal is stored
 if not file:
-    st.info('Upload a file')
+    st.info('RAFT is a free tool to plot the content a various data files. Just drag and drop your file and get the relevant information from it!')
 
 else:
 
