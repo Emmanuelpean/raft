@@ -202,8 +202,7 @@ with st.expander('Changelog'):
 
 # ------------------------------------------------------ ANALYTICS -----------------------------------------------------
 
-components.html("""<script async defer data-website-id="820a9cf5-cbf2-430f-aff1-c6b647194d74" 
-src="https://pears-tracking.herokuapp.com/umami.js"></script>""")
+components.html("""<script async defer src="https://analytics.umami.is/script.js" data-website-id="18c966b7-05b9-4473-ab5c-8d493d03f892"></script>""")
 
 # ------------------------------------------------------- FOOTER -------------------------------------------------------
 
