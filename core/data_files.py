@@ -72,7 +72,7 @@ def BeamproFile(filename):
     Dimension([0.        0.0976563 1.12305   ... 1.0498    1.26953   1.02539  ], intensity, a.u.)"""
 
     content, name = read_datafile(filename)
-    if content[0] != 'BeamPro 3.0 Crosshair file':
+    if content[0] not in ('BeamPro 3.0 Crosshair file', 'Beamage Crosshair file'):
         raise AssertionError()
     x_quantity, x_unit = pc.distance_qt, pc.micrometer_unit
     y_quantity, y_unit = pc.intensity_qt, pc.au_unit
