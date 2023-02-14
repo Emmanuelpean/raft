@@ -310,19 +310,33 @@ def EdinstFile(filename, delimiter='\t'):
     >>> fluoracle_c[-1].print()
     Dimension([450.  450.5 451.  ... 599.  599.5 600. ], wavelength, nm)
     Dimension([90.638423   90.793699   90.5693948  ...  1.54868774  0.58697853
-      1.20407082], absorptance, %)"""
+      1.20407082], absorptance, %)
+
+    >>> fluoracle_d = EdinstFile(resources.fluoracle_missing, ',')
+    >>> fluoracle_d[-1].print()
+    Dimension([400.  400.5 401.  ... 849.  849.5 850. ], wavelength, nm)
+    Dimension([4390.01904  4332.65088  4206.68164  ...  182.306168  258.138153
+        0.      ], intensity, counts)"""
 
     content, name = read_datafile(filename)
     index = pdp.grep(content, 'Labels')[0][1]
     content = content[index:]
 
-    # Remove the extra column in the case where the delimiter is not \t
-    if delimiter != '\t':
-        content = [line.replace(delimiter, '\t') for line in content]
+    index_header = pdp.get_data_index(content, delimiter)
+    headers = pdp.get_header_as_dicts(content[:index_header - 1], delimiter)
 
-    index_header = pdp.get_data_index(content)
-    headers = pdp.get_header_as_dicts(content[:index_header - 1])
-    x_data, *ys_data = pdp.stringcolumn_to_array(content[index_header:])
+    if delimiter == ',':
+        data = []
+        for line in content[index_header:]:
+            line_data = []
+            for element in line.split(delimiter):
+                if element.isspace() or element == '':
+                    element = 'nan'
+                line_data.append(float(element))
+            data.append(line_data)
+        x_data, *ys_data, _ = np.transpose(data)
+    else:
+        x_data, *ys_data = pdp.stringcolumn_to_array(content[index_header:])
 
     # X dimension
     measure_type = headers[0]['Type']

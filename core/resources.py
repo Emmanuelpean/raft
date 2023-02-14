@@ -31,6 +31,7 @@ f980_emscan = path.join(basepath, 'resources/test_files/Edinst/F980_EmScan.txt')
 fluoracle_absorbance = path.join(basepath, 'resources/test_files/Edinst/Fluoracle_absorbance.txt')
 fluoracle_emission = path.join(basepath, 'resources/test_files/Edinst/Fluoracle_emission.txt')
 fluoracle_emission_multiple = path.join(basepath, 'resources/test_files/Edinst/Fluoracle_emission_multiple.txt')
+fluoracle_missing = path.join(basepath, 'resources/test_files/Edinst/Fluoracle_missing.csv')
 
 # FluorEssence
 fluoressence_allcol = path.join(basepath, 'resources/test_files/FluorEssence/FluorEssence_allcol.txt')

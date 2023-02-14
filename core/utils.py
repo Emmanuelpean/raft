@@ -109,7 +109,7 @@ def get_data_index(content, delimiter=None):
 
         if line != '' and line != delimiter and not line.isspace():
             try:
-                [float(f) for f in line.split(delimiter)]
+                [float(f) for f in line.split(delimiter) if not f.isspace() and f != '']
                 return index
             except ValueError:
                 continue

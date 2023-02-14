@@ -188,6 +188,9 @@ else:
 
 with st.expander('Changelog'):
     st.markdown("""
+    #### February 2023 - Minor release
+    * Bug fixes
+    * Now able to read incomplete Fluoracle files
     #### November 2022 - Minor release
     * Data labelling has been significantly improved.
     * Bug fix and code optimisation.
