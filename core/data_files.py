@@ -100,7 +100,7 @@ def DektakFile(filename):
      2.00000e+03], horizontal distance, um)
     Dimension([-649.13 -648.21 -643.29 ...  -70.38  -77.46  -84.53], vertical distance, um)
     >>> a.z_dict[pc.timestamp_id]
-    Dimension(2017-05-23 11:35:19, time)"""
+    Dimension([datetime.datetime(2017, 5, 23, 11, 35, 19)], time)"""
 
     content, name = read_datafile(filename)
 
@@ -506,7 +506,7 @@ def LambdaSpxFile(filename):
     Dimension([700.  700.5 701.  ... 799.  799.5 800. ], wavelength, nm)
     Dimension([0.5041709  0.50298887 0.50147861 ... 0.21925835 0.21803915 0.21983826], absorbance)
     >>> a.z_dict[pc.scan_speed_id], a.z_dict[pc.timestamp_id]
-    (Dimension(480.0, speed, nm/min), Dimension(2017-02-14 11:25:23, time))
+    (Dimension([480.], speed, nm/min), Dimension([datetime.datetime(2017, 2, 14, 11, 25, 23)], time))
 
     >>> b = LambdaSpxFile(resources.lambdaspx_reflectance)
     >>> b.print()
@@ -514,7 +514,7 @@ def LambdaSpxFile(filename):
     Dimension([31.24734461 31.35104477 31.39903992 ... 60.31588614 60.29761881
      60.16479731], reflectance, %)
     >>> b.z_dict[pc.scan_speed_id], b.z_dict[pc.timestamp_id]
-    (Dimension(480.0, speed, nm/min), Dimension(2017-02-14 11:33:45, time))
+    (Dimension([480.], speed, nm/min), Dimension([datetime.datetime(2017, 2, 14, 11, 33, 45)], time))
 
     >>> f = LambdaSpxFile(resources.lambdaspx_transmittance)
     >>> f.print()
@@ -522,14 +522,14 @@ def LambdaSpxFile(filename):
     Dimension([31.42957985 31.43935651 31.4599216  ... 60.38159132 60.50872058
      60.50410867], transmittance, %)
     >>> f.z_dict[pc.scan_speed_id], f.z_dict[pc.timestamp_id]
-    (Dimension(480.0, speed, nm/min), Dimension(2017-02-14 11:27:32, time))
+    (Dimension([480.], speed, nm/min), Dimension([datetime.datetime(2017, 2, 14, 11, 27, 32)], time))
 
     >>> d = LambdaSpxFile(resources.lambdaspx_absorbance2)
     >>> d.print()
     Dimension([200. 201. 202. ... 798. 799. 800.], wavelength, nm)
     Dimension([0.62599342 0.64735628 0.66461102 ... 0.1690872  0.16830412 0.16843767], absorbance)
     >>> d.z_dict[pc.scan_speed_id], d.z_dict[pc.timestamp_id]
-    (Dimension(960.0, speed, nm/min), Dimension(2017-06-07 11:03:00, time))"""
+    (Dimension([960.], speed, nm/min), Dimension([datetime.datetime(2017, 6, 7, 11, 3)], time))"""
 
     content, name = read_datafile(filename)
 
@@ -860,14 +860,14 @@ def SpectraSuiteFile(filename):
     Dimension([ 340.07  340.45  340.82 ... 1028.37 1028.66 1028.94], wavelength, nm)
     Dimension([776.36 776.36 776.36 ... 833.99 829.02 829.92], intensity, counts)
     >>> a.z_dict[pc.timestamp_id], a.z_dict[pc.int_time_id]
-    (Dimension(2016-11-16 18:07:25, time), Dimension(0.1, time, s))
+    (Dimension([datetime.datetime(2016, 11, 16, 18, 7, 25)], time), Dimension([0.1], time, s))
 
     >>> b = SpectraSuiteFile(resources.spectrasuite_header_bst)
     >>> b.print()
     Dimension([ 340.07  340.45  340.82 ... 1028.37 1028.66 1028.94], wavelength, nm)
     Dimension([ 732.18  732.18  732.18 ...  973.99 1003.36 1089.24], intensity, counts)
     >>> b.z_dict[pc.timestamp_id], b.z_dict[pc.int_time_id]
-    (Dimension(2016-10-21 10:57:53, time), Dimension(2.5, time, s))"""
+    (Dimension([datetime.datetime(2016, 10, 21, 10, 57, 53)], time), Dimension([2.5], time, s))"""
 
     content, name = read_datafile(filename)
 
@@ -932,7 +932,7 @@ def PerkinElmerFile(filename):
     x_data, *ys_data = pdp.sort(data, 0)
 
     if index == 1:
-        x_q, y_q = content[1].split(',')
+        x_q, y_q = content[0].split(',')
 
         # X dimension
         if x_q == 'cm-1':
@@ -1016,13 +1016,17 @@ def WireFile(filename):
     --------
     >>> a = WireFile(resources.wire_wdf1)
     >>> a.print()
-    Dimension([ 794.19727  795.4375   796.6758  ... 1940.9746  1942.0098  1943.0449 ], wavenumber, cm^-1)
-    Dimension([ 84046.164  84312.37   84407.18  ... 130683.18  130495.22  129160.39 ], intensity)
+    Dimension([ 794.19726562  795.4375      796.67578125 ... 1940.97460938 1942.00976562
+     1943.04492188], wavenumber, cm^-1)
+    Dimension([ 84046.1640625  84312.3671875  84407.1796875 ... 130683.1796875
+     130495.21875   129160.390625 ], intensity)
 
     >>> b = WireFile(resources.wire_wdf2)
     >>> b.print()
-    Dimension([ 830.9918  832.1725  833.3541 ... 1897.2906 1898.2369 1899.1832], wavenumber, cm^-1)
-    Dimension([28863.012 28688.145 28792.688 ... 21222.156 20938.07  20763.61 ], intensity)"""
+    Dimension([ 830.99182129  832.17248535  833.35412598 ... 1897.29064941 1898.23693848
+     1899.18322754], wavenumber, cm^-1)
+    Dimension([28863.01171875 28688.14453125 28792.6875     ... 21222.15625
+     20938.0703125  20763.609375  ], intensity)"""
 
     if not isinstance(filename, str):
         with open('temp_', 'wb') as ofile:
