@@ -4,4 +4,4 @@ streamlit~=1.13.0
 lxml~=4.9.1
 renishawWiRE~=0.1.15
 scipy~=1.9.1
-protobuf~=3.19.0
+protobuf==3.20.*
