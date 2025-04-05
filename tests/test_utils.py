@@ -7,10 +7,11 @@ returned.
 Tests should cover various edge cases, valid inputs, and any other conditions that are necessary to confirm the
 robustness of the functions."""
 
+import datetime as dt
+import os
 from unittest.mock import mock_open, patch
 
 import pytest
-import datetime as dt
 
 from core.utils import *
 
@@ -496,7 +497,7 @@ class TestInterpolatePoint:
 
     def test_linear_interpolation(self) -> None:
         x = np.array([-10, -7, -5, -1, 5, 7, 10])
-        y = x**2
+        y = x ** 2
         x_int, y_int = interpolate_point(x, y, 3, kind="linear")
         assert len(x_int) == 1000
         assert len(y_int) == 1000
@@ -506,7 +507,7 @@ class TestInterpolatePoint:
 
     def test_cubic_interpolation(self) -> None:
         x = np.array([-10, -7, -5, -1, 5, 7, 10])
-        y = x**2
+        y = x ** 2
         x_int, y_int = interpolate_point(x, y, 3, kind="cubic")
         assert len(x_int) == 1000
         assert len(y_int) == 1000
@@ -516,21 +517,21 @@ class TestInterpolatePoint:
 
     def test_default_nb_point(self) -> None:
         x = np.array([-10, -7, -5, -1, 5, 7, 10])
-        y = x**2
+        y = x ** 2
         x_int, y_int = interpolate_point(x, y, 3)
         assert len(x_int) == 1000
         assert len(y_int) == 1000
 
     def test_index_near_start(self) -> None:
         x = np.array([-10, -7, -5, -1, 5, 7, 10])
-        y = x**2
+        y = x ** 2
         x_int, y_int = interpolate_point(x, y, 0, kind="linear")
         assert len(x_int) == 1000
         assert len(y_int) == 1000
 
     def test_index_near_end(self) -> None:
         x = np.array([-10, -7, -5, -1, 5, 7, 10])
-        y = x**2
+        y = x ** 2
         x_int, y_int = interpolate_point(x, y, 6, kind="linear")
         assert len(x_int) == 1000
         assert len(y_int) == 1000
@@ -669,8 +670,59 @@ class TestComparisonFunctions:
         assert are_close(mixed_inf1, mixed_inf2)
 
     def test_datetime(self) -> None:
-
         obj1 = dt.datetime(year=2025, day=25, month=3)
         obj2 = dt.datetime(year=2026, day=25, month=3)
         assert are_identical(obj1, obj1)
         assert not are_identical(obj1, obj2)
+
+
+class TestReadTxtFile:
+    """Test class for the read_txt_file function."""
+
+    # File path for temporary test file
+    TEMP_FILE = "_temp.txt"
+
+    def teardown_method(self) -> None:
+        """Teardown method that runs after each test."""
+
+        # Clean up test file after each test
+        if os.path.exists(self.TEMP_FILE):
+            os.remove(self.TEMP_FILE)
+
+        # Clear the cache
+        st.cache_resource.clear()
+
+    def test_read_existing_file(self) -> None:
+        """Test reading from an existing file with valid content."""
+
+        # Create file with some content
+        with open(self.TEMP_FILE, "w") as f:
+            f.write("Hello, World!")
+
+        # Read the content using our function
+        content = read_txt_file(self.TEMP_FILE)
+
+        # Assert the content matches what we wrote
+        assert content == "Hello, World!"
+
+    def test_read_multiline_file(self) -> None:
+        """Test reading from a file with multiple lines."""
+
+        # Create a file with multiline content
+        with open(self.TEMP_FILE, "w") as f:
+            f.write("Line 1\nLine 2\nLine 3")
+
+        # Read the content using our function
+        content = read_txt_file(self.TEMP_FILE)
+
+        # Assert the content matches what we wrote
+        assert content == "Line 1\nLine 2\nLine 3"
+        # Additional check for line count
+        assert len(content.splitlines()) == 3
+
+    def test_nonexistent_file(self) -> None:
+        """Test that trying to read a nonexistent file raises an error."""
+
+        # Check that the function raises FileNotFoundError
+        with pytest.raises(FileNotFoundError):
+            read_txt_file(self.TEMP_FILE)
