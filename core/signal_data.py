@@ -22,8 +22,8 @@ import numpy as np
 import plotly.graph_objects as go
 import scipy.signal as ss
 
-import core.constants as pc
-from core.utils import merge_dicts, interpolate_point
+import constants
+from utils import merge_dicts, interpolate_point
 
 
 def get_label(
@@ -106,7 +106,7 @@ class Dimension(object):
             else:
                 capitalise = True
 
-            return get_label(self.quantity, pc.quantities_label, capitalise)
+            return get_label(self.quantity, constants.quantities_label, capitalise)
 
         else:
             return ""
@@ -115,7 +115,7 @@ class Dimension(object):
         """Get the unit label"""
 
         if self.unit:
-            return get_label(self.unit, pc.units_label, False)
+            return get_label(self.unit, constants.units_label, False)
         else:
             return ""
 
@@ -275,9 +275,9 @@ class SignalData(object):
         :param point: 'max', 'min'"""
 
         if point == "min":
-            method, quantity = "argmin", pc.min_qt
+            method, quantity = "argmin", constants.min_qt
         else:
-            method, quantity = "argmax", pc.max_qt
+            method, quantity = "argmax", constants.max_qt
         index = getattr(self.y.data, method)()
 
         # Point dimensions
@@ -302,12 +302,12 @@ class SignalData(object):
         M = self.get_max()
         m = self.get_min()
         if abs(M[1].data) < abs(m[1].data):  # accessing data avoid pycharm from highlighting error
-            x_ext = m[0](quantity=m[0].quantity.replace(pc.min_qt, "extremum"))
-            y_ext = m[1](quantity=m[1].quantity.replace(pc.min_qt, "extremum"))
+            x_ext = m[0](quantity=m[0].quantity.replace(constants.min_qt, "extremum"))
+            y_ext = m[1](quantity=m[1].quantity.replace(constants.min_qt, "extremum"))
             i_ext = m[2]
         else:
-            x_ext = M[0](quantity=M[0].quantity.replace(pc.max_qt, "extremum"))
-            y_ext = M[1](quantity=M[1].quantity.replace(pc.max_qt, "extremum"))
+            x_ext = M[0](quantity=M[0].quantity.replace(constants.max_qt, "extremum"))
+            y_ext = M[1](quantity=M[1].quantity.replace(constants.max_qt, "extremum"))
             i_ext = M[2]
 
         return x_ext, y_ext, i_ext
@@ -336,7 +336,7 @@ class SignalData(object):
             fwhm = 0
 
         return (
-            self.x(data=np.abs(fwhm), quantity=pc.fwhm_qt),
+            self.x(data=np.abs(fwhm), quantity=constants.fwhm_qt),
             self.x(data=x_left),
             self.y(data=y_left),
             self.x(data=x_right),

@@ -9,9 +9,9 @@ import lxml.etree as etree
 import numpy as np
 from renishawWiRE import WDFReader
 
-import core.constants as pc
-from core.signal import SignalData, Dimension
-from core.utils import grep, get_data_index, stringlist_to_matrix, sort_lists, get_header_as_dicts
+import constants
+from signal_data import SignalData, Dimension
+from utils import grep, get_data_index, stringlist_to_matrix, sort_lists, get_header_as_dicts
 
 
 def get_uvvis_dimension(
@@ -23,11 +23,11 @@ def get_uvvis_dimension(
     :param mode: any string containing T, R or A"""
 
     if "T" in mode:
-        return Dimension(data, pc.transmittance_qt, pc.percent_unit)
+        return Dimension(data, constants.transmittance_qt, constants.percent_unit)
     elif "R" in mode:
-        return Dimension(data, pc.reflectance_qt, pc.percent_unit)
+        return Dimension(data, constants.reflectance_qt, constants.percent_unit)
     elif "A" in mode:
-        return Dimension(data, pc.absorbance_qt)
+        return Dimension(data, constants.absorbance_qt)
     else:
         return Dimension(data)
 
@@ -66,8 +66,8 @@ def BeamproFile(filename: str) -> dict[str, SignalData]:
     content, name = read_datafile(filename)
     if content[0] not in ("BeamPro 3.0 Crosshair file", "Beamage Crosshair file"):
         raise AssertionError()  # pragma: no cover
-    x_quantity, x_unit = pc.distance_qt, pc.micrometer_unit
-    y_quantity, y_unit = pc.intensity_qt, pc.au_unit
+    x_quantity, x_unit = constants.distance_qt, constants.micrometer_unit
+    y_quantity, y_unit = constants.intensity_qt, constants.au_unit
     data_index = get_data_index(content)
     if data_index != 5:
         raise AssertionError()  # pragma: no cover
@@ -92,14 +92,14 @@ def DektakFile(filename: str) -> SignalData | None:
     if not isinstance(data_index, int):
         raise AssertionError()  # pragma: no cover
     x_data, y_data = stringlist_to_matrix(content[data_index + 2 : -2], ",")[:2]
-    x = Dimension(x_data, pc.horizontal_distance_qt, pc.micrometer_unit)
-    y = Dimension(y_data, pc.vertical_distance_qt, pc.micrometer_unit)
+    x = Dimension(x_data, constants.horizontal_distance_qt, constants.micrometer_unit)
+    y = Dimension(y_data, constants.vertical_distance_qt, constants.micrometer_unit)
 
     # Timestamp
     date_str = grep(content, "Date,", 0)
     date_format = "%m/%d/%y %H:%M:%S"
     date = dt.datetime.strptime(date_str, date_format)
-    z_dict = {pc.timestamp_id: Dimension(date, pc.time_qt)}
+    z_dict = {constants.timestamp_id: Dimension(date, constants.time_qt)}
 
     return SignalData(x, y, name, z_dict=z_dict)
 
@@ -123,14 +123,14 @@ def read_brml_rawdata_file(
 
     # Data type
     dtype = root.findall("DataRoutes/DataRoute/ScanInformation")[0].get("VisibleName")
-    x_quantity = pc.two_theta_qt
+    x_quantity = constants.two_theta_qt
     if dtype == "Coupled TwoTheta/Theta":
         x_data, theta, y_data = data[2:]
     elif dtype == "TwoTheta":
         x_data, y_data = data[2:]
     elif dtype == "Rocking":
         x_data, y_data = data[2:]
-        x_quantity = pc.theta_qt
+        x_quantity = constants.theta_qt
     elif dtype == "PSD fixed":
         y_data = np.transpose(data)[0][:-1]  # for unknown reason, y_data is 1 element longer than x_data
         x0 = float(root.findall("DataRoutes/DataRoute/ScanInformation/ScanAxes/ScanAxisInfo/Start")[0].text)
@@ -140,25 +140,25 @@ def read_brml_rawdata_file(
     else:
         raise AssertionError("Unknown data type")  # pragma: no cover
 
-    x = Dimension(x_data, x_quantity, pc.deg_unit)
-    y = Dimension(y_data, pc.intensity_qt, pc.counts_unit)
+    x = Dimension(x_data, x_quantity, constants.deg_unit)
+    y = Dimension(y_data, constants.intensity_qt, constants.counts_unit)
 
     # TimeStamp
     date_str = root.findall("TimeStampStarted")[0].text
     date_format = "%Y-%m-%dT%H:%M:%S.%f"
     date = dt.datetime.strptime(date_str[:-7], date_format)  # only keep 6 digits and remove the UTC
-    z_dict[pc.timestamp_id] = Dimension(date, pc.time_qt)
+    z_dict[constants.timestamp_id] = Dimension(date, constants.time_qt)
 
     # Integration time
     inttime_str = root.findall("DataRoutes/DataRoute/ScanInformation/TimePerStep")[0].text
-    z_dict[pc.int_time_id] = Dimension(float(inttime_str), pc.time_qt, pc.second_unit)
+    z_dict[constants.int_time_id] = Dimension(float(inttime_str), constants.time_qt, constants.second_unit)
 
     # X-rays wavelength
     wl_el = root.findall(
         "FixedInformation/Instrument/PrimaryTracks/TrackInfoData/MountedOptics/InfoData/Tube/WaveLengthAverage"
     )[0]
     wl_str = wl_el.get("Value")  # wavelength in angstrom
-    z_dict[pc.wl_id] = Dimension(float(wl_str), pc.wavelength_qt, pc.angstrom_unit)
+    z_dict[constants.wl_id] = Dimension(float(wl_str), constants.wavelength_qt, constants.angstrom_unit)
 
     # Measure time
     meas_time_str = root.findall("TimeStampFinished")[0].text
@@ -167,7 +167,7 @@ def read_brml_rawdata_file(
         measure_time = (end_time - date).total_seconds()
     except ValueError:
         measure_time = 0.0
-    z_dict[pc.measure_time_id] = Dimension(measure_time, pc.time_qt, pc.second_unit)
+    z_dict[constants.measure_time_id] = Dimension(measure_time, constants.time_qt, constants.second_unit)
 
     # Position
     xml_drives = root.findall("FixedInformation/Drives/InfoData")
@@ -211,19 +211,19 @@ def EasyLogFile(filename: str) -> dict[str, SignalData]:
     date_format = "%Y-%m-%d %H:%M:%S"
     measure_time = [dt.datetime.strptime(f[1], date_format) for f in data_str]
     x_data = np.array([(f - min(measure_time)).total_seconds() for f in measure_time])
-    x = Dimension(x_data, pc.time_qt, pc.second_unit)
+    x = Dimension(x_data, constants.time_qt, constants.second_unit)
 
     # First measurement as Timestamp
-    z_dict = {pc.timestamp_id: Dimension(measure_time[0], pc.time_qt)}
+    z_dict = {constants.timestamp_id: Dimension(measure_time[0], constants.time_qt)}
 
     # Y dimension (temperature)
     y_temp_data = np.array([float(f[2]) for f in data_str])
-    y_temp = Dimension(y_temp_data, pc.temperature_qt, pc.celsius_unit)
+    y_temp = Dimension(y_temp_data, constants.temperature_qt, constants.celsius_unit)
     temperature = SignalData(x, y_temp, name, "Temperature", z_dict.copy())
 
     # Y dimension (humidity)
     y_hum_data = np.array([float(f[3]) for f in data_str])
-    y_hum = Dimension(y_hum_data, pc.humidity_qt, pc.percent_unit)
+    y_hum = Dimension(y_hum_data, constants.humidity_qt, constants.percent_unit)
     humidity = SignalData(x, y_hum, name, "Humidity", z_dict.copy())
 
     return {"Temperature": temperature, "Humidity": humidity}
@@ -265,13 +265,13 @@ def EdinstFile(
     # X dimension
     measure_type = headers[0]["Type"]
     if "Emission Scan" in measure_type or "Excitation Scan" in measure_type:
-        x_quantity, x_unit = pc.wavelength_qt, pc.nm_unit
+        x_quantity, x_unit = constants.wavelength_qt, constants.nm_unit
     elif "Time Scan" in measure_type:
-        x_quantity, x_unit = pc.time_qt, grep(content, "Time(", 0, ")")
+        x_quantity, x_unit = constants.time_qt, grep(content, "Time(", 0, ")")
         if x_unit is None:
-            x_unit = pc.nanosecond_unit  # assume ns
+            x_unit = constants.nanosecond_unit  # assume ns
     elif "Synchronous Scan" in measure_type:
-        x_quantity, x_unit = pc.wavelength_qt, pc.nm_unit
+        x_quantity, x_unit = constants.wavelength_qt, constants.nm_unit
     else:
         raise AssertionError("Unknown scan type")  # pragma: no cover
     x = Dimension(x_data, x_quantity, x_unit)
@@ -283,10 +283,10 @@ def EdinstFile(
     else:
         yaxis = headers[0]["YAxis"]
     if "Absorbance" in yaxis:
-        y_quantity, y_unit = pc.absorptance_qt, pc.percent_unit
+        y_quantity, y_unit = constants.absorptance_qt, constants.percent_unit
         ys_data *= 100
     elif "Counts" in yaxis:
-        y_quantity, y_unit = pc.intensity_qt, pc.counts_unit
+        y_quantity, y_unit = constants.intensity_qt, constants.counts_unit
     else:
         raise AssertionError("Unknown y axis")  # pragma: no cover
 
@@ -330,12 +330,12 @@ def FluorEssenceFile(filename: str) -> list[SignalData] | dict[str, SignalData]:
         data = stringlist_to_matrix(content[index_header:])[1:]  # first column is ignored
 
         # X dimension
-        x = Dimension(data[0], pc.wavelength_qt, headers[0]["Units"])
+        x = Dimension(data[0], constants.wavelength_qt, headers[0]["Units"])
 
         # ys
         ys_data = data[1:]
         ys_headers = headers[1:]
-        y_quantity = pc.intensity_qt
+        y_quantity = constants.intensity_qt
         ys_unit = [header["Units"] for header in ys_headers]
 
         # Data type
@@ -343,15 +343,15 @@ def FluorEssenceFile(filename: str) -> list[SignalData] | dict[str, SignalData]:
             float(headers[1]["Long Name"])  # check if the Long Name is a float or int
             for header in ys_headers:
                 wl = float(header["Long Name"])
-                header[pc.pyda_id + pc.exc_wl_id] = Dimension(wl, pc.exc_wavelength_qt, pc.nm_unit)
-            names = [header["Long Name"] + " " + pc.nm_unit for header in ys_headers]
+                header[constants.pyda_id + constants.exc_wl_id] = Dimension(wl, constants.exc_wavelength_qt, constants.nm_unit)
+            names = [header["Long Name"] + " " + constants.nm_unit for header in ys_headers]
 
         except ValueError:  # Timelapse
             date_format = "%m/%d/%Y %H:%M:%S"
             for header in ys_headers:
                 date = dt.datetime.strptime(header["TimeStamp"], date_format)
-                header[pc.pyda_id + pc.timestamp_id] = Dimension(date, pc.time_qt)
-            names = [str(header[pc.timestamp_id]) for header in ys_headers]
+                header[constants.pyda_id + constants.timestamp_id] = Dimension(date, constants.time_qt)
+            names = [str(header[constants.timestamp_id]) for header in ys_headers]
 
         signals = []
         for y_data, y_unit, name_, y_dict in zip(ys_data, ys_unit, names, ys_headers):
@@ -370,9 +370,9 @@ def FluorEssenceFile(filename: str) -> list[SignalData] | dict[str, SignalData]:
         ys = {}
         for header, y_data in zip(headers, data):
             if header["Long Name"] == "Wavelength":
-                ys[header["Long Name"]] = Dimension(y_data, pc.wavelength_qt, header["Units"])
+                ys[header["Long Name"]] = Dimension(y_data, constants.wavelength_qt, header["Units"])
             else:
-                ys[header["Long Name"]] = Dimension(y_data, pc.intensity_qt, header["Units"])
+                ys[header["Long Name"]] = Dimension(y_data, constants.intensity_qt, header["Units"])
 
         signals = {}
         for key in ys:
@@ -398,12 +398,12 @@ def FlWinlabFile(filename: str) -> SignalData:
     if not isinstance(data_index, int):
         raise AssertionError()  # pragma: no cover
     x_data, y_data = stringlist_to_matrix(content[data_index + 1 : -2])
-    x = Dimension(x_data, pc.wavelength_qt, pc.nm_unit)
-    y = Dimension(y_data, pc.intensity_qt, pc.au_unit)
+    x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
+    y = Dimension(y_data, constants.intensity_qt, constants.au_unit)
 
     # Timestamp
     date = dt.datetime.strptime(content[3] + " " + content[4][:8], "%d/%m/%y %X")
-    z_dict = {pc.timestamp_id: Dimension(date, pc.time_qt)}
+    z_dict = {constants.timestamp_id: Dimension(date, constants.time_qt)}
 
     return SignalData(x, y, name, z_dict=z_dict)
 
@@ -434,7 +434,7 @@ def LambdaSpxFile(filename: str) -> SignalData:
     x_max = float(content[x_index + 2])  # highest x
     nb_points = int(content[x_index + 4])  # number of points measured
     x_data = np.linspace(x_min, x_max, nb_points)
-    x = Dimension(x_data, pc.wavelength_qt, pc.nm_unit)
+    x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
 
     # Timestamp
     date_format1 = "%m/%d/%Y %I:%M:%S %p"
@@ -444,8 +444,8 @@ def LambdaSpxFile(filename: str) -> SignalData:
     except ValueError:
         date = dt.datetime.strptime(content[16], date_format1)
     z_dict = {
-        pc.timestamp_id: Dimension(date, pc.time_qt),
-        pc.scan_speed_id: Dimension(float(content[62]), pc.speed_qt, pc.nm_min_unit),
+        constants.timestamp_id: Dimension(date, constants.time_qt),
+        constants.scan_speed_id: Dimension(float(content[62]), constants.speed_qt, constants.nm_min_unit),
     }
 
     return SignalData(x, y, name, z_dict=z_dict)
@@ -465,7 +465,7 @@ def ProDataSignal(filename: str) -> dict[str, list[SignalData]]:
     date_format = "%a %b %d %X %Y"
     date_str = grep(content, "Time Stamp :", 0)
     date = dt.datetime.strptime(date_str, date_format)
-    z_dict = {pc.timestamp_id: Dimension(date, pc.time_qt)}
+    z_dict = {constants.timestamp_id: Dimension(date, constants.time_qt)}
 
     nb_points = grep(content, "Time,", 0, "time points", "int")
 
@@ -479,18 +479,18 @@ def ProDataSignal(filename: str) -> dict[str, list[SignalData]]:
     data = stringlist_to_matrix(data_raw, delimiter)
 
     # X dimension
-    x = Dimension(data[0], pc.time_qt, pc.second_unit)
+    x = Dimension(data[0], constants.time_qt, constants.second_unit)
 
     # Y dimension
     ys_data = data[1:]
     data_type = content[data_index - 4]
 
     if data_type == "Rel_Absorbance":
-        y_quantity, y_unit = pc.rel_abs_qt, pc.none_unit
+        y_quantity, y_unit = constants.rel_abs_qt, constants.none_unit
     elif data_type == "Emission":
-        y_quantity, y_unit = pc.intensity_qt, pc.counts_unit
+        y_quantity, y_unit = constants.intensity_qt, constants.counts_unit
     else:
-        y_quantity, y_unit = pc.unknown_qt, pc.none_unit
+        y_quantity, y_unit = constants.unknown_qt, constants.none_unit
 
     # Check if any array is all zeros
     nonzero_indices = [i for i in range(len(ys_data)) if np.any(ys_data[i])]
@@ -502,11 +502,11 @@ def ProDataSignal(filename: str) -> dict[str, list[SignalData]]:
     z_data = z_data[nonzero_indices]
 
     if z_type == "Repeat":
-        z_quantity, z_unit = pc.repeats_qt, pc.none_unit
+        z_quantity, z_unit = constants.repeats_qt, constants.none_unit
     elif z_type == "Wavelength":
-        z_quantity, z_unit = pc.em_wavelength_qt, pc.nm_unit
+        z_quantity, z_unit = constants.em_wavelength_qt, constants.nm_unit
     else:
-        z_quantity, z_unit = pc.unknown_qt, pc.none_unit
+        z_quantity, z_unit = constants.unknown_qt, constants.none_unit
 
     z = Dimension(z_data, z_quantity, z_unit)
 
@@ -550,16 +550,16 @@ def ProDataSignal(filename: str) -> dict[str, list[SignalData]]:
 
         if otb_data is not None:
             otb_signals.append(
-                SignalData(x, Dimension(otb_data[i], pc.intensity_qt, pc.volt_unit), name, shortname, z_dict)
+                SignalData(x, Dimension(otb_data[i], constants.intensity_qt, constants.volt_unit), name, shortname, z_dict)
             )
 
         if huntb_data is not None:
             huntb_signals.append(
-                SignalData(x, Dimension(huntb_data[i], pc.intensity_qt, pc.volt_unit), name, shortname, z_dict)
+                SignalData(x, Dimension(huntb_data[i], constants.intensity_qt, constants.volt_unit), name, shortname, z_dict)
             )
 
         if rawabs_data is not None:
-            rawabs_signals.append(SignalData(x, Dimension(rawabs_data[i], pc.absorbance_qt), name, shortname, z_dict))
+            rawabs_signals.append(SignalData(x, Dimension(rawabs_data[i], constants.absorbance_qt), name, shortname, z_dict))
 
     data = {
         "dT/T": signals,
@@ -610,8 +610,8 @@ def SbtpsSeqFile(filename: str) -> dict[str, list[SignalData]]:
         sweep_indexes = np.arange(index_start + 1, index_end)
         sweeps = [data_header[i].replace(" (mA/cm\xb2)", "") for i in sweep_indexes]
         s_data = sort_lists(data[index_start:index_end], 0)
-        x = Dimension(s_data[0], pc.voltage_qt, pc.volt_unit)
-        ys = [Dimension(y_data, pc.current_density_qt, pc.ma_cm2_unit) for y_data in s_data[1:]]
+        x = Dimension(s_data[0], constants.voltage_qt, constants.volt_unit)
+        ys = [Dimension(y_data, constants.current_density_qt, constants.ma_cm2_unit) for y_data in s_data[1:]]
         return [SignalData(x, y, name, "%s (%s)" % (sname, s)) for s, y in zip(sweeps, ys)]
 
     # Forward scan
@@ -647,13 +647,13 @@ def SbtpsIvFile(filename: str) -> dict[str, SignalData]:
     data = stringlist_to_matrix(content[data_index + 1 :])
     x_data, y_data_cd, y_data_c, y_data_p, y_data_t = sort_lists(data, 0)
 
-    x = Dimension(x_data, pc.voltage_qt, pc.volt_unit)
+    x = Dimension(x_data, constants.voltage_qt, constants.volt_unit)
     current_density = SignalData(
-        x, Dimension(y_data_cd, pc.current_density_qt, pc.ma_cm2_unit), name, "Current density"
+        x, Dimension(y_data_cd, constants.current_density_qt, constants.ma_cm2_unit), name, "Current density"
     )
-    current = SignalData(x, Dimension(y_data_c, pc.current_qt, pc.ma_unit), name, "Current")
-    power = SignalData(x, Dimension(y_data_p, pc.power_qt, pc.mw_unit), name, "Power")
-    time = SignalData(x, Dimension(y_data_t, pc.time_qt, pc.second_unit), name, "Time")
+    current = SignalData(x, Dimension(y_data_c, constants.current_qt, constants.ma_unit), name, "Current")
+    power = SignalData(x, Dimension(y_data_p, constants.power_qt, constants.mw_unit), name, "Power")
+    time = SignalData(x, Dimension(y_data_t, constants.time_qt, constants.second_unit), name, "Time")
 
     return {"Current density": current_density, "Current": current, "Power": power, "Time": time}
 
@@ -703,8 +703,8 @@ def SpectraSuiteFile(filename: str) -> SignalData:
 
     # Data
     x_data, y_data = stringlist_to_matrix(content[17:-1])
-    x = Dimension(x_data, pc.wavelength_qt, pc.nm_unit)
-    y = Dimension(y_data, pc.intensity_qt, pc.counts_unit)
+    x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
+    y = Dimension(y_data, constants.intensity_qt, constants.counts_unit)
 
     # Timestamp
     date_str = content[2][6:]
@@ -714,11 +714,11 @@ def SpectraSuiteFile(filename: str) -> SignalData:
     date = dt.datetime.strptime(date_str, date_format)
     if "BST" in date_str:
         date -= dt.timedelta(seconds=3600)
-    z_dict = {pc.timestamp_id: Dimension(date, pc.time_qt)}
+    z_dict = {constants.timestamp_id: Dimension(date, constants.time_qt)}
 
     # Integration time
     int_time = grep(content, "Integration Time (usec):", 0, "(", "float")
-    z_dict[pc.int_time_id] = Dimension(int_time / 1e6, pc.time_qt, pc.second_unit)
+    z_dict[constants.int_time_id] = Dimension(int_time / 1e6, constants.time_qt, constants.second_unit)
 
     return SignalData(x, y, name, z_dict=z_dict)
 
@@ -748,9 +748,9 @@ def PerkinElmerFile(filename: str) -> SignalData | list[SignalData]:
 
         # X dimension
         if x_q == "cm-1":
-            x = Dimension(x_data, pc.wavenumber_qt, pc.cm_1_unit)
+            x = Dimension(x_data, constants.wavenumber_qt, constants.cm_1_unit)
         elif x_q == "nm":
-            x = Dimension(x_data, pc.wavelength_qt, pc.nm_unit)
+            x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
         else:
             x = Dimension(x_data, x_q)
 
@@ -763,9 +763,9 @@ def PerkinElmerFile(filename: str) -> SignalData | list[SignalData]:
 
         # X dimension
         if content[index - 1] == '"Wavenumber"':
-            x = Dimension(x_data, pc.wavenumber_qt, pc.cm_1_unit)
+            x = Dimension(x_data, constants.wavenumber_qt, constants.cm_1_unit)
         elif content[index - 1] == '"Wavelength"':
-            x = Dimension(x_data, pc.wavelength_qt, pc.nm_unit)
+            x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
         else:
             x = Dimension(x_data, content[5])
 
@@ -785,12 +785,12 @@ def UVWinLabASCII(filename: str) -> SignalData:
     if not isinstance(data_index, int):
         raise AssertionError()  # pragma: no cover
     data = stringlist_to_matrix(content[data_index + 1 :])[:, ::-1]
-    x = Dimension(data[0], pc.wavelength_qt, pc.nm_unit)
+    x = Dimension(data[0], constants.wavelength_qt, constants.nm_unit)
     y = get_uvvis_dimension(data[1], content[80])
 
     # Date
     date = dt.datetime.strptime(content[3] + " " + content[4][:-3], "%d/%m/%y %H:%M:%S")
-    z_dict = {pc.timestamp_id: Dimension(date, pc.time_qt)}
+    z_dict = {constants.timestamp_id: Dimension(date, constants.time_qt)}
 
     return SignalData(x, y, name, z_dict=z_dict)
 
@@ -804,8 +804,8 @@ def VestaDiffractionFile(filename: str) -> SignalData:
 
     content, name = read_datafile(filename)
     x_data, y_data = stringlist_to_matrix(content)[:2]
-    x = Dimension(x_data, pc.two_theta_qt, pc.deg_unit)
-    y = Dimension(y_data, pc.intensity_qt, pc.au_unit)
+    x = Dimension(x_data, constants.two_theta_qt, constants.deg_unit)
+    y = Dimension(y_data, constants.intensity_qt, constants.au_unit)
     return SignalData(x, y, name)
 
 
@@ -824,10 +824,10 @@ def WireFile(filename: str | BytesIO) -> SignalData:
     reader = WDFReader(filename)
     x_data, y_data = np.array(reader.xdata[::-1], dtype=float), np.array(reader.spectra[::-1], dtype=float)
     if reader.xlist_unit.name == "RamanShift":
-        x = Dimension(x_data, pc.wavenumber_qt, pc.cm_1_unit)
+        x = Dimension(x_data, constants.wavenumber_qt, constants.cm_1_unit)
     else:
-        x = Dimension(x_data, pc.wavelength_qt, pc.nm_unit)
-    y = Dimension(y_data, pc.intensity_qt)
+        x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
+    y = Dimension(y_data, constants.intensity_qt)
     return SignalData(x, y, reader.title)
 
 

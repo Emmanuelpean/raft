@@ -7,7 +7,7 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.subplots as ps
 
-from core.signal import SignalData
+from signal_data import SignalData
 
 
 def subplots(

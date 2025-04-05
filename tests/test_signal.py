@@ -10,7 +10,7 @@ robustness of the functions."""
 import plotly.subplots as ps
 import pytest
 
-from core.signal import *
+from core.signal_data import *
 from core.utils import are_close, are_identical
 
 

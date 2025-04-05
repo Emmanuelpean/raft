@@ -10,7 +10,7 @@ robustness of the functions."""
 import pytest
 
 from core.plot import *
-from core.signal import Dimension
+from core.signal_data import Dimension
 
 
 class TestSubplots:
