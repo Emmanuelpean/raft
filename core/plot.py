@@ -1,37 +1,49 @@
 """ plot module """
 
+import itertools
+import math
+
+import numpy as np
 import plotly.graph_objects as go
 import plotly.subplots as ps
 
-import numpy as np
-import math
-import itertools
+from core.signal import SignalData
 
 
-def subplots(n, m=None, **kwargs):
-    """ Create n subplots
-    :param int n: number of subplots
-    :param None, int m: if int, maximum number of columns
-    :param kwargs: keyword arguments passed to plotly.subplots.make_subplots
-
-    Example
-    -------
-    >>> subplots(3)[1]
-    [(1, 1), (2, 1), (3, 1)]
-    >>> subplots(9, 2)[1]
-    [(1, 1), (1, 2), (2, 1), (2, 2), (3, 1), (3, 2), (4, 1), (4, 2), (5, 1)]"""
+def subplots(
+        n: int,
+        m: int | None = None,
+        **kwargs,
+) -> tuple[go.Figure, list[tuple[int, int]]]:
+    """Create n subplots
+    :param n: number of subplots
+    :param m: if int, maximum number of columns
+    :param kwargs: keyword arguments passed to plotly.subplots.make_subplots"""
 
     nb_cols = int(np.sqrt(n))
     if isinstance(m, int) and nb_cols > m:
         nb_cols = m
     nb_rows = int(math.ceil(n / nb_cols))
     positions = list(itertools.product(range(1, nb_rows + 1), range(1, nb_cols + 1)))[:n]
-    # noinspection PyArgumentList
     return ps.make_subplots(rows=nb_rows, cols=nb_cols, **kwargs), positions
 
 
-def plot(signals, position=None, figure=None, *args, **kwargs):
-    """ Plot signals """
+def plot(signals: dict[str, list[SignalData]] | dict[str, SignalData] | list[SignalData] | SignalData,
+         position: list | None = None,
+         figure: go.Figure | None = None,
+         *args,
+         **kwargs):
+    """Plot signals in a Plotly figure.
+    :param signals: Signal data to plot. Can be:
+            - A single SignalData object
+            - A list of SignalData objects (plotted in the same subplot)
+            - A dictionary of signal names mapping to SignalData objects or lists of SignalData objects
+              (each key will be plotted in its own subplot)
+    :param position: Position in the figure to plot at, format [row, col]. If None and
+        plotting a single signal or list, plots in the main figure.
+    :param figure: Existing figure to plot on. If None, creates a new figure.
+    :param args: Additional positional arguments passed to the SignalData.plot method
+    :param kwargs: Additional keyword arguments passed to the SignalData.plot method"""
 
     # Dict: data type is different, plot in multiple subplots
     if isinstance(signals, dict):
@@ -54,8 +66,3 @@ def plot(signals, position=None, figure=None, *args, **kwargs):
 
     figure.update_layout(height=800)
     return figure
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()

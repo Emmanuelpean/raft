@@ -1,378 +1,382 @@
-import numpy as np
+"""This module contains classes and functions for handling, analyzing, and plotting 2D signal data. It provides tools for:
+- Defining and managing physical quantities and their units with the `Dimension` class.
+- Storing signal data as `SignalData` objects, which hold associated x and y dimensions (data, quantity, and unit).
+- Plotting signal data using Plotly.
+- Calculating signal properties such as extrema, Full Width at Half Maximum (FWHM), and half-intensity points.
+- Smoothing and reducing the range of signal data.
+- Interpolating signal data for more accurate results.
+
+Key Components:
+---------------
+1. **Dimension Class**: Represents a physical dimension (e.g., time, intensity, etc.) associated with data values,
+quantities, and units. It includes methods to generate formatted labels for displaying data.
+2. **SignalData Class**: Represents a 2D signal with associated x and y `Dimension` objects. This class includes
+methods for data manipulation (e.g., smoothing, range reduction), calculating extrema, and plotting.
+3. **get_label Function**: Converts a string to a formatted html label suitable for use with plotly."""
+
+from __future__ import annotations
+
 import re
+
+import numpy as np
 import plotly.graph_objects as go
-import core.utils as utils
 import scipy.signal as ss
+
 import core.constants as pc
-np.set_printoptions(threshold=7)
+from core.utils import merge_dicts, interpolate_point
 
 
-def get_label(string, dictionary, capitalize=True):
-    """ Create a label from a string to display it with matplotlib
-    :param str string: string
+def get_label(
+    string: str,
+    dictionary: dict[str, str],
+    capitalize: bool = True,
+) -> str:
+    """Create a label from a string to display it with matplotlib
+    :param string: string
     :param dictionary: dictionary containing conversion for specific strings
-    :param bool capitalize: if True, try to capitalize the label
-    :return: str
-    Note: The string should not contain the symbol '?'
+    :param capitalize: if True, try to capitalize the label
+    Note: The string should not contain the symbol '?'"""
 
-    Examples
-    --------
-    >>> print(get_label('sub_sub^1 max. wavelength^2 sup^sup1 sup^{-3}', pc.quantities_label))
-    Sub<sub>sub<\sub>^1 λ_{max}^2 sup^sup1 sup^{-3}
+    if "?" in string:
+        raise AssertionError("? should not be in the string")
 
-    >>> print(get_label('int. max. max. wavelength^2', pc.quantities_label))
-    Int. max. λ_{max}^2
-
-    >>> print(get_label('taureau', {'rap': r'\tau', 'taureau': 't|rap'}, False))
-    t rap
-
-    >>> print(get_label('test mum_test^2', pc.units_label, False))
-    test mum<sub>test<\sub>^2"""
-
-    label = ' ' + string + ' '  # initialise the label
+    label = " " + string + " "  # initialise the label
 
     # Replace the strings that have a dictionary entry only if they start and end with a white space or _ or ^
-    for item in sorted(dictionary.keys(), key=lambda a: - len(a)):
-        condition_start = any(x + item in label for x in [' ', '_', '^'])
-        condition_end = any(item + x in label for x in [' ', '_', '^'])
+    for item in sorted(dictionary.keys(), key=lambda a: -len(a)):
+        condition_start = any(x + item in label for x in [" ", "_", "^"])
+        condition_end = any(item + x in label for x in [" ", "_", "^"])
         if condition_start and condition_end:
-            label = label.replace(item, '?' + dictionary[item])
+            label = label.replace(item, "?" + dictionary[item])
 
     # Superscripts
-    label = re.sub(r'\^([0-9a-zA-Z+-]+)', r'<sup>\1</sup>', label)
+    label = re.sub(r"\^([0-9a-zA-Z+-]+)", r"<sup>\1</sup>", label)
 
     # Subscripts
-    label = re.sub(r'_([0-9a-zA-Z+-]+)', r'<sub>\1</sub>', label)
+    label = re.sub(r"_([0-9a-zA-Z+-]+)", r"<sub>\1</sub>", label)
 
     # Remove whitespaces
     label = label.strip()
 
     # Capitalize
-    if label[0] != '?' and capitalize and len(label.split('_')[0]) > 1:
+    if label[0] != "?" and capitalize and len(label.split("_")[0]) > 1:
         label = label[0].capitalize() + label[1:]
 
-    label = label.replace('?', '')
-    label = label.replace('|', ' ')
+    label = label.replace("?", "")
+    label = label.replace("|", " ")
 
     return label
 
 
 class Dimension(object):
-    """ Dimension class
+    """A Dimension corresponds to a 0D or 1D data associated with a physical quantity and unit"""
 
-    Examples
-    --------
-    >>> dimension_B = Dimension([1, 2, 3])
-    >>> dimension_C = Dimension(1)
-    >>> dimension_D = Dimension(None)"""
-
-    ARGKEYS = ('data', 'quantity', 'unit')
-
-    def __init__(self, data, quantity='', unit=''):
-        """ Object initialisation
+    def __init__(
+        self,
+        data: any,
+        quantity: str = "",
+        unit: str = "",
+    ) -> None:
+        """Object initialisation
         :param data: value or np.ndarray of values
-        :param str quantity: quantity
-        :param str unit: unit """
+        :param quantity: quantity associated with the data
+        :param unit: unit associated with the data"""
 
-        if not isinstance(data, np.ndarray):
-            self.data = np.array([data])
-        else:
-            self.data = data
+        self.data = data
         self.quantity = quantity
         self.unit = unit
 
-    @property
-    def kwargs(self):
-        """ Return the keyword arguments of the Dimension """
+    def __call__(self, *args: object, **kwargs: object) -> Dimension:
+        """Return a Dimension object with the same parameter as this one, but overridden with args and kwargs.
+        :param args: arguments passed to the constructor in order
+        :param kwargs: keyword arguments passed to the constructor"""
 
-        return dict(data=self.data, quantity=self.quantity, unit=self.unit)
+        args = dict(zip(("data", "quantity", "unit"), args))
+        input_kwargs = dict(data=self.data, quantity=self.quantity, unit=self.unit)
+        return Dimension(**merge_dicts(args, kwargs, input_kwargs))
 
-    def __call__(self, *args, **kwargs):
-        """ __call__
-        NOTE: THIS IS 3 TIMES SLOWER THAN CALLING DIMENSION CLASS
-
-        Examples
-        --------
-        >>> = dimension3 = Dimension([-1., 1., 2., 3., 3.5], 'quantity', 'unit')
-
-        >>> dimension3([1, 3], unit='unit2')
-        Dimension([1 3], quantity, unit2)
-
-        >>> dimension3([1, 3], data=[1, 4], unit='unit2')
-        Dimension([1 3], quantity, unit2)"""
-
-        args = dict(zip(self.ARGKEYS, args))
-        return Dimension(**utils.merge_dicts(args, kwargs, self.kwargs))
-
-    def get_quantity_label(self):
-        """ Get the quantity label """
+    def get_quantity_label_html(self) -> str:
+        """Get the quantity label"""
 
         if self.quantity:
+            # If the label is only one alpha character
             if sum([c.isalpha() for c in self.quantity]) == 1:
                 capitalise = False
+
             else:
                 capitalise = True
 
             return get_label(self.quantity, pc.quantities_label, capitalise)
-        else:
-            return ''
 
-    def get_unit_label(self):
-        """ Get the unit label"""
+        else:
+            return ""
+
+    def get_unit_label_html(self) -> str:
+        """Get the unit label"""
 
         if self.unit:
             return get_label(self.unit, pc.units_label, False)
         else:
-            return ''
+            return ""
 
-    def get_axis_label_html(self):
-        """ Return the quantity and unit as a string
-
-        Example
-        -------
-        >>> Dimension([-1., 1., 2., 3., 3.5], 'quantity', 'unit').get_axis_label_html()
-        'Quantity (unit)'"""
+    def get_label_html(self) -> str:
+        """Return the quantity and unit as a string"""
 
         if self.unit:
-            return self.get_quantity_label() + ' (' + self.get_unit_label() + ')'
+            return self.get_quantity_label_html() + " (" + self.get_unit_label_html() + ")"
         else:
-            return self.get_quantity_label()
+            return self.get_quantity_label_html()
 
-    def get_value_label_html(self):
-        """ Return the value label for display
+    def get_value_label_html(self) -> str:
+        """Return the value label for display"""
 
-        Example
-        -------
-        >>> Dimension([-1., 1., 2., 3., 3.5], 'quantity', 'unit').get_value_label_html()
-        'Quantity: -1 unit'"""
+        return f"{self.get_quantity_label_html()}: {self.data:g} {self.get_unit_label_html()}"
 
-        return self.get_quantity_label() + ': ' + '%g' % self.data[0] + ' ' + self.get_unit_label()
-
-    def get_label(self):
-        """ Get a simple label of the dimension """
+    def get_label_raw(self) -> str:
+        """Get a simple label of the dimension"""
 
         if self.unit:
-            return f'{self.quantity} ({self.unit})'
+            return f"{self.quantity} ({self.unit})"
         else:
             return self.quantity
 
-    def get_value_label(self):
-
-        return self.quantity + ': ' + '%g' % self.data[0] + ' ' + self.unit
-
-    def __repr__(self):
-        """ __repr__
-
-        Examples
-        --------
-        >>> Dimension(3.)
-        Dimension(3.0)
-
-        >>> Dimension(3., 'quantity', 'unit')
-        Dimension(3.0, quantity, unit)
-
-        >>> Dimension(np.array([1., 2., 3., 3.5]), '', 'unit')
-        Dimension([1.  2.  3.  3.5], unit)"""
+    def __repr__(self) -> str:
+        """__repr__ method"""
 
         # Data
-        string = 'Dimension(%s' % self.data
+        string = f"Dimension({self.data}"
 
         # Quantity, unit, name and z_dict
         if self.quantity:
-            string += ', %s' % self.quantity
+            string += f", {self.quantity}"
         if self.unit:
-            string += ', %s' % self.unit
+            string += f", {self.unit}"
 
-        return string + ')'
+        return string + ")"
 
 
 class SignalData(object):
+    """A SignalData object corresponds to 2 Dimension objects (X and Y), a name, a shortname, and a
+    dictionary for storing additional information"""
 
-    def __init__(self, x, y, name='', shortname='', z_dict=None):
-        """
-        :param Dimension x: x dimension
-        :param Dimension y: y dimension
-        :param str name: name
-        :param None, dict z_dict: information about the signal """
+    def __init__(
+        self,
+        x: Dimension,
+        y: Dimension,
+        name: str = "",
+        shortname: str = "",
+        z_dict: dict | None = None,
+    ) -> None:
+        """Initialise the object by storing the input arguments
+        :param x: x dimension
+        :param y: y dimension
+        :param name: name
+        :param shortname: secondary optional name
+        :param z_dict: additional optional information about the signal"""
 
         self.x = x
         self.y = y
         self.name = name
         self.shortname = shortname
-        self.longname = self.name + ': ' + shortname
         if z_dict is None:
             self.z_dict = {}
         else:
             self.z_dict = z_dict
 
-    def get_name(self, condition):
-        """ Get the name of the signal for display purpose """
+    def get_name(self, condition: bool) -> str:
+        """Get the name of the signal for display purpose"""
 
         if not self.shortname:
             return self.name
         if condition:
-            return self.longname
+            return self.name + ": " + self.shortname
         else:
             return self.shortname
 
-    def print(self):
-        """ Print the signal dimensions """
-
-        print(self.x)
-        print(self.y)
-
-    def plot(self, figure, position=None, condition=False):
-        """ Plot the signal data in a plotly figure
+    def plot(
+        self,
+        figure: go.Figure | None = None,
+        position: None | list | tuple = None,
+        condition: bool = False,
+    ) -> go.Figure:
+        """Plot the signal data in a plotly figure
         :param figure: plotly figure object
-        :param None, tuple, list position: subplot position
-        :param bool condition: argument passed to get_name """
+        :param position: subplot position
+        :param condition: argument passed to get_name"""
 
-        trace = go.Scatter(x=self.x.data, y=self.y.data, name=self.get_name(condition), showlegend=True)
+        if figure is None:
+            figure = go.Figure()
+
+        trace = go.Scatter(
+            x=self.x.data,
+            y=self.y.data,
+            name=self.get_name(condition),
+            showlegend=True,
+        )
 
         if position:
             kwargs = dict(row=position[0], col=position[1])
         else:
             kwargs = dict()
 
-        figure.add_trace(trace, **kwargs)
+        figure.add_trace(
+            trace,
+            **kwargs,
+        )
 
-        figure.update_xaxes(title_text=self.x.get_axis_label_html(), tickformat=',', **kwargs)
-        figure.update_yaxes(title_text=self.y.get_axis_label_html(), **kwargs)
+        figure.update_xaxes(
+            title_text=self.x.get_label_html(),
+            tickformat=",",
+            **kwargs,
+        )
+        figure.update_yaxes(
+            title_text=self.y.get_label_html(),
+            **kwargs,
+        )
 
-    def smooth(self, *args):
-        """ Smooth the y data """
+        return figure
 
-        # noinspection PyBroadException
+    # ---------------------------------------------- SIGNAL TRANSFORMATION ---------------------------------------------
+
+    def smooth(self, *args) -> SignalData:
+        """Smooth the y data
+        :param args: arguments passed to the scipy.signal savgol_filter function"""
+
         try:
             y = ss.savgol_filter(self.y.data, *args)
-            return SignalData(self.x, self.y(data=y), self.name, self.shortname + ' (smoothed)', self.z_dict)
+            return SignalData(
+                self.x,
+                self.y(data=y),
+                self.name,
+                self.shortname + " (smoothed)",
+                self.z_dict,
+            )
         except:
             return self
 
-    def reduce_range(self, xrange):
-        """ Reduce the x range """
+    def reduce_range(self, xrange: list[float | int] | tuple[float | int] | np.ndarray[float | int]) -> SignalData:
+        """Reduce the x-axis range
+        :param xrange: data range"""
 
         index1 = np.abs(self.x.data - xrange[0]).argmin()
         index2 = np.abs(self.x.data - xrange[1]).argmin()
-        return SignalData(self.x(data=self.x.data[index1: index2]), self.y(data=self.y.data[index1: index2]), self.name, self.shortname, self.z_dict)
+        return SignalData(
+            self.x(data=self.x.data[index1:index2]),
+            self.y(data=self.y.data[index1:index2]),
+            self.name,
+            self.shortname,
+            self.z_dict,
+        )
 
-    def get_max(self):
-        """ Get the maximum intensity signal """
+    # ------------------------------------------------- DATA EXTRACTION ------------------------------------------------
 
-        return get_point(self.x, self.y, 'max')
+    def _get_point(self, point: str) -> tuple[Dimension, Dimension, Dimension]:
+        """Get the extrema point of a signal
+        :param point: 'max', 'min'"""
 
-    def get_min(self):
-        """ Get the minimum intensity signal """
+        if point == "min":
+            method, quantity = "argmin", pc.min_qt
+        else:
+            method, quantity = "argmax", pc.max_qt
+        index = getattr(self.y.data, method)()
 
-        return get_point(self.x, self.y, 'min')
+        # Point dimensions
+        x_e = self.x(data=self.x.data[index], quantity=quantity + " " + self.x.quantity)
+        y_e = self.y(data=self.y.data[index], quantity=quantity + " " + self.y.quantity)
 
-    def get_extrema(self):
-        """ Get the extremum intensity signal """
+        return x_e, y_e, Dimension(index)
+
+    def get_max(self) -> tuple[Dimension, Dimension, Dimension]:
+        """Get the maximum intensity signal"""
+
+        return self._get_point("max")
+
+    def get_min(self) -> tuple[Dimension, Dimension, Dimension]:
+        """Get the minimum intensity signal"""
+
+        return self._get_point("min")
+
+    def get_extrema(self) -> tuple[Dimension, Dimension, Dimension]:
+        """Get the extremum intensity signal"""
 
         M = self.get_max()
         m = self.get_min()
         if abs(M[1].data) < abs(m[1].data):  # accessing data avoid pycharm from highlighting error
-            x_ext = m[0](quantity=m[0].quantity.replace(pc.min_qt, 'extremum'))
-            y_ext = m[1](quantity=m[1].quantity.replace(pc.min_qt, 'extremum'))
+            x_ext = m[0](quantity=m[0].quantity.replace(pc.min_qt, "extremum"))
+            y_ext = m[1](quantity=m[1].quantity.replace(pc.min_qt, "extremum"))
             i_ext = m[2]
         else:
-            x_ext = M[0](quantity=M[0].quantity.replace(pc.max_qt, 'extremum'))
-            y_ext = M[1](quantity=M[1].quantity.replace(pc.max_qt, 'extremum'))
+            x_ext = M[0](quantity=M[0].quantity.replace(pc.max_qt, "extremum"))
+            y_ext = M[1](quantity=M[1].quantity.replace(pc.max_qt, "extremum"))
             i_ext = M[2]
+
         return x_ext, y_ext, i_ext
 
-    def get_fwhm(self, interpolation=False):
-        """ Get the signal FWHM. Calculate the maximum point if not already stored """
+    def get_fwhm(self, interpolation: bool = False) -> tuple[Dimension, Dimension, Dimension, Dimension, Dimension]:
+        """Get the signal FWHM. Calculate the maximum point if not already stored"""
 
         x_ext, y_ext, i_ext = self.get_extrema()
+        m = i_ext.data
 
-        m = i_ext.data[0]
-        if m != len(self.y.data):
-            x_right, y_right = get_halfint_point(self.x.data[m:], self.y.data[m:], interpolation)
+        # Get the half-intensity on the right of the extremum
+        if m != len(self.y.data) - 1:
+            x_right, y_right = self.get_halfint_point(self.x.data[m:], self.y.data[m:], interpolation)
         else:
             x_right, y_right = None, None
 
+        # Get the half-intensity on the left of the extremum
         if m != 0:
-            x_left, y_left = get_halfint_point(self.x.data[:m + 1], self.y.data[:m + 1], interpolation)
+            x_left, y_left = self.get_halfint_point(self.x.data[: m + 1], self.y.data[: m + 1], interpolation)
         else:
             x_left, y_left = None, None
 
-        if x_left and x_right:
+        if x_left is not None and x_right is not None:
             fwhm = x_right - x_left
         else:
             fwhm = 0
 
-        return self.x(data=np.abs(fwhm), quantity=pc.fwhm_qt), self.x(data=x_left), self.y(data=y_left), self.x(data=x_right), self.y(data=y_right)
+        return (
+            self.x(data=np.abs(fwhm), quantity=pc.fwhm_qt),
+            self.x(data=x_left),
+            self.y(data=y_left),
+            self.x(data=x_right),
+            self.y(data=y_right),
+        )
 
+    def get_halfint_point(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        interpolation: bool = False,
+        halfint: float | None = None,
+    ) -> tuple[float, float]:
+        """Calculate the half intensity point
+        :param x: x data
+        :param y: y data
+        :param interpolation: if True, use interpolation to improve the calculation
+        :param halfint: optional half intensity. If not provided, calculate it through the x and y data"""
 
-def get_point(x, y, point):
-    """ Get the extrema point of a signal
-    :param Dimension x: x dimension
-    :param Dimension y: y dimension
-    :param str point: 'max', 'min'
+        # Calculate the half intensity
+        if not halfint:
+            y_min = np.min(y)
+            y_max = np.max(y)
 
-    Example
-    -------
-    >>> x1 = Dimension(np.arange(-10, 10, 0.32), 'X quantity', 'X unit')
-    >>> gaussian = lambda x_, height, mean, fwhm: height * np.exp(- (x_ - mean)**2 / (2 * (fwhm / (2 * np.sqrt(2 * np.log(2))))**2))
-    >>> y1 = Dimension(gaussian(x1.data, 10., 0., 3.), 'Y quantity', 'Y unit')
-    >>> print(*get_point(x1, y1, 'max'))
-    Dimension(-0.07999999999999119, max. X quantity, X unit) Dimension(9.98030323716376, max. Y quantity, Y unit) Dimension(31)"""
+            # Determine if the peak is upside down
+            if np.abs(y_min) > np.abs(y_max):
+                halfint = (y_min - y_max) / 2.0 + y_max
+            else:
+                halfint = (y_max - y_min) / 2.0 + y_min
 
-    if point == 'min':
-        method, quantity = 'argmin', pc.min_qt
-    else:
-        method, quantity = 'argmax', pc.max_qt
-    index = getattr(y.data, method)()
+        # Find the closest points to the half intensity
+        index = np.abs(y - halfint).argsort()[0]
 
-    # Point dimensions
-    x_e = x(data=x.data[index], quantity=quantity + ' ' + x.quantity)
-    y_e = y(data=y.data[index], quantity=quantity + ' ' + y.quantity)
+        # Interpolation
+        if interpolation:
+            try:
+                x_int, y_int = interpolate_point(x, y, index)
+                return self.get_halfint_point(x_int, y_int, False, halfint)
+            except IndexError:  # pragma: no cover
+                print("Interpolation failed")
+                pass
 
-    return x_e, y_e, Dimension(index)
-
-
-def get_halfint_point(x, y, interpolation=True, halfint=None):
-    """ Calculate the half intensity point
-    :param np.ndarray x: x dimension
-    :param np.ndarray y: y dimension
-    :param bool interpolation: if True, use interpolation to improve the calculation
-    :param None, float halfint: half intensity
-
-    Example
-    -------
-    >>> x1 = np.linspace(-1, 10, 101)[:19]
-    >>> gaussian = lambda x_, height, mean, fwhm: height * np.exp(- (x_ - mean)**2 / (2 * (fwhm / (2 * np.sqrt(2 * np.log(2))))**2))
-    >>> y1 = gaussian(x1, 10., 1, 3.)[:19]
-    >>> get_halfint_point(x1, y1)
-    (-0.22999999999999998, 6.27462002114742)"""
-
-    # Calculate the half intensity
-    if not halfint:
-        y_min = np.min(y)
-        y_max = np.max(y)
-
-        # Determine if the peak is upside down
-        if np.abs(y_min) > np.abs(y_max):
-            halfint = (y_min - y_max) / 2. + y_max
-        else:
-            halfint = (y_max - y_min) / 2. + y_min
-
-    # Find the closest points to the half intensity
-    index = np.abs(y - halfint).argsort()[0]
-
-    # Interpolation
-    if interpolation:
-        try:
-            x_int, y_int = utils.interpolate_point(x, y, index)
-            return get_halfint_point(x_int, y_int, False, halfint)
-        except IndexError:
-            print('Interpolation failed')
-            pass
-
-    return x[index], y[index]
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
+        return x[index], y[index]

@@ -98,7 +98,7 @@ else:
 
             # ----------------------------------------------- DATA EXPORT ----------------------------------------------
 
-            header = [signal.x.get_label(), signal.y.get_label()]
+            header = [signal.x.get_label_raw(), signal.y.get_label_raw()]
             export_data = utils.matrix_to_string([signal.x.data, signal.y.data], header)
             st.download_button('Download data', export_data, 'data.csv')
 
