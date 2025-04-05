@@ -122,6 +122,15 @@ def generate_download_link(
     return rf'<a href="data:text/csv;base64,{b64}" download="{name}.csv">{text}</a>'
 
 
+@st.cache_resource
+def read_txt_file(path: str) -> str:
+    """Read the content of a text file and store it as a resource.
+    :param path: file path"""
+
+    with open(path) as ofile:
+        return ofile.read()
+
+
 # --------------------------------------------------- DATA EXTRACTION --------------------------------------------------
 
 
