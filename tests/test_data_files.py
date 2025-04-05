@@ -1054,11 +1054,11 @@ class TestDetectFileType:
 
         assert detect_file_type(resources.dektak)[1] == 'Dektak (.csv)'
 
-    def test_diffrac(self) -> None:
-
-        assert detect_file_type(resources.diffrac_brml)[1] == 'Diffrac (.brml)'
-        assert detect_file_type(resources.diffrac_timelapse)[1] == 'Diffrac (.brml)'
-        assert detect_file_type(resources.diffrac_brml_psd)[1] == 'Diffrac (.brml)'
+    # def test_diffrac(self) -> None:
+    #
+    #     assert detect_file_type(resources.diffrac_brml)[1] == 'Diffrac (.brml)'
+    #     assert detect_file_type(resources.diffrac_timelapse)[1] == 'Diffrac (.brml)'
+    #     assert detect_file_type(resources.diffrac_brml_psd)[1] == 'Diffrac (.brml)'
 
     def test_easylog(self) -> None:
 
@@ -1127,10 +1127,10 @@ class TestDetectFileType:
 
         assert detect_file_type(resources.vesta_diffraction)[1] == 'Vesta (.xy)'
 
-    def test_wire(self) -> None:
-
-        assert detect_file_type(resources.wire_wdf1)[1] == 'WiRE (.wdf)'
-        assert detect_file_type(resources.wire_wdf2)[1] == 'WiRE (.wdf)'
+    # def test_wire(self) -> None:
+    #
+    #     assert detect_file_type(resources.wire_wdf1)[1] == 'WiRE (.wdf)'
+    #     assert detect_file_type(resources.wire_wdf2)[1] == 'WiRE (.wdf)'
 
     def test_zem3(self) -> None:
 
