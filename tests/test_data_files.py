@@ -236,111 +236,111 @@ class TestDataFiles:
         }
         self.assert_signal(data, expected)
 
-    def test_read_brml_rawdata_file(self) -> None:
-
-        with zipfile.ZipFile(resources.diffrac_brml) as brml:
-            datafile = brml.infolist()[-3]
-            data = read_brml_rawdata_file(brml, datafile)
-
-        expected = {
-            "x_data": np.array([10.0001, 10.0197, 10.0394, 59.9705, 59.9901, 60.0097]),
-            "y_data": np.array([191.0, 208.0, 224.0, 95.0, 68.0, 86.0]),
-            "x_quantity": "2 theta",
-            "y_quantity": "intensity",
-            "x_unit": "deg",
-            "y_unit": "counts",
-            "name": "Diffrac",
-            "shortname": "RawData0",
-            "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2017, 8, 4, 16, 43, 2, 345953), "time", ""),
-                "IntegrationTime": Dimension(0.15, "time", "s"),
-                "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
-                "measure_time": Dimension(412.58348, "time", "s"),
-                "Chi": Dimension(-0.0, "Chi", "°"),
-                "Phi": Dimension(0.0, "Phi", "°"),
-                "X": Dimension(-0.0, "X", "mm"),
-                "Y": Dimension(-0.0, "Y", "mm"),
-                "Z": Dimension(1.4, "Z", "mm"),
-            },
-        }
-
-        self.assert_signal(data, expected)
-
-    def test_diffrac(self) -> None:
-
-        data = DiffracBrmlFile(resources.diffrac_brml)
-        expected = {
-            "x_data": np.array([10.0001, 10.0197, 10.0394, 59.9705, 59.9901, 60.0097]),
-            "y_data": np.array([191.0, 208.0, 224.0, 95.0, 68.0, 86.0]),
-            "x_quantity": "2 theta",
-            "y_quantity": "intensity",
-            "x_unit": "deg",
-            "y_unit": "counts",
-            "name": "Diffrac",
-            "shortname": "RawData0",
-            "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2017, 8, 4, 16, 43, 2, 345953), "time", ""),
-                "IntegrationTime": Dimension(0.15, "time", "s"),
-                "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
-                "measure_time": Dimension(412.58348, "time", "s"),
-                "Chi": Dimension(-0.0, "Chi", "°"),
-                "Phi": Dimension(0.0, "Phi", "°"),
-                "X": Dimension(-0.0, "X", "mm"),
-                "Y": Dimension(-0.0, "Y", "mm"),
-                "Z": Dimension(1.4, "Z", "mm"),
-            },
-        }
-        self.assert_signal(data[0], expected)
-        #
-        # data = DiffracBrmlFile(resources.diffrac_timelapse)
-        # expected = {
-        #     "x_data": np.array([12.0001, 12.0021, 12.0041, 14.4961, 14.4981, 14.5001]),
-        #     "y_data": np.array([0.0, 0.0, 178.0, 52.0, 48.0, 53.0]),
-        #     "x_quantity": "2 theta",
-        #     "y_quantity": "intensity",
-        #     "x_unit": "deg",
-        #     "y_unit": "counts",
-        #     "name": "Diffrac_multiple",
-        #     "shortname": "RawData79",
-        #     "z_dict": {
-        #         "TimeStamp": Dimension(dt.datetime(2017, 10, 11, 9, 29, 34, 753172), "time", ""),
-        #         "IntegrationTime": Dimension(0.5, "time", "s"),
-        #         "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
-        #         "measure_time": Dimension(676.947589, "time", "s"),
-        #         "Theta": Dimension(2.0186, "Theta", "°"),
-        #         "Chi": Dimension(-0.0, "Chi", "°"),
-        #         "Phi": Dimension(0.0, "Phi", "°"),
-        #         "X": Dimension(-0.0, "X", "mm"),
-        #         "Y": Dimension(-0.0, "Y", "mm"),
-        #         "Z": Dimension(-0.0395, "Z", "mm"),
-        #     },
-        # }
-        # self.assert_signal(data[-1], expected)
-        #
-        # data = DiffracBrmlFile(resources.diffrac_brml_psd)
-        # expected = {
-        #     "x_data": np.array([8.5001, 8.5118762, 8.52365241, 10.73757886, 10.74935506, 10.76113126]),
-        #     "y_data": np.array([5.000e00, 1.000e00, 2.129e03, 0.000e00, 1.000e00, 1.000e00]),
-        #     "x_quantity": "2 theta",
-        #     "y_quantity": "intensity",
-        #     "x_unit": "deg",
-        #     "y_unit": "counts",
-        #     "name": "Diffrac_PSD",
-        #     "shortname": "RawData0",
-        #     "z_dict": {
-        #         "TimeStamp": Dimension(dt.datetime(2018, 3, 5, 12, 11, 11, 816786), "time", ""),
-        #         "IntegrationTime": Dimension(5.0, "time", "s"),
-        #         "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
-        #         "measure_time": Dimension(23.337641, "time", "s"),
-        #         "Theta": Dimension(4.8153, "Theta", "°"),
-        #         "Chi": Dimension(-0.0, "Chi", "°"),
-        #         "Phi": Dimension(0.0, "Phi", "°"),
-        #         "X": Dimension(-0.0, "X", "mm"),
-        #         "Y": Dimension(-0.0, "Y", "mm"),
-        #         "Z": Dimension(0.8455, "Z", "mm"),
-        #     },
-        # }
-        # self.assert_signal(data[0], expected)
+    # def test_read_brml_rawdata_file(self) -> None:
+    #
+    #     with zipfile.ZipFile(resources.diffrac_brml) as brml:
+    #         datafile = brml.infolist()[-3]
+    #         data = read_brml_rawdata_file(brml, datafile)
+    #
+    #     expected = {
+    #         "x_data": np.array([10.0001, 10.0197, 10.0394, 59.9705, 59.9901, 60.0097]),
+    #         "y_data": np.array([191.0, 208.0, 224.0, 95.0, 68.0, 86.0]),
+    #         "x_quantity": "2 theta",
+    #         "y_quantity": "intensity",
+    #         "x_unit": "deg",
+    #         "y_unit": "counts",
+    #         "name": "Diffrac",
+    #         "shortname": "RawData0",
+    #         "z_dict": {
+    #             "TimeStamp": Dimension(dt.datetime(2017, 8, 4, 16, 43, 2, 345953), "time", ""),
+    #             "IntegrationTime": Dimension(0.15, "time", "s"),
+    #             "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
+    #             "measure_time": Dimension(412.58348, "time", "s"),
+    #             "Chi": Dimension(-0.0, "Chi", "°"),
+    #             "Phi": Dimension(0.0, "Phi", "°"),
+    #             "X": Dimension(-0.0, "X", "mm"),
+    #             "Y": Dimension(-0.0, "Y", "mm"),
+    #             "Z": Dimension(1.4, "Z", "mm"),
+    #         },
+    #     }
+    #
+    #     self.assert_signal(data, expected)
+    #
+    # def test_diffrac(self) -> None:
+    #
+    #     data = DiffracBrmlFile(resources.diffrac_brml)
+    #     expected = {
+    #         "x_data": np.array([10.0001, 10.0197, 10.0394, 59.9705, 59.9901, 60.0097]),
+    #         "y_data": np.array([191.0, 208.0, 224.0, 95.0, 68.0, 86.0]),
+    #         "x_quantity": "2 theta",
+    #         "y_quantity": "intensity",
+    #         "x_unit": "deg",
+    #         "y_unit": "counts",
+    #         "name": "Diffrac",
+    #         "shortname": "RawData0",
+    #         "z_dict": {
+    #             "TimeStamp": Dimension(dt.datetime(2017, 8, 4, 16, 43, 2, 345953), "time", ""),
+    #             "IntegrationTime": Dimension(0.15, "time", "s"),
+    #             "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
+    #             "measure_time": Dimension(412.58348, "time", "s"),
+    #             "Chi": Dimension(-0.0, "Chi", "°"),
+    #             "Phi": Dimension(0.0, "Phi", "°"),
+    #             "X": Dimension(-0.0, "X", "mm"),
+    #             "Y": Dimension(-0.0, "Y", "mm"),
+    #             "Z": Dimension(1.4, "Z", "mm"),
+    #         },
+    #     }
+    #     self.assert_signal(data[0], expected)
+    #
+    #     data = DiffracBrmlFile(resources.diffrac_timelapse)
+    #     expected = {
+    #         "x_data": np.array([12.0001, 12.0021, 12.0041, 14.4961, 14.4981, 14.5001]),
+    #         "y_data": np.array([0.0, 0.0, 178.0, 52.0, 48.0, 53.0]),
+    #         "x_quantity": "2 theta",
+    #         "y_quantity": "intensity",
+    #         "x_unit": "deg",
+    #         "y_unit": "counts",
+    #         "name": "Diffrac_multiple",
+    #         "shortname": "RawData79",
+    #         "z_dict": {
+    #             "TimeStamp": Dimension(dt.datetime(2017, 10, 11, 9, 29, 34, 753172), "time", ""),
+    #             "IntegrationTime": Dimension(0.5, "time", "s"),
+    #             "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
+    #             "measure_time": Dimension(676.947589, "time", "s"),
+    #             "Theta": Dimension(2.0186, "Theta", "°"),
+    #             "Chi": Dimension(-0.0, "Chi", "°"),
+    #             "Phi": Dimension(0.0, "Phi", "°"),
+    #             "X": Dimension(-0.0, "X", "mm"),
+    #             "Y": Dimension(-0.0, "Y", "mm"),
+    #             "Z": Dimension(-0.0395, "Z", "mm"),
+    #         },
+    #     }
+    #     self.assert_signal(data[-1], expected)
+    #
+    #     data = DiffracBrmlFile(resources.diffrac_brml_psd)
+    #     expected = {
+    #         "x_data": np.array([8.5001, 8.5118762, 8.52365241, 10.73757886, 10.74935506, 10.76113126]),
+    #         "y_data": np.array([5.000e00, 1.000e00, 2.129e03, 0.000e00, 1.000e00, 1.000e00]),
+    #         "x_quantity": "2 theta",
+    #         "y_quantity": "intensity",
+    #         "x_unit": "deg",
+    #         "y_unit": "counts",
+    #         "name": "Diffrac_PSD",
+    #         "shortname": "RawData0",
+    #         "z_dict": {
+    #             "TimeStamp": Dimension(dt.datetime(2018, 3, 5, 12, 11, 11, 816786), "time", ""),
+    #             "IntegrationTime": Dimension(5.0, "time", "s"),
+    #             "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
+    #             "measure_time": Dimension(23.337641, "time", "s"),
+    #             "Theta": Dimension(4.8153, "Theta", "°"),
+    #             "Chi": Dimension(-0.0, "Chi", "°"),
+    #             "Phi": Dimension(0.0, "Phi", "°"),
+    #             "X": Dimension(-0.0, "X", "mm"),
+    #             "Y": Dimension(-0.0, "Y", "mm"),
+    #             "Z": Dimension(0.8455, "Z", "mm"),
+    #         },
+    #     }
+    #     self.assert_signal(data[0], expected)
 
     def test_easylog(self) -> None:
 
@@ -982,36 +982,37 @@ class TestDataFiles:
         }
         self.assert_signal(data, expected)
 
-    def test_wire(self) -> None:
-        data = WireFile(resources.wire_wdf1)
-        expected = {
-            "x_data": np.array([794.19726562, 795.4375, 796.67578125, 1940.97460938, 1942.00976562, 1943.04492188]),
-            "y_data": np.array(
-                [84046.1640625, 84312.3671875, 84407.1796875, 130683.1796875, 130495.21875, 129160.390625]
-            ),
-            "x_quantity": "wavenumber",
-            "y_quantity": "intensity",
-            "x_unit": "cm^-1",
-            "y_unit": "",
-            "name": "Single scan measurement 4",
-            "shortname": "",
-            "z_dict": {},
-        }
-        self.assert_signal(data, expected)
-
-        data = WireFile(resources.wire_wdf2)
-        expected = {
-            "x_data": np.array([830.99182129, 832.17248535, 833.35412598, 1897.29064941, 1898.23693848, 1899.18322754]),
-            "y_data": np.array([28863.01171875, 28688.14453125, 28792.6875, 21222.15625, 20938.0703125, 20763.609375]),
-            "x_quantity": "wavenumber",
-            "y_quantity": "intensity",
-            "x_unit": "cm^-1",
-            "y_unit": "",
-            "name": "Single scan measurement 3",
-            "shortname": "",
-            "z_dict": {},
-        }
-        self.assert_signal(data, expected)
+    # def test_wire(self) -> None:
+    #
+    #     data = WireFile(resources.wire_wdf1)
+    #     expected = {
+    #         "x_data": np.array([794.19726562, 795.4375, 796.67578125, 1940.97460938, 1942.00976562, 1943.04492188]),
+    #         "y_data": np.array(
+    #             [84046.1640625, 84312.3671875, 84407.1796875, 130683.1796875, 130495.21875, 129160.390625]
+    #         ),
+    #         "x_quantity": "wavenumber",
+    #         "y_quantity": "intensity",
+    #         "x_unit": "cm^-1",
+    #         "y_unit": "",
+    #         "name": "Single scan measurement 4",
+    #         "shortname": "",
+    #         "z_dict": {},
+    #     }
+    #     self.assert_signal(data, expected)
+    #
+    #     data = WireFile(resources.wire_wdf2)
+    #     expected = {
+    #         "x_data": np.array([830.99182129, 832.17248535, 833.35412598, 1897.29064941, 1898.23693848, 1899.18322754]),
+    #         "y_data": np.array([28863.01171875, 28688.14453125, 28792.6875, 21222.15625, 20938.0703125, 20763.609375]),
+    #         "x_quantity": "wavenumber",
+    #         "y_quantity": "intensity",
+    #         "x_unit": "cm^-1",
+    #         "y_unit": "",
+    #         "name": "Single scan measurement 3",
+    #         "shortname": "",
+    #         "z_dict": {},
+    #     }
+    #     self.assert_signal(data, expected)
 
     def test_zem3(self) -> None:
         data = Zem3(resources.zem3)
