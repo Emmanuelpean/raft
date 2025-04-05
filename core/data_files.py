@@ -15,8 +15,8 @@ from core.utils import grep, get_data_index, stringlist_to_matrix, sort_lists, g
 
 
 def get_uvvis_dimension(
-        data: np.ndarray,
-        mode: str,
+    data: np.ndarray,
+    mode: str,
 ) -> Dimension:
     """Get the y dimension of a uv-vis data file depending on the mode
     :param data: data array
@@ -39,7 +39,7 @@ def read_datafile(filename: str | BytesIO) -> tuple[list[str], str]:
     if isinstance(filename, str):
         with open(filename, encoding="utf8", errors="ignore") as ofile:
             content = str(ofile.read()).splitlines()
-        name = os.path.basename(filename).split('.')[0]
+        name = os.path.basename(filename).split(".")[0]
 
     else:
         content = filename.getvalue()
@@ -91,7 +91,7 @@ def DektakFile(filename: str) -> SignalData | None:
     data_index = grep(content, "Horizontal Distance,Raw Data,")[0][1]
     if not isinstance(data_index, int):
         raise AssertionError()  # pragma: no cover
-    x_data, y_data = stringlist_to_matrix(content[data_index + 2: -2], ",")[:2]
+    x_data, y_data = stringlist_to_matrix(content[data_index + 2 : -2], ",")[:2]
     x = Dimension(x_data, pc.horizontal_distance_qt, pc.micrometer_unit)
     y = Dimension(y_data, pc.vertical_distance_qt, pc.micrometer_unit)
 
@@ -108,8 +108,8 @@ def DektakFile(filename: str) -> SignalData | None:
 
 
 def read_brml_rawdata_file(
-        brml: zipfile.ZipFile,
-        rawdata_file: zipfile.ZipInfo,
+    brml: zipfile.ZipFile,
+    rawdata_file: zipfile.ZipInfo,
 ) -> SignalData:
     """Read the content of a RawData file from a Diffrac .brml file
     :param brml: zipfile.ZipFile object
@@ -232,7 +232,10 @@ def EasyLogFile(filename: str) -> dict[str, SignalData]:
 # -------------------------------------------------- F980 & FLUORACLE --------------------------------------------------
 
 
-def EdinstFile(filename: str, delimiter: str | None = "\t", ) -> list[SignalData]:
+def EdinstFile(
+    filename: str,
+    delimiter: str | None = "\t",
+) -> list[SignalData]:
     """Read the content of an exported Edinburgh Instrument file (F980 or Fluoracle)
     :param filename: file path
     :param delimiter: data delimiter"""
@@ -394,7 +397,7 @@ def FlWinlabFile(filename: str) -> SignalData:
     data_index = grep(content, "#DATA")[0][1]
     if not isinstance(data_index, int):
         raise AssertionError()  # pragma: no cover
-    x_data, y_data = stringlist_to_matrix(content[data_index + 1:-2])
+    x_data, y_data = stringlist_to_matrix(content[data_index + 1 : -2])
     x = Dimension(x_data, pc.wavelength_qt, pc.nm_unit)
     y = Dimension(y_data, pc.intensity_qt, pc.au_unit)
 
@@ -422,7 +425,7 @@ def LambdaSpxFile(filename: str) -> SignalData:
     data_index = grep(content, "#DATA")[0][1]
     if not isinstance(data_index, int):
         raise AssertionError()  # pragma: no cover
-    (y_data,) = stringlist_to_matrix(content[data_index + 1:])
+    (y_data,) = stringlist_to_matrix(content[data_index + 1 :])
     y = get_uvvis_dimension(y_data, content[9])
 
     # X dimension
@@ -472,7 +475,7 @@ def ProDataSignal(filename: str) -> dict[str, list[SignalData]]:
     if not isinstance(data_index, int):
         raise AssertionError()  # pragma: no cover
     data_index += 2
-    data_raw = content[data_index: data_index + nb_points]
+    data_raw = content[data_index : data_index + nb_points]
     data = stringlist_to_matrix(data_raw, delimiter)
 
     # X dimension
@@ -520,7 +523,7 @@ def ProDataSignal(filename: str) -> dict[str, list[SignalData]]:
             data_index_ = index[0][1] + 4
             if not isinstance(data_index_, int):
                 raise AssertionError()  # pragma: no cover
-            data_ = stringlist_to_matrix(content[data_index_: data_index_ + nb_points], delimiter)
+            data_ = stringlist_to_matrix(content[data_index_ : data_index_ + nb_points], delimiter)
             return data_[1:][nonzero_indices]  # do not keep the time axis
         else:
             return None
@@ -586,7 +589,7 @@ def SbtpsSeqFile(filename: str) -> dict[str, list[SignalData]]:
         raise AssertionError()  # pragma: no cover
     data_header = [x for x in content[data_index].split("\t") if x != ""]
 
-    data = stringlist_to_matrix([line.strip() for line in content[data_index + 1:]])
+    data = stringlist_to_matrix([line.strip() for line in content[data_index + 1 :]])
 
     try:
         fw_index = data_header.index("VSource Forward")
@@ -598,7 +601,11 @@ def SbtpsSeqFile(filename: str) -> dict[str, list[SignalData]]:
     except ValueError:
         bk_index = -1
 
-    def get_data(index_start: int, index_end: int, sname: str,) -> list[SignalData]:
+    def get_data(
+        index_start: int,
+        index_end: int,
+        sname: str,
+    ) -> list[SignalData]:
         """Get the data"""
         sweep_indexes = np.arange(index_start + 1, index_end)
         sweeps = [data_header[i].replace(" (mA/cm\xb2)", "") for i in sweep_indexes]
@@ -637,7 +644,7 @@ def SbtpsIvFile(filename: str) -> dict[str, SignalData]:
     data_index = grep(content, "VSource (V)\tCurrent Density (mA/cm")[0][1]
     if not isinstance(data_index, int):
         raise AssertionError()  # pragma: no cover
-    data = stringlist_to_matrix(content[data_index + 1:])
+    data = stringlist_to_matrix(content[data_index + 1 :])
     x_data, y_data_cd, y_data_c, y_data_p, y_data_t = sort_lists(data, 0)
 
     x = Dimension(x_data, pc.voltage_qt, pc.volt_unit)
@@ -777,7 +784,7 @@ def UVWinLabASCII(filename: str) -> SignalData:
     data_index = grep(content, "#DATA")[0][1]
     if not isinstance(data_index, int):
         raise AssertionError()  # pragma: no cover
-    data = stringlist_to_matrix(content[data_index + 1:])[:, ::-1]
+    data = stringlist_to_matrix(content[data_index + 1 :])[:, ::-1]
     x = Dimension(data[0], pc.wavelength_qt, pc.nm_unit)
     y = get_uvvis_dimension(data[1], content[80])
 
@@ -843,7 +850,7 @@ def Zem3(filename: str) -> dict[str, SignalData]:
         xcol = 1
     data = {
         h: SignalData(Dimension(data[xcol], headers[xcol]), Dimension(d, h), name)
-        for d, h in zip(data[xcol + 1:], headers[xcol + 1:])
+        for d, h in zip(data[xcol + 1 :], headers[xcol + 1 :])
     }
     if not data:
         raise AssertionError()  # pragma: no cover
@@ -857,9 +864,9 @@ functions = {
     "EasyLog (.txt)": (EasyLogFile, "txt"),
     "Beampro (.txt)": (BeamproFile, "txt"),
     "F980/Fluoracle (.txt, tab)": (EdinstFile, "txt"),
-    "F980/Fluoracle (.csv, comma)": (lambda filename: EdinstFile(filename, delimiter=","), "csv"),
-    "UvWinlab/Spectrum (.csv)": (PerkinElmerFile, "csv"),
+    "F980/Fluoracle (.txt, comma)": (lambda filename: EdinstFile(filename, delimiter=","), "txt"),
     "Dektak (.csv)": (DektakFile, "csv"),
+    "UvWinlab/Spectrum (.csv)": (PerkinElmerFile, "csv"),
     "ProData (.csv)": (ProDataSignal, "csv"),
     "UVWinLab (.asc)": (UVWinLabASCII, "asc"),
     "FlWinlab": (FlWinlabFile, ""),
@@ -875,3 +882,28 @@ functions = {
     "Simple (comma)": (lambda filename: SimpleDataFile(filename, delimiter=","), ""),
     "Simple (semicolon)": (lambda filename: SimpleDataFile(filename, delimiter=";"), ""),
 }
+
+
+def detect_file_type(filename: str | BytesIO) -> tuple[any, str] | tuple[None, None]:
+    """Detect the type of file and load it
+    :param filename: file to load"""
+
+    # Only search through the filetypes matching the extension
+    if isinstance(filename, str):
+        extension = os.path.splitext(filename)[1]
+    else:
+        extension = os.path.splitext(filename.name)[1]
+    filtered_functions = {}
+    for key, value in functions.items():
+        if extension.lower() == "." + functions[key][1].lower() or functions[key][1] == "":
+            filtered_functions[key] = value[0]
+
+    # Try to load the data with each function until successful
+    for filetype in filtered_functions:
+        try:
+            signal = functions[filetype][0](filename)
+            return signal, filetype
+        except:
+            pass
+
+    return None, None
