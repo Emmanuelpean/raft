@@ -1,6 +1,6 @@
 from os import path
 
-resources_path = path.join(path.dirname(path.dirname(__file__)), "resources")
+resources_path = path.join(path.dirname(path.dirname(path.dirname(__file__))), "resources")
 
 # ------------------------------------------------------- IMAGES -------------------------------------------------------
 
