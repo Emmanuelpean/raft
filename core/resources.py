@@ -1,6 +1,6 @@
 from os import path
 
-resources_path = path.join(path.dirname(path.dirname(path.dirname(__file__))), "resources")
+resources_path = path.join(path.dirname(path.dirname(__file__)), "resources")
 
 # ------------------------------------------------------- IMAGES -------------------------------------------------------
 
@@ -33,7 +33,6 @@ f980_emscan = path.join(resources_path, "test_files/Edinst/F980_EmScan.txt")
 fluoracle_absorbance = path.join(resources_path, "test_files/Edinst/Fluoracle_absorbance.txt")
 fluoracle_emission = path.join(resources_path, "test_files/Edinst/Fluoracle_emission.txt")
 fluoracle_emission_multiple = path.join(resources_path, "test_files/Edinst/Fluoracle_emission_multiple.txt")
-fluoracle_missing = path.join(resources_path, "test_files/Edinst/Fluoracle_missing.csv")
 
 # FluorEssence
 fluoressence_allcol = path.join(resources_path, "test_files/FluorEssence/FluorEssence_allcol.txt")
