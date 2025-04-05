@@ -336,7 +336,7 @@ class SignalData(object):
             fwhm = 0
 
         return (
-            self.x(data=np.abs(fwhm), quantity=constants.fwhm_qt),
+            self.x(data=np.abs(fwhm), quantity=constants.fwhm_qt),  # TODO missing x unit?
             self.x(data=x_left),
             self.y(data=y_left),
             self.x(data=x_right),
