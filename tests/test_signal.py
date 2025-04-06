@@ -236,7 +236,7 @@ class TestSignalData:
         """Fixture that returns sample x and y dimensions for testing"""
 
         x_data = np.linspace(0, 10, 21)
-        y_data = np.exp(- (x_data - 3) ** 2 / 2)
+        y_data = np.exp(-((x_data - 3) ** 2) / 2)
         x_dim = Dimension(x_data, "time", "s")
         y_dim = Dimension(y_data, "amplitude", "V")
         return x_dim, y_dim
@@ -368,55 +368,55 @@ class TestSignalData:
 
         result = sample_signal.get_max()
         assert are_close(result[0].data, 3.0)
-        assert result[0].quantity == 'max. time'
-        assert result[0].unit == 's'
+        assert result[0].quantity == "max. time"
+        assert result[0].unit == "s"
         assert are_close(result[1].data, 1.0)
-        assert result[1].quantity == 'max. amplitude'
-        assert result[1].unit == 'V'
+        assert result[1].quantity == "max. amplitude"
+        assert result[1].unit == "V"
         assert are_close(result[2].data, 6)
-        assert result[2].quantity == ''
-        assert result[2].unit == ''
+        assert result[2].quantity == ""
+        assert result[2].unit == ""
 
     def test_get_min(self, sample_signal) -> None:
         """Test get_min method"""
 
         result = sample_signal.get_min()
         assert are_close(result[0].data, 10.0)
-        assert result[0].quantity == 'min. time'
-        assert result[0].unit == 's'
+        assert result[0].quantity == "min. time"
+        assert result[0].unit == "s"
         assert are_close(result[1].data, 2.289734845645553e-11)
-        assert result[1].quantity == 'min. amplitude'
-        assert result[1].unit == 'V'
+        assert result[1].quantity == "min. amplitude"
+        assert result[1].unit == "V"
         assert are_close(result[2].data, 20)
-        assert result[2].quantity == ''
-        assert result[2].unit == ''
+        assert result[2].quantity == ""
+        assert result[2].unit == ""
 
     def test_get_extrema(self, sample_signal, sample_dimensions) -> None:
         """Test get_extrema method"""
 
         result = sample_signal.get_extrema()
         assert are_close(result[0].data, 3.0)
-        assert result[0].quantity == 'extremum time'
-        assert result[0].unit == 's'
-        assert are_close(result[1].data, 1.)
-        assert result[1].quantity == 'extremum amplitude'
-        assert result[1].unit == 'V'
+        assert result[0].quantity == "extremum time"
+        assert result[0].unit == "s"
+        assert are_close(result[1].data, 1.0)
+        assert result[1].quantity == "extremum amplitude"
+        assert result[1].unit == "V"
         assert are_close(result[2].data, 6)
-        assert result[2].quantity == ''
-        assert result[2].unit == ''
+        assert result[2].quantity == ""
+        assert result[2].unit == ""
 
         x_dim, y_dim = sample_dimensions
         signal = SignalData(x_dim, Dimension(-y_dim.data))
         result = signal.get_extrema()
-        assert are_close(result[0].data, 3.)
-        assert result[0].quantity == 'extremum time'
-        assert result[0].unit == 's'
-        assert are_close(result[1].data, -1.)
-        assert result[1].quantity == 'extremum '
-        assert result[1].unit == ''
+        assert are_close(result[0].data, 3.0)
+        assert result[0].quantity == "extremum time"
+        assert result[0].unit == "s"
+        assert are_close(result[1].data, -1.0)
+        assert result[1].quantity == "extremum "
+        assert result[1].unit == ""
         assert are_close(result[2].data, 6)
-        assert result[2].quantity == ''
-        assert result[2].unit == ''
+        assert result[2].quantity == ""
+        assert result[2].unit == ""
 
     def test_get_fwhm(self, sample_signal) -> None:
         """Test get_fwhm method"""
@@ -466,7 +466,7 @@ class TestSignalData:
         assert are_close(y_half, 0.606)
 
         # Test the function with a peak pointing down and no interpolation
-        x_half, y_half = sample_signal.get_halfint_point(sample_signal.x.data, - sample_signal.y.data, False)
+        x_half, y_half = sample_signal.get_halfint_point(sample_signal.x.data, -sample_signal.y.data, False)
         assert are_close(x_half, 2.0)
         assert are_close(y_half, -0.606)
 

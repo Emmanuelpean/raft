@@ -497,7 +497,7 @@ class TestInterpolatePoint:
 
     def test_linear_interpolation(self) -> None:
         x = np.array([-10, -7, -5, -1, 5, 7, 10])
-        y = x ** 2
+        y = x**2
         x_int, y_int = interpolate_point(x, y, 3, kind="linear")
         assert len(x_int) == 1000
         assert len(y_int) == 1000
@@ -507,7 +507,7 @@ class TestInterpolatePoint:
 
     def test_cubic_interpolation(self) -> None:
         x = np.array([-10, -7, -5, -1, 5, 7, 10])
-        y = x ** 2
+        y = x**2
         x_int, y_int = interpolate_point(x, y, 3, kind="cubic")
         assert len(x_int) == 1000
         assert len(y_int) == 1000
@@ -517,21 +517,21 @@ class TestInterpolatePoint:
 
     def test_default_nb_point(self) -> None:
         x = np.array([-10, -7, -5, -1, 5, 7, 10])
-        y = x ** 2
+        y = x**2
         x_int, y_int = interpolate_point(x, y, 3)
         assert len(x_int) == 1000
         assert len(y_int) == 1000
 
     def test_index_near_start(self) -> None:
         x = np.array([-10, -7, -5, -1, 5, 7, 10])
-        y = x ** 2
+        y = x**2
         x_int, y_int = interpolate_point(x, y, 0, kind="linear")
         assert len(x_int) == 1000
         assert len(y_int) == 1000
 
     def test_index_near_end(self) -> None:
         x = np.array([-10, -7, -5, -1, 5, 7, 10])
-        y = x ** 2
+        y = x**2
         x_int, y_int = interpolate_point(x, y, 6, kind="linear")
         assert len(x_int) == 1000
         assert len(y_int) == 1000
