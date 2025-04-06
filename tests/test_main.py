@@ -106,7 +106,7 @@ class TestApp:
     @patch("streamlit.sidebar.file_uploader")
     def test_upload(self, mock_file_uploader: MagicMock) -> None:
 
-        for path in resource.FILE_TYPE_DICT:
+        for path in resources.FILE_TYPE_DICT:
 
             self.create_mock_file(mock_file_uploader, path)
 
@@ -114,12 +114,12 @@ class TestApp:
             self.at = AppTest(self.main_path, default_timeout=100).run()
 
             # Assert filetype
-            assert self.at.sidebar.markdown[1].value == f"Detected: {resource.FILE_TYPE_DICT[path]}"
+            assert self.at.sidebar.markdown[1].value == f"Detected: {resources.FILE_TYPE_DICT[path]}"
 
     @patch("streamlit.sidebar.file_uploader")
     def test_fixed_read(self, mock_file_uploader: MagicMock) -> None:
 
-        self.create_mock_file(mock_file_uploader, resource.SPECTRASUITE_HEADER_PATH)
+        self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
 
         # Start the app and run it
         self.at = AppTest(self.main_path, default_timeout=100).run()
@@ -129,7 +129,7 @@ class TestApp:
     @patch("streamlit.sidebar.file_uploader")
     def test_fixed_read_incorrect(self, mock_file_uploader: MagicMock) -> None:
 
-        self.create_mock_file(mock_file_uploader, resource.SPECTRASUITE_HEADER_PATH)
+        self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
 
         # Start the app and run it
         self.at = AppTest(self.main_path, default_timeout=100).run()
@@ -141,7 +141,7 @@ class TestApp:
     @patch("streamlit.sidebar.file_uploader")
     def test_range_incorrect(self, mock_file_uploader: MagicMock):
 
-        self.create_mock_file(mock_file_uploader, resource.SPECTRASUITE_HEADER_PATH)
+        self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
 
         # Start the app and run it
         self.at = AppTest(self.main_path, default_timeout=100).run()
@@ -153,7 +153,7 @@ class TestApp:
     @patch("streamlit.sidebar.file_uploader")
     def test_dict_file(self, mock_file_uploader: MagicMock):
 
-        self.create_mock_file(mock_file_uploader, resource.EASYLOG_PATH)
+        self.create_mock_file(mock_file_uploader, resources.EASYLOG_PATH)
 
         # Start the app and run it
         self.at = AppTest(self.main_path, default_timeout=100).run()
@@ -167,7 +167,7 @@ class TestApp:
     @patch("streamlit.sidebar.file_uploader")
     def test_list_file(self, mock_file_uploader: MagicMock):
 
-        self.create_mock_file(mock_file_uploader, resource.FLUORESSENCE_MULTIPLE_PATH)
+        self.create_mock_file(mock_file_uploader, resources.FLUORESSENCE_MULTIPLE_PATH)
 
         # Start the app and run it
         self.at = AppTest(self.main_path, default_timeout=100).run()
@@ -181,7 +181,7 @@ class TestApp:
     @patch("streamlit.sidebar.file_uploader")
     def test_dict_list_file(self, mock_file_uploader: MagicMock):
 
-        self.create_mock_file(mock_file_uploader, resource.PRODATA_TAS_3PROP_PATH)  # wrong detect
+        self.create_mock_file(mock_file_uploader, resources.PRODATA_TAS_3PROP_PATH)  # wrong detect
 
         # Start the app and run it
         self.at = AppTest(self.main_path, default_timeout=100).run()
@@ -202,7 +202,7 @@ class TestApp:
     @patch("streamlit.sidebar.file_uploader")
     def test_extract(self, mock_file_uploader: MagicMock):
 
-        self.create_mock_file(mock_file_uploader, resource.SPECTRASUITE_HEADER_PATH)
+        self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
 
         # Start the app and run it
         self.at = AppTest(self.main_path, default_timeout=100).run()
@@ -225,7 +225,7 @@ class TestApp:
     @patch("streamlit.sidebar.file_uploader")
     def test_range_extract(self, mock_file_uploader: MagicMock):
 
-        self.create_mock_file(mock_file_uploader, resource.SPECTRASUITE_HEADER_PATH)
+        self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
 
         # Start the app and run it
         self.at = AppTest(self.main_path, default_timeout=100).run()
@@ -252,7 +252,7 @@ class TestApp:
     @patch("streamlit.sidebar.file_uploader")
     def test_smoothing_extract(self, mock_file_uploader: MagicMock):
 
-        self.create_mock_file(mock_file_uploader, resource.SPECTRASUITE_HEADER_PATH)
+        self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
 
         # Start the app and run it
         self.at = AppTest(self.main_path, default_timeout=100).run()

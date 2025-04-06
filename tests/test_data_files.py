@@ -192,7 +192,7 @@ class TestDataFiles:
             assert are_close(signal.z_dict[key].unit, expected["z_dict"][key].unit)
 
     def test_breampro(self) -> None:
-        data = BeamproFile(resource.BEAMPRO_PATH)
+        data = BeamproFile(resources.BEAMPRO_PATH)
         expected = {
             "x_data": np.array([0.00000e00, 6.60584e00, 1.32117e01, 1.35089e04, 1.35156e04, 1.35222e04]),
             "y_data": np.array([1.24512, 1.5625, 1.14746, 1.14746, 1.00098, 1.34277]),
@@ -220,7 +220,7 @@ class TestDataFiles:
 
     def test_dektak(self) -> None:
 
-        data = DektakFile(resource.DEKTAK_PATH)
+        data = DektakFile(resources.DEKTAK_PATH)
         expected = {
             "x_data": np.array([0.00000e00, 5.10000e-01, 1.03000e00, 1.99897e03, 1.99949e03, 2.00000e03]),
             "y_data": np.array([-649.13, -648.21, -643.29, -70.38, -77.46, -84.53]),
@@ -238,7 +238,7 @@ class TestDataFiles:
 
     def test_read_brml_rawdata_file(self) -> None:
 
-        with zipfile.ZipFile(resource.DIFFRAC_PATH) as brml:
+        with zipfile.ZipFile(resources.DIFFRAC_PATH) as brml:
             datafile = brml.infolist()[-3]
             data = read_brml_rawdata_file(brml, datafile)
 
@@ -268,7 +268,7 @@ class TestDataFiles:
 
     def test_diffrac(self) -> None:
 
-        data = DiffracBrmlFile(resource.DIFFRAC_PATH)
+        data = DiffracBrmlFile(resources.DIFFRAC_PATH)
         expected = {
             "x_data": np.array([10.0001, 10.0197, 10.0394, 59.9705, 59.9901, 60.0097]),
             "y_data": np.array([191.0, 208.0, 224.0, 95.0, 68.0, 86.0]),
@@ -292,7 +292,7 @@ class TestDataFiles:
         }
         self.assert_signal(data[0], expected)
 
-        data = DiffracBrmlFile(resource.DIFFRAC_TIMELAPSE_PATH)
+        data = DiffracBrmlFile(resources.DIFFRAC_TIMELAPSE_PATH)
         expected = {
             "x_data": np.array([12.0001, 12.0021, 12.0041, 14.4961, 14.4981, 14.5001]),
             "y_data": np.array([0.0, 0.0, 178.0, 52.0, 48.0, 53.0]),
@@ -317,7 +317,7 @@ class TestDataFiles:
         }
         self.assert_signal(data[-1], expected)
 
-        data = DiffracBrmlFile(resource.DIFFRAC_PSD_PATH)
+        data = DiffracBrmlFile(resources.DIFFRAC_PSD_PATH)
         expected = {
             "x_data": np.array([8.5001, 8.5118762, 8.52365241, 10.73757886, 10.74935506, 10.76113126]),
             "y_data": np.array([5.000e00, 1.000e00, 2.129e03, 0.000e00, 1.000e00, 1.000e00]),
@@ -344,7 +344,7 @@ class TestDataFiles:
 
     def test_easylog(self) -> None:
 
-        data = EasyLogFile(resource.EASYLOG_PATH)
+        data = EasyLogFile(resources.EASYLOG_PATH)
         expected = {
             "x_data": np.array([0.0000e00, 1.2000e02, 2.4000e02, 2.5284e05, 2.5296e05, 2.5308e05]),
             "y_data": np.array([19.0, 19.0, 18.5, 18.5, 19.5, 22.5]),
@@ -376,7 +376,7 @@ class TestDataFiles:
 
     def test_edinst(self) -> None:
 
-        data = EdinstFile(resource.F980_IRF_PATH)
+        data = EdinstFile(resources.F980_IRF_PATH)
         expected = {
             "x_data": np.array([0.0, 0.9765625, 1.953125, 497.07031, 498.04688, 499.02344]),
             "y_data": np.array([4.0, 1.0, 2.0, 5.0, 1.0, 8.0]),
@@ -400,7 +400,7 @@ class TestDataFiles:
         }
         self.assert_signal(data[0], expected)
 
-        data = EdinstFile(resource.F980_EMSCAN_PATH)
+        data = EdinstFile(resources.F980_EMSCAN_PATH)
         expected = {
             "x_data": np.array([675.0, 676.0, 677.0, 818.0, 819.0, 820.0]),
             "y_data": np.array([0.0, 22.4496574, 22.899437, 11287.127, 6189.1084, 0.0]),
@@ -436,7 +436,7 @@ class TestDataFiles:
         }
         self.assert_signal(data[0], expected)
 
-        data = EdinstFile(resource.F980_IRF_MULTIPLE_PATH)
+        data = EdinstFile(resources.F980_IRF_MULTIPLE_PATH)
         expected = {
             "x_data": np.array([0.0, 3.90625, 7.8125, 988.28125, 992.1875, 996.09375]),
             "y_data": np.array([7.0, 2.0, 3.0, 3.0, 4.0, 7.0]),
@@ -460,7 +460,7 @@ class TestDataFiles:
         }
         self.assert_signal(data[0], expected)
 
-        data = EdinstFile(resource.F980_IRF_COMMA_PATH, delimiter=",")
+        data = EdinstFile(resources.F980_IRF_COMMA_PATH, delimiter=",")
         expected = {
             "x_data": np.array([0.0, 1.953125, 3.90625, 494.14063, 496.09375, 498.04688]),
             "y_data": np.array([26.0, 29.0, 30.0, 38.0, 43.0, 26.0]),
@@ -484,7 +484,7 @@ class TestDataFiles:
         }
         self.assert_signal(data[0], expected)
 
-        data = EdinstFile(resource.FLUORACLE_EMISSION_PATH)
+        data = EdinstFile(resources.FLUORACLE_EMISSION_PATH)
         expected = {
             "x_data": np.array([375.0, 376.0, 377.0, 598.0, 599.0, 600.0]),
             "y_data": np.array([10774.1357, 10104.75, 9978.43262, 852.291443, 884.633545, 796.848145]),
@@ -520,7 +520,7 @@ class TestDataFiles:
         }
         self.assert_signal(data[0], expected)
 
-        data = EdinstFile(resource.FLUORACLE_MULTIPLE_EMISSION_PATH)
+        data = EdinstFile(resources.FLUORACLE_MULTIPLE_EMISSION_PATH)
         expected = {
             "x_data": np.array([500.0, 500.5, 501.0, 599.0, 599.5, 600.0]),
             "y_data": np.array([25.375803, 27.6460876, 26.2228432, 14.2663317, 17.3304443, 15.4786711]),
@@ -558,7 +558,7 @@ class TestDataFiles:
 
     def test_fluoressence(self) -> None:
 
-        data = FluorEssenceFile(resource.FLUORESSENCE_PATH)
+        data = FluorEssenceFile(resources.FLUORESSENCE_PATH)
         expected = {
             "x_data": np.array([490.0, 491.0, 492.0, 698.0, 699.0, 700.0]),
             "y_data": np.array(
@@ -574,7 +574,7 @@ class TestDataFiles:
         }
         self.assert_signal(data["S1c / R1c"], expected)
 
-        data = FluorEssenceFile(resource.FLUORESSENCE_ALLCOL_PATH)
+        data = FluorEssenceFile(resources.FLUORESSENCE_ALLCOL_PATH)
         expected = {
             "x_data": np.array([700.0, 701.0, 702.0, 848.0, 849.0, 850.0]),
             "y_data": np.array([243.32337943, 253.62609798, 244.50769122, 165.42510121, 154.60077388, 154.53307392]),
@@ -601,7 +601,7 @@ class TestDataFiles:
         }
         self.assert_signal(data["S1"], expected)
 
-        data = FluorEssenceFile(resource.FLUORESSENCE_MULTIPLE_PATH)
+        data = FluorEssenceFile(resources.FLUORESSENCE_MULTIPLE_PATH)
         expected = {
             "x_data": np.array([650.0, 651.0, 652.0, 848.0, 849.0, 850.0]),
             "y_data": np.array([111.93601741, 96.76899294, 100.82534075, 1940.96407674, 2386.23609332, 1665.61854766]),
@@ -625,7 +625,7 @@ class TestDataFiles:
 
     def test_flwinlab(self) -> None:
 
-        data = FlWinlabFile(resource.FLWINLAB_PATH)
+        data = FlWinlabFile(resources.FLWINLAB_PATH)
         expected = {
             "x_data": np.array([350.0, 350.5, 351.0, 598.5, 599.0, 599.5]),
             "y_data": np.array([65.282, 54.64567, 44.866456, 5.854989, 5.846911, 5.84554]),
@@ -643,7 +643,7 @@ class TestDataFiles:
 
     def test_lambdaspx(self) -> None:
 
-        data = LambdaSpxFile(resource.LAMBDASPX_ABSORBANCE_PATH)
+        data = LambdaSpxFile(resources.LAMBDASPX_ABSORBANCE_PATH)
         expected = {
             "x_data": np.array([700.0, 700.5, 701.0, 799.0, 799.5, 800.0]),
             "y_data": np.array([0.5041709, 0.50298887, 0.50147861, 0.21925835, 0.21803915, 0.21983826]),
@@ -660,7 +660,7 @@ class TestDataFiles:
         }
         self.assert_signal(data, expected)
 
-        data = LambdaSpxFile(resource.LAMBDASPX_REFLECTANCE_PATH)
+        data = LambdaSpxFile(resources.LAMBDASPX_REFLECTANCE_PATH)
         expected = {
             "x_data": np.array([700.0, 700.5, 701.0, 799.0, 799.5, 800.0]),
             "y_data": np.array([31.24734461, 31.35104477, 31.39903992, 60.31588614, 60.29761881, 60.16479731]),
@@ -677,7 +677,7 @@ class TestDataFiles:
         }
         self.assert_signal(data, expected)
 
-        data = LambdaSpxFile(resource.LAMBDASPX_TRANSMITTANCE_PATH)
+        data = LambdaSpxFile(resources.LAMBDASPX_TRANSMITTANCE_PATH)
         expected = {
             "x_data": np.array([700.0, 700.5, 701.0, 799.0, 799.5, 800.0]),
             "y_data": np.array([31.42957985, 31.43935651, 31.4599216, 60.38159132, 60.50872058, 60.50410867]),
@@ -694,7 +694,7 @@ class TestDataFiles:
         }
         self.assert_signal(data, expected)
 
-        data = LambdaSpxFile(resource.LAMBDASPX_ABSORBANCE2_PATH)
+        data = LambdaSpxFile(resources.LAMBDASPX_ABSORBANCE2_PATH)
         expected = {
             "x_data": np.array([200.0, 201.0, 202.0, 798.0, 799.0, 800.0]),
             "y_data": np.array([0.62599342, 0.64735628, 0.66461102, 0.1690872, 0.16830412, 0.16843767]),
@@ -713,7 +713,7 @@ class TestDataFiles:
 
     def test_prodata(self) -> None:
 
-        data = ProDataSignal(resource.PRODATA_PLL_12WL_1PROP_PATH)
+        data = ProDataSignal(resources.PRODATA_PLL_12WL_1PROP_PATH)
         expected = {
             "x_data": np.array([-9.98e-07, -9.94e-07, -9.90e-07, -4.98e-07, -4.94e-07, -4.90e-07]),
             "y_data": np.array([-3.12e-16, -3.12e-16, -3.12e-16, -3.12e-16, -3.12e-16, -3.12e-16]),
@@ -730,7 +730,7 @@ class TestDataFiles:
         }
         self.assert_signal(data["dT/T"][0], expected)
 
-        data = ProDataSignal(resource.PRODATA_TAS_3PROP_PATH)
+        data = ProDataSignal(resources.PRODATA_TAS_3PROP_PATH)
         expected = {
             "x_data": np.array([-9.89e-07, -9.73e-07, -9.57e-07, 9.61e-07, 9.77e-07, 9.93e-07]),
             "y_data": np.array([0.440035, 0.43998, 0.440085, 0.440225, 0.44, 0.44009]),
@@ -748,7 +748,7 @@ class TestDataFiles:
         self.assert_signal(data["100 % T Baseline"][0], expected)
 
     def test_sbtps_seq(self) -> None:
-        data = SbtpsSeqFile(resource.SBTPS_SEQ1_PATH)
+        data = SbtpsSeqFile(resources.SBTPS_SEQ1_PATH)
         expected = {
             "x_data": np.array([-0.1, -0.09, -0.075, 1.07, 1.085, 1.1]),
             "y_data": np.array([17.90753, 17.76527, 17.40059, -29.98907, -29.98892, -29.98761]),
@@ -774,7 +774,7 @@ class TestDataFiles:
         }
         self.assert_signal(data["Reverse"][-1], expected)
 
-        data = SbtpsSeqFile(resource.SBTPS_SEQ2_PATH)
+        data = SbtpsSeqFile(resources.SBTPS_SEQ2_PATH)
         expected = {
             "x_data": np.array([-0.2, -0.18, -0.16, 1.06, 1.08, 1.1]),
             "y_data": np.array([0.1799218, 0.1585494, 0.1367925, -9.380523, -9.624294, -8.67218]),
@@ -800,7 +800,7 @@ class TestDataFiles:
         }
         self.assert_signal(data["Reverse"][0], expected)
 
-        data = SbtpsSeqFile(resource.SBTPS_SEQ3_PATH)
+        data = SbtpsSeqFile(resources.SBTPS_SEQ3_PATH)
         expected = {
             "x_data": np.array([-0.1, -0.1, -0.08, 1.14, 1.16, 1.18]),
             "y_data": np.array([1.661264e-02, 1.371791e-02, 1.646814e-02, -1.613068e01, -1.754159e01, -1.808632e01]),
@@ -827,7 +827,7 @@ class TestDataFiles:
         self.assert_signal(data["Reverse"][0], expected)
 
     def test_sbtps_iv(self) -> None:
-        data = SbtpsIvFile(resource.SBTPS_IV1_PATH)
+        data = SbtpsIvFile(resources.SBTPS_IV1_PATH)
         expected = {
             "x_data": np.array([-0.1, -0.085, -0.07, 1.08, 1.095, 1.1]),
             "y_data": np.array([18.99143, 17.11235, 16.38189, -27.84484, -29.17089, -29.87343]),
@@ -853,7 +853,7 @@ class TestDataFiles:
         }
         self.assert_signal(data["Time"], expected)
 
-        data = SbtpsIvFile(resource.SBTPS_IV2_PATH)
+        data = SbtpsIvFile(resources.SBTPS_IV2_PATH)
         expected = {
             "x_data": np.array([0.4895, 0.4895, 0.4895, 0.4895, 0.4895, 0.4895]),
             "y_data": np.array([21.1545, 19.65363, 19.4841, 16.92228, 16.92511, 16.9125]),
@@ -867,7 +867,7 @@ class TestDataFiles:
         }
         self.assert_signal(data["Current density"], expected)
 
-        data = SbtpsIvFile(resource.SBTPS_IV3_PATH)
+        data = SbtpsIvFile(resources.SBTPS_IV3_PATH)
         expected = {
             "x_data": np.array([-0.1, -0.1, -0.08, 1.14, 1.16, 1.18]),
             "y_data": np.array([1.661264e-02, 1.371791e-02, 1.646814e-02, -1.613068e01, -1.754159e01, -1.808632e01]),
@@ -882,7 +882,7 @@ class TestDataFiles:
         self.assert_signal(data["Current density"], expected)
 
     def test_simple_data(self) -> None:
-        data = SimpleDataFile(resource.SIMPLE_TAB_PATH)
+        data = SimpleDataFile(resources.SIMPLE_TAB_PATH)
         expected = {
             "x_data": np.array([340.07, 340.45, 340.82, 1028.37, 1028.66, 1028.94]),
             "y_data": np.array([768.57, 768.57, 768.57, 818.06, 809.32, 819.71]),
@@ -896,7 +896,7 @@ class TestDataFiles:
         }
         self.assert_signal(data[0], expected)
 
-        data = SimpleDataFile(resource.SIMPLE_SEMICOLON_PATH, ";")
+        data = SimpleDataFile(resources.SIMPLE_SEMICOLON_PATH, ";")
         expected = {
             "x_data": np.array([800.14495197, 802.07594206, 804.9724272, 1786.78433957, 1792.19111183, 1797.59788408]),
             "y_data": np.array([0.12535344, 0.09868099, 0.1913995, 0.08115339, 0.07994678, 0.07543786]),
@@ -911,7 +911,7 @@ class TestDataFiles:
         self.assert_signal(data[0], expected)
 
     def test_spectrasuit(self) -> None:
-        data = SpectraSuiteFile(resource.SPECTRASUITE_HEADER_PATH)
+        data = SpectraSuiteFile(resources.SPECTRASUITE_HEADER_PATH)
         expected = {
             "x_data": np.array([340.07, 340.45, 340.82, 1028.37, 1028.66, 1028.94]),
             "y_data": np.array([776.36, 776.36, 776.36, 833.99, 829.02, 829.92]),
@@ -928,7 +928,7 @@ class TestDataFiles:
         }
         self.assert_signal(data, expected)
 
-        data = SpectraSuiteFile(resource.SPECTRASUITE_HEADER_BST_PATH)
+        data = SpectraSuiteFile(resources.SPECTRASUITE_HEADER_BST_PATH)
         expected = {
             "x_data": np.array([340.07, 340.45, 340.82, 1028.37, 1028.66, 1028.94]),
             "y_data": np.array([732.18, 732.18, 732.18, 973.99, 1003.36, 1089.24]),
@@ -947,7 +947,7 @@ class TestDataFiles:
 
     def test_perkinelmer(self) -> None:
 
-        data = PerkinElmerFile(resource.SPECTRUM_PATH)
+        data = PerkinElmerFile(resources.SPECTRUM_PATH)
         expected = {
             "x_data": np.array([650.0, 650.5, 651.0, 3999.0, 3999.5, 4000.0]),
             "y_data": np.array([80.18, 80.25, 80.27, 96.38, 96.37, 96.36]),
@@ -961,7 +961,7 @@ class TestDataFiles:
         }
         self.assert_signal(data, expected)
 
-        data = PerkinElmerFile(resource.SPECTRUM_MULTIPLE_PATH)
+        data = PerkinElmerFile(resources.SPECTRUM_MULTIPLE_PATH)
         expected = {
             "x_data": np.array([450.0, 451.0, 452.0, 1048.0, 1049.0, 1050.0]),
             "y_data": np.array([0.0168, 0.0289, 0.0151, 0.116, 0.117, 0.118]),
@@ -975,7 +975,7 @@ class TestDataFiles:
         }
         self.assert_signal(data[0], expected)
 
-        data = PerkinElmerFile(resource.UVWINLAB_PATH)
+        data = PerkinElmerFile(resources.UVWINLAB_PATH)
         expected = {
             "x_data": np.array([200.0, 201.0, 202.0, 698.0, 699.0, 700.0]),
             "y_data": np.array([1.00000e01, 2.74454e-01, 1.74635e-01, 7.53000e-04, 4.97000e-04, 4.65000e-04]),
@@ -990,7 +990,7 @@ class TestDataFiles:
         self.assert_signal(data, expected)
 
     def test_uvwinlab_ascii(self) -> None:
-        data = UVWinLabASCII(resource.UVWINLAB_ASCII_PATH)
+        data = UVWinLabASCII(resources.UVWINLAB_ASCII_PATH)
         expected = {
             "x_data": np.array([390.0, 391.0, 392.0, 418.0, 419.0, 420.0]),
             "y_data": np.array([26.218752, 26.132979, 26.056731, 23.728336, 23.64869, 23.606037]),
@@ -1007,7 +1007,7 @@ class TestDataFiles:
         self.assert_signal(data, expected)
 
     def test_vesta(self) -> None:
-        data = VestaDiffractionFile(resource.VESTA_PATH)
+        data = VestaDiffractionFile(resources.VESTA_PATH)
         expected = {
             "x_data": np.array([1.0, 1.01, 1.02, 119.97, 119.98, 119.99]),
             "y_data": np.array([0.11191, 0.10984, 0.10782, 0.0693, 0.07054, 0.07185]),
@@ -1023,7 +1023,7 @@ class TestDataFiles:
 
     def test_wire(self) -> None:
 
-        data = WireFile(resource.WIRE1_PATH)
+        data = WireFile(resources.WIRE1_PATH)
         expected = {
             "x_data": np.array([794.19726562, 795.4375, 796.67578125, 1940.97460938, 1942.00976562, 1943.04492188]),
             "y_data": np.array(
@@ -1039,7 +1039,7 @@ class TestDataFiles:
         }
         self.assert_signal(data, expected)
 
-        data = WireFile(resource.WIRE2_PATH)
+        data = WireFile(resources.WIRE2_PATH)
         expected = {
             "x_data": np.array([830.99182129, 832.17248535, 833.35412598, 1897.29064941, 1898.23693848, 1899.18322754]),
             "y_data": np.array([28863.01171875, 28688.14453125, 28792.6875, 21222.15625, 20938.0703125, 20763.609375]),
@@ -1054,7 +1054,7 @@ class TestDataFiles:
         self.assert_signal(data, expected)
 
     def test_zem3(self) -> None:
-        data = Zem3(resource.ZEM3_PATH)
+        data = Zem3(resources.ZEM3_PATH)
         expected = {
             "x_data": np.array([44.16055, 59.66502, 77.633, 248.0079, 267.0932, 286.0288]),
             "y_data": np.array([3.276580e-06, 3.357355e-06, 3.403639e-06, 3.281571e-06, 3.180939e-06, 5.350202e-06]),
@@ -1068,7 +1068,7 @@ class TestDataFiles:
         }
         self.assert_signal(data["Resistivity(Ohm m)"], expected)
 
-        data = Zem3(resource.ZEM3_TXT_PATH)
+        data = Zem3(resources.ZEM3_TXT_PATH)
         expected = {
             "x_data": np.array([39.44201, 42.1815, 44.11031, 283.6468, 286.4197, 288.0198]),
             "y_data": np.array([-0.3088848, 0.8997093, 2.302329, -0.7177747, 0.3782233, 1.430436]),
@@ -1086,6 +1086,6 @@ class TestDataFiles:
 def test_detect_file_type() -> None:
     """Check that the test files are properly detected"""
 
-    for path in resource.FILE_TYPE_DICT:
+    for path in resources.FILE_TYPE_DICT:
         print(path)
-        assert detect_file_type(path)[1] == resource.FILE_TYPE_DICT[path]
+        assert detect_file_type(path)[1] == resources.FILE_TYPE_DICT[path]
