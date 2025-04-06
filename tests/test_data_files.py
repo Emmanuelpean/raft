@@ -12,7 +12,7 @@ import tempfile
 
 import pytest
 
-from app import resource
+from app import resources
 from app.data_files import *
 from app.utils import are_close
 

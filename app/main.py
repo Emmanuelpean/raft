@@ -7,9 +7,12 @@ import streamlit as st
 
 from data_files import FUNCTIONS, detect_file_type
 from plot import plot
-from resource import LOGO_FILENAME, LOGO_TEXT_FILENAME, CSS_STYLE_PATH
+from resources import LOGO_FILENAME, LOGO_TEXT_FILENAME, CSS_STYLE_PATH
 from signal_data import SignalData, Dimension
 from utils import render_image, matrix_to_string, read_txt_file
+
+__version__ = "2.0.0"
+__date__ = "March 2025"
 
 dirname = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

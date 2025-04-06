@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch
 
 from streamlit.testing.v1 import AppTest
 
-import resource
+import resources
 
 
 class TestApp:
