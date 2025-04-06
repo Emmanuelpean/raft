@@ -19,11 +19,11 @@ import resources
 class TestApp:
     main_path = "app/main.py"
 
-    # def teardown_method(self) -> None:
-    #     """Teardown method that runs after each test."""
-    #
-    #     # Make sure that no exception happened
-    #     assert len(self.at.exception) == 0
+    def teardown_method(self) -> None:
+        """Teardown method that runs after each test."""
+
+        # Make sure that no exception happened
+        assert len(self.at.exception) == 0
 
     def test_default(self) -> None:
 

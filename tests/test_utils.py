@@ -354,7 +354,8 @@ class TestGetDataIndex:
 class TestGrep:
 
     def setup_method(self) -> None:
-        # Sample data to use across tests
+        """Sample data to use across tests"""
+
         self.sample_content = [
             "name: John",
             "age: 30",

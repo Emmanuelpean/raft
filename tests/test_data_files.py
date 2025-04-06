@@ -238,9 +238,13 @@ class TestDataFiles:
 
     def test_read_brml_rawdata_file(self) -> None:
 
-        with zipfile.ZipFile(resources.DIFFRAC_PATH) as brml:
-            datafile = brml.infolist()[-3]
-            data = read_brml_rawdata_file(brml, datafile)
+        try:
+            with zipfile.ZipFile(resources.DIFFRAC_PATH) as brml:
+                datafile = brml.infolist()[-3]
+                data = read_brml_rawdata_file(brml, datafile)
+        except:
+            with open(resources.DIFFRAC_PATH) as brml:
+                print(brml.read())
 
         expected = {
             "x_data": np.array([10.0001, 10.0197, 10.0394, 59.9705, 59.9901, 60.0097]),

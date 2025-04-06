@@ -1,4 +1,4 @@
-""" plot module """
+"""plot module"""
 
 import itertools
 import math
@@ -11,9 +11,9 @@ from signal_data import SignalData
 
 
 def subplots(
-        n: int,
-        m: int | None = None,
-        **kwargs,
+    n: int,
+    m: int | None = None,
+    **kwargs,
 ) -> tuple[go.Figure, list[tuple[int, int]]]:
     """Create n subplots
     :param n: number of subplots
@@ -28,11 +28,13 @@ def subplots(
     return ps.make_subplots(rows=nb_rows, cols=nb_cols, **kwargs), positions
 
 
-def plot(signals: dict[str, list[SignalData]] | dict[str, SignalData] | list[SignalData] | SignalData,
-         position: list | None = None,
-         figure: go.Figure | None = None,
-         *args,
-         **kwargs):
+def plot(
+    signals: dict[str, list[SignalData]] | dict[str, SignalData] | list[SignalData] | SignalData,
+    position: list | None = None,
+    figure: go.Figure | None = None,
+    *args,
+    **kwargs,
+):
     """Plot signals in a Plotly figure.
     :param signals: Signal data to plot. Can be:
             - A single SignalData object
@@ -49,6 +51,7 @@ def plot(signals: dict[str, list[SignalData]] | dict[str, SignalData] | list[Sig
     if isinstance(signals, dict):
         figure, positions = subplots(len(signals))
         for key, position in zip(signals, positions):
+            # noinspection PyTypeChecker
             plot(signals[key], position, figure, *args, **kwargs)
 
     else:
