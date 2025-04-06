@@ -8,3 +8,4 @@
 
 ## Bug fixes
 * [ ] Fix bug preventing the loading of diffrac and wire files
+* [ ] Fix name error in License

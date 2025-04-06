@@ -825,40 +825,58 @@ def VestaDiffractionFile(filename: str) -> SignalData:
 
 # -------------------------------------------------------- WIRE --------------------------------------------------------
 
+#
+# def WireFile(filename: str | BytesIO) -> SignalData | None:
+#     """Read Renishaw WiRE files.
+#     :param filename: file path or BytesIO object"""
+#
+#     temp_file_path = ""
+#
+#     if not isinstance(filename, str):
+#         temp_file_path = "temp_"
+#         with open(temp_file_path, "wb") as ofile:
+#             ofile.write(filename.read())
+#             filename = temp_file_path
+#
+#     try:
+#         reader = WDFReader(filename)
+#
+#         x_data = np.array(reader.xdata[::-1], dtype=float)
+#         y_data = np.array(reader.spectra[::-1], dtype=float)
+#
+#         if reader.xlist_unit.name == "RamanShift":
+#             x = Dimension(x_data, constants.wavenumber_qt, constants.cm_1_unit)
+#         else:
+#             x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
+#
+#         y = Dimension(y_data, constants.intensity_qt)
+#         return SignalData(x, y, reader.title)
+#
+#     except Exception as e:
+#         raise e  # Explicitly re-raise the exception
+#
+#     finally:
+#         if temp_file_path:
+#             os.remove(temp_file_path)
+
 
 def WireFile(filename: str | BytesIO) -> SignalData:
-    """Read Renishaw WiRE files.
-    :param filename: file path or BytesIO object"""
-
-    temp_file_path = ""
+    """Read Renishaw WiRE files
+    :param filename: file path"""
 
     if not isinstance(filename, str):
-        temp_file_path = "temp_"
-        with open(temp_file_path, "wb") as ofile:
+        with open("temp_", "wb") as ofile:
             ofile.write(filename.read())
-            filename = temp_file_path
+            filename = "temp_"
 
-    try:
-        reader = WDFReader(filename)
-
-        x_data = np.array(reader.xdata[::-1], dtype=float)
-        y_data = np.array(reader.spectra[::-1], dtype=float)
-
-        if reader.xlist_unit.name == "RamanShift":
-            x = Dimension(x_data, constants.wavenumber_qt, constants.cm_1_unit)
-        else:
-            x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
-
-        y = Dimension(y_data, constants.intensity_qt)
-        return SignalData(x, y, reader.title)
-
-    except Exception as e:
-        raise e  # Explicitly re-raise the exception
-
-    finally:
-        if temp_file_path:
-            os.remove(temp_file_path)
-        raise AssertionError()
+    reader = WDFReader(filename)
+    x_data, y_data = np.array(reader.xdata[::-1], dtype=float), np.array(reader.spectra[::-1], dtype=float)
+    if reader.xlist_unit.name == "RamanShift":
+        x = Dimension(x_data, constants.wavenumber_qt, constants.cm_1_unit)
+    else:
+        x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
+    y = Dimension(y_data, constants.intensity_qt)
+    return SignalData(x, y, reader.title)
 
 
 # -------------------------------------------------------- ZEM3 --------------------------------------------------------
