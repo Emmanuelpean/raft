@@ -237,14 +237,13 @@ class TestDataFiles:
         self.assert_signal(data, expected)
 
     def test_read_brml_rawdata_file(self) -> None:
+        from pathlib import Path
 
-        try:
-            with zipfile.ZipFile(resources.DIFFRAC_PATH) as brml:
-                datafile = brml.infolist()[-3]
-                data = read_brml_rawdata_file(brml, datafile)
-        except:
-            with open(resources.DIFFRAC_PATH) as brml:
-                print(brml.read())
+        DIFFRAC_PATH = Path(__file__).parent / "resources/test_files/Diffrac/Diffrac.brml"
+
+        with zipfile.ZipFile(DIFFRAC_PATH) as brml:
+            datafile = brml.infolist()[-3]
+            data = read_brml_rawdata_file(brml, datafile)
 
         expected = {
             "x_data": np.array([10.0001, 10.0197, 10.0394, 59.9705, 59.9901, 60.0097]),
