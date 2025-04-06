@@ -21,7 +21,7 @@ BEAMPRO_PATH = path.join(resources_path, "test_files/BeamPro/BeamPro.txt")
 DEKTAK_PATH = path.join(resources_path, "test_files/Dektak/Dektak.csv")
 
 # Diffrac
-DIFFRAC_PATH = path.join(resources_path, "test_files/Diffrac/Diffrac.brml")
+DIFFRAC_PATH = path.join(resources_path, "test_files/Diffrac/diffrac.brml")
 DIFFRAC_TIMELAPSE_PATH = path.join(resources_path, "test_files/Diffrac/Diffrac_multiple.brml")
 DIFFRAC_PSD_PATH = path.join(resources_path, "test_files/Diffrac/Diffrac_PSD.brml")
 
