@@ -4,3 +4,4 @@ htmlcov
 __pycache__/
 core/__pycache__/
 tests/__pycache__/
+/.idea
