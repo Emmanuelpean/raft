@@ -237,12 +237,6 @@ class TestDataFiles:
         self.assert_signal(data, expected)
 
     def test_read_brml_rawdata_file(self) -> None:
-        if not os.path.exists(resources.DIFFRAC_PATH):
-            raise FileNotFoundError(
-                f"Could not find file: {resources.DIFFRAC_PATH}\n"
-                f"Current working directory: {os.getcwd()}\n"
-                f"Contents of directory: {os.listdir(os.path.dirname(resources.DIFFRAC_PATH))}"
-            )
 
         with zipfile.ZipFile(resources.DIFFRAC_PATH) as brml:
             datafile = brml.infolist()[-3]
@@ -255,7 +249,7 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "deg",
             "y_unit": "counts",
-            "name": "Diffrac",
+            "name": "diffrac",
             "shortname": "RawData0",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2017, 8, 4, 16, 43, 2, 345953), "time", ""),
@@ -269,7 +263,6 @@ class TestDataFiles:
                 "Z": Dimension(1.4, "Z", "mm"),
             },
         }
-
         self.assert_signal(data, expected)
 
     def test_diffrac(self) -> None:
@@ -282,7 +275,7 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "deg",
             "y_unit": "counts",
-            "name": "Diffrac",
+            "name": "diffrac",
             "shortname": "RawData0",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2017, 8, 4, 16, 43, 2, 345953), "time", ""),
