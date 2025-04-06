@@ -13,7 +13,7 @@ from unittest.mock import mock_open, patch
 
 import pytest
 
-from core.utils import *
+from app.utils import *
 
 
 # --------------------------------------------------- DATA CONVERSION --------------------------------------------------

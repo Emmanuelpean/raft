@@ -10,8 +10,8 @@ robustness of the functions."""
 import plotly.subplots as ps
 import pytest
 
-from core.signal_data import *
-from core.utils import are_close, are_identical
+from app.signal_data import *
+from app.utils import are_close, are_identical
 
 
 class TestGetLabel:

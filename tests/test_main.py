@@ -17,7 +17,7 @@ import resource
 
 
 class TestApp:
-    main_path = "core/main.py"
+    main_path = "app/main.py"
 
     def teardown_method(self) -> None:
         """Teardown method that runs after each test."""

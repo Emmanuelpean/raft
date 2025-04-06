@@ -12,9 +12,9 @@ import tempfile
 
 import pytest
 
-from core import resource
-from core.data_files import *
-from core.utils import are_close
+from app import resource
+from app.data_files import *
+from app.utils import are_close
 
 
 @pytest.mark.parametrize(
