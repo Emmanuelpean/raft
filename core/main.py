@@ -5,7 +5,7 @@ import os
 import plotly.graph_objects as go
 import streamlit as st
 
-from data_files import functions, detect_file_type
+from data_files import FUNCTIONS, detect_file_type
 from plot import plot
 from resource import LOGO_FILENAME, LOGO_TEXT_FILENAME, CSS_STYLE_PATH
 from signal_data import SignalData, Dimension
@@ -35,12 +35,13 @@ set_style()
 file = st.sidebar.file_uploader("File uploader", label_visibility="hidden")
 
 # File type
-filetypes = ["Detect"] + sorted(functions.keys())
+filetypes = ["Detect"] + sorted(FUNCTIONS.keys())
 filetype_help = "Select the file type. If 'Detect' is selected, the file type will be automatically detected"
 filetype = st.sidebar.selectbox(
     label="Data file type",
     options=filetypes,
     help=filetype_help,
+    key="filetype_select",
 )
 filetype_message = st.sidebar.empty()
 
@@ -50,32 +51,32 @@ signal = None
 if not file:
     st.markdown(render_image(LOGO_TEXT_FILENAME, 25), unsafe_allow_html=True)  # main logo
     st.info(
-        "RAFT is a free tool to plot the content a various data files. Just drag and drop your file and get the relevant information from it!"
+        "RAFT is a free tool to plot the content a various data files. Just drag and drop your file and get "
+        "the relevant information from it!"
     )
 
 else:
 
     # -------------------------------------------------- DATA LOADING --------------------------------------------------
-    print("loading file")
 
     # Attempt to load the data by testing every file types
     if filetype == "Detect":
 
-        signal, extension = detect_file_type(file)  # TODO bug here
-        filetype_message.markdown("Detected: %s" % extension)
+        signal, extension = detect_file_type(file)
+        filetype_message.markdown(f"Detected: {extension}")
 
     # Attempt to load the data using the provided function
     else:
         try:
-            signal = functions[filetype][0](file)
+            signal = FUNCTIONS[filetype][0](file)
         except:
             pass
 
-    # If the signal could be loaded, display an error message, else store it in the session state
+    # If the signal could be loaded, display a warning message
     if signal is None:
         st.warning("Unable to read that file")
 
-    # If signals are stored in the session state
+    # else display the data
     else:
 
         plot_spot = st.empty()
@@ -84,7 +85,11 @@ else:
 
         # Select the data type to plot if signal is a dictionary
         if isinstance(signal, dict):
-            selection = st.sidebar.selectbox("Data type to plot", ["All"] + list(signal.keys()))
+            selection = st.sidebar.selectbox(
+                label="Data type to plot",
+                options=["All"] + list(signal.keys()),
+                key="type_select",
+            )
             if selection in signal:
                 signal = signal[selection]
 
@@ -92,7 +97,11 @@ else:
         if isinstance(signal, (list, tuple)) and len(signal) > 1:
             names = [s.get_name(False) for s in signal]
             signal_dict = dict(zip(names, signal))
-            col_selection = st.sidebar.selectbox("Data to plot", ["All"] + sorted(signal_dict.keys()))
+            col_selection = st.sidebar.selectbox(
+                label="Data to plot",
+                options=["All"] + sorted(signal_dict.keys()),
+                key="data_select",
+            )
             if col_selection in signal_dict:
                 signal = signal_dict[col_selection]
 
@@ -103,15 +112,29 @@ else:
 
             header = [signal.x.get_label_raw(), signal.y.get_label_raw()]
             export_data = matrix_to_string([signal.x.data, signal.y.data], header)
-            st.sidebar.download_button("Download data", export_data, "data.csv", use_container_width=True)
+            st.sidebar.download_button(
+                "Download data",
+                export_data,
+                "data.csv",
+                use_container_width=True,
+                key="download_button",
+            )
 
             # ----------------------------------------------- DATA RANGE -----------------------------------------------
 
             min_label = Dimension(0, "min. " + signal.x.quantity, signal.x.unit).get_label_html()
             max_label = Dimension(0, "max. " + signal.x.quantity, signal.x.unit).get_label_html()
             range_cols = st.sidebar.columns(2)
-            range_button1 = range_cols[0].text_input(label=min_label, value=signal.x.data[0])
-            range_button2 = range_cols[1].text_input(label=max_label, value=signal.x.data[-1])
+            range_button1 = range_cols[0].text_input(
+                label=min_label,
+                value=signal.x.data[0],
+                key="range_input1",
+            )
+            range_button2 = range_cols[1].text_input(
+                label=max_label,
+                value=signal.x.data[-1],
+                key="range_input2",
+            )
             try:
                 signal = signal.reduce_range([float(range_button1), float(range_button2)])
             except ValueError:
@@ -127,11 +150,13 @@ else:
                 label="Smoothing\n\n (Filter Length)",
                 value=0,
                 help="Length of the Savitzky-Golay filter window",
+                key="sg_fw",
             )
             smoothing_po = smoothing_cols[1].number_input(
                 label="Smoothing\n\n (Polynomial Order)",
                 value=0,
                 help="Order of the polynomial used to fit the samples",
+                key="sg_po",
             )
 
             if smoothing_fw > 0 and smoothing_po > 0:
@@ -141,13 +166,13 @@ else:
 
             # --------------------------------------------- DATA EXTRACTION --------------------------------------------
 
-            max_button = st.sidebar.checkbox(label="Display maximum")
-            min_button = st.sidebar.checkbox(label="Display minimum")
+            max_button = st.sidebar.checkbox(label="Display maximum", key="max_button")
+            min_button = st.sidebar.checkbox(label="Display minimum", key="min_button")
             fwhm_cols = st.sidebar.columns(2)
-            fwhm_button = fwhm_cols[0].checkbox(label="Display FWHM")
+            fwhm_button = fwhm_cols[0].checkbox(label="Display FWHM", key="fwhm_button")
             fwhm_button_interp = fwhm_cols[1].checkbox(
                 "use interpolation",
-                key="fwhm_button_interp_",
+                key="fwhm_button_interp",
                 help="""Use interpolation to improve the calculation of the FWHM""",
             )
             buttons = (max_button, min_button, fwhm_button)

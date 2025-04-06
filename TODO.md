@@ -5,3 +5,6 @@
 
 ## Tests
 * [ ] Add tests for app.py.
+
+## Bug fixes
+* [ ] Fix bug preventing the loading of diffrac and wire files

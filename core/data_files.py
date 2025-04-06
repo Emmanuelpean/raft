@@ -318,7 +318,7 @@ def FluorEssenceFile(filename: str) -> list[SignalData] | dict[str, SignalData]:
     # 'Correct' the content if it does not have a first column
     while content[0][:10] != "Short Name":
         new_col = ["Short Name", "Long Name", "Units"] + list(map(str, range(1, len(content) - 2)))
-        content = [f + r"\t" + g for f, g in zip(new_col, content)]
+        content = [f + "\t" + g for f, g in zip(new_col, content)]
 
     if grep(content, "SourceName"):
 
@@ -343,7 +343,8 @@ def FluorEssenceFile(filename: str) -> list[SignalData] | dict[str, SignalData]:
             float(headers[1]["Long Name"])  # check if the Long Name is a float or int
             for header in ys_headers:
                 wl = float(header["Long Name"])
-                header[constants.pyda_id + constants.exc_wl_id] = Dimension(wl, constants.exc_wavelength_qt, constants.nm_unit)
+                dim = Dimension(wl, constants.exc_wavelength_qt, constants.nm_unit)
+                header[constants.pyda_id + constants.exc_wl_id] = dim
             names = [header["Long Name"] + " " + constants.nm_unit for header in ys_headers]
 
         except ValueError:  # Timelapse
@@ -352,6 +353,11 @@ def FluorEssenceFile(filename: str) -> list[SignalData] | dict[str, SignalData]:
                 date = dt.datetime.strptime(header["TimeStamp"], date_format)
                 header[constants.pyda_id + constants.timestamp_id] = Dimension(date, constants.time_qt)
             names = [str(header[constants.timestamp_id]) for header in ys_headers]
+
+        for header in ys_headers:
+            for key in header:
+                if not isinstance(header[key], Dimension):
+                    header[key] = Dimension(header[key])
 
         signals = []
         for y_data, y_unit, name_, y_dict in zip(ys_data, ys_unit, names, ys_headers):
@@ -377,7 +383,7 @@ def FluorEssenceFile(filename: str) -> list[SignalData] | dict[str, SignalData]:
         signals = {}
         for key in ys:
             if key != "Wavelength":
-                signals[key] = SignalData(ys["Wavelength"], ys[key], name, "(%s)" % key)
+                signals[key] = SignalData(ys["Wavelength"], ys[key], name, f"({key})")
 
         return signals
 
@@ -550,16 +556,22 @@ def ProDataSignal(filename: str) -> dict[str, list[SignalData]]:
 
         if otb_data is not None:
             otb_signals.append(
-                SignalData(x, Dimension(otb_data[i], constants.intensity_qt, constants.volt_unit), name, shortname, z_dict)
+                SignalData(
+                    x, Dimension(otb_data[i], constants.intensity_qt, constants.volt_unit), name, shortname, z_dict
+                )
             )
 
         if huntb_data is not None:
             huntb_signals.append(
-                SignalData(x, Dimension(huntb_data[i], constants.intensity_qt, constants.volt_unit), name, shortname, z_dict)
+                SignalData(
+                    x, Dimension(huntb_data[i], constants.intensity_qt, constants.volt_unit), name, shortname, z_dict
+                )
             )
 
         if rawabs_data is not None:
-            rawabs_signals.append(SignalData(x, Dimension(rawabs_data[i], constants.absorbance_qt), name, shortname, z_dict))
+            rawabs_signals.append(
+                SignalData(x, Dimension(rawabs_data[i], constants.absorbance_qt), name, shortname, z_dict)
+            )
 
     data = {
         "dT/T": signals,
@@ -583,8 +595,10 @@ def SbtpsSeqFile(filename: str) -> dict[str, list[SignalData]]:
     :param filename: file path"""
 
     content, name = read_datafile(filename)
-    # noinspection PyTypeChecker
-    data_index = grep(content, "IV data")[0][1] + 1
+    data_index = grep(content, "IV data")[0][1]
+    if not isinstance(data_index, int):
+        raise AssertionError()  # pragma: no cover
+    data_index += 1
     if not isinstance(data_index, int):
         raise AssertionError()  # pragma: no cover
     data_header = [x for x in content[data_index].split("\t") if x != ""]
@@ -813,22 +827,38 @@ def VestaDiffractionFile(filename: str) -> SignalData:
 
 
 def WireFile(filename: str | BytesIO) -> SignalData:
-    """Read Renishaw WiRE files
-    :param filename: file path"""
+    """Read Renishaw WiRE files.
+    :param filename: file path or BytesIO object"""
+
+    temp_file_path = ""
 
     if not isinstance(filename, str):
-        with open("temp_", "wb") as ofile:
+        temp_file_path = "temp_"
+        with open(temp_file_path, "wb") as ofile:
             ofile.write(filename.read())
-            filename = "temp_"
+            filename = temp_file_path
 
-    reader = WDFReader(filename)
-    x_data, y_data = np.array(reader.xdata[::-1], dtype=float), np.array(reader.spectra[::-1], dtype=float)
-    if reader.xlist_unit.name == "RamanShift":
-        x = Dimension(x_data, constants.wavenumber_qt, constants.cm_1_unit)
-    else:
-        x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
-    y = Dimension(y_data, constants.intensity_qt)
-    return SignalData(x, y, reader.title)
+    try:
+        reader = WDFReader(filename)
+
+        x_data = np.array(reader.xdata[::-1], dtype=float)
+        y_data = np.array(reader.spectra[::-1], dtype=float)
+
+        if reader.xlist_unit.name == "RamanShift":
+            x = Dimension(x_data, constants.wavenumber_qt, constants.cm_1_unit)
+        else:
+            x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
+
+        y = Dimension(y_data, constants.intensity_qt)
+        return SignalData(x, y, reader.title)
+
+    except Exception as e:
+        raise e  # Explicitly re-raise the exception
+
+    finally:
+        if temp_file_path:
+            os.remove(temp_file_path)
+        raise AssertionError()
 
 
 # -------------------------------------------------------- ZEM3 --------------------------------------------------------
@@ -858,7 +888,7 @@ def Zem3(filename: str) -> dict[str, SignalData]:
         return data
 
 
-functions = {
+FUNCTIONS = {
     "SpectraSuite (.txt)": (SpectraSuiteFile, "txt"),
     "FluorEssence (.txt)": (FluorEssenceFile, "txt"),
     "EasyLog (.txt)": (EasyLogFile, "txt"),
@@ -866,8 +896,8 @@ functions = {
     "F980/Fluoracle (.txt, tab)": (EdinstFile, "txt"),
     "F980/Fluoracle (.txt, comma)": (lambda filename: EdinstFile(filename, delimiter=","), "txt"),
     "Dektak (.csv)": (DektakFile, "csv"),
-    "UvWinlab/Spectrum (.csv)": (PerkinElmerFile, "csv"),
     "ProData (.csv)": (ProDataSignal, "csv"),
+    "UvWinlab/Spectrum (.csv)": (PerkinElmerFile, "csv"),
     "UVWinLab (.asc)": (UVWinLabASCII, "asc"),
     "FlWinlab": (FlWinlabFile, ""),
     "Diffrac (.brml)": (DiffracBrmlFile, "brml"),
@@ -894,14 +924,14 @@ def detect_file_type(filename: str | BytesIO) -> tuple[any, str] | tuple[None, N
     else:
         extension = os.path.splitext(filename.name)[1]
     filtered_functions = {}
-    for key, value in functions.items():
-        if extension.lower() == "." + functions[key][1].lower() or functions[key][1] == "":
+    for key, value in FUNCTIONS.items():
+        if extension.lower() == "." + FUNCTIONS[key][1].lower() or FUNCTIONS[key][1] == "":
             filtered_functions[key] = value[0]
 
     # Try to load the data with each function until successful
     for filetype in filtered_functions:
         try:
-            signal = functions[filetype][0](filename)
+            signal = FUNCTIONS[filetype][0](filename)
             return signal, filetype
         except:
             pass

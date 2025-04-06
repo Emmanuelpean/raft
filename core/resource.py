@@ -38,8 +38,8 @@ FLUORACLE_EMISSION_PATH = path.join(resources_path, "test_files/Edinst/Fluoracle
 FLUORACLE_MULTIPLE_EMISSION_PATH = path.join(resources_path, "test_files/Edinst/Fluoracle_emission_multiple.txt")
 
 # FluorEssence
-FLUORESSENCE_ALLCOL_PATH = path.join(resources_path, "test_files/FluorEssence/FluorEssence_allcol.txt")
 FLUORESSENCE_PATH = path.join(resources_path, "test_files/FluorEssence/FluorEssence.txt")
+FLUORESSENCE_ALLCOL_PATH = path.join(resources_path, "test_files/FluorEssence/FluorEssence_allcol.txt")
 FLUORESSENCE_MULTIPLE_PATH = path.join(resources_path, "test_files/FluorEssence/FluorEssence_multiple.txt")
 
 # FL Winlab
@@ -49,7 +49,9 @@ FLWINLAB_PATH = path.join(resources_path, "test_files/FLWinlab/FLWinlab")
 LAMBDASPX_ABSORBANCE_PATH = path.join(resources_path, "test_files/LambdaSPX/LambdaSPX_absorbance.dsp")
 LAMBDASPX_TRANSMITTANCE_PATH = path.join(resources_path, "test_files/LambdaSPX/LambdaSPX_transmittance.dsp")
 LAMBDASPX_REFLECTANCE_PATH = path.join(resources_path, "test_files/LambdaSPX/LambdaSPX_reflectance.dsp")
-LAMBDASPX_ABSORBANCE2_PATH = path.join(resources_path, "test_files/LambdaSPX/LambdaSPX_absorbance_other-date-format.dsp")
+LAMBDASPX_ABSORBANCE2_PATH = path.join(
+    resources_path, "test_files/LambdaSPX/LambdaSPX_absorbance_other-date-format.dsp"
+)
 
 # Pro-Data
 PRODATA_PLL_12WL_1PROP_PATH = path.join(resources_path, "test_files/Pro-Data/prodata-pll_12wl_1prop.csv")
@@ -89,3 +91,49 @@ WIRE2_PATH = path.join(resources_path, "test_files/WiRE/WiRE_785.wdf")
 # Zem3
 ZEM3_PATH = path.join(resources_path, "test_files/Zem3/Zem3")
 ZEM3_TXT_PATH = path.join(resources_path, "test_files/Zem3/Zem3.txt")
+
+
+FILE_TYPE_DICT = {
+    BEAMPRO_PATH: "Beampro (.txt)",
+    DEKTAK_PATH: "Dektak (.csv)",
+    DIFFRAC_PATH: "Diffrac (.brml)",
+    DIFFRAC_TIMELAPSE_PATH: "Diffrac (.brml)",
+    DIFFRAC_PSD_PATH: "Diffrac (.brml)",
+    EASYLOG_PATH: "EasyLog (.txt)",
+    F980_IRF_PATH: "F980/Fluoracle (.txt, tab)",
+    F980_EMSCAN_PATH: "F980/Fluoracle (.txt, tab)",
+    F980_IRF_MULTIPLE_PATH: "F980/Fluoracle (.txt, tab)",
+    F980_IRF_COMMA_PATH: "F980/Fluoracle (.txt, comma)",
+    FLUORACLE_EMISSION_PATH: "F980/Fluoracle (.txt, tab)",
+    FLUORACLE_ABSORPTANCE_PATH: "F980/Fluoracle (.txt, tab)",
+    FLUORACLE_MULTIPLE_EMISSION_PATH: "F980/Fluoracle (.txt, tab)",
+    FLUORESSENCE_PATH: "FluorEssence (.txt)",
+    FLUORESSENCE_MULTIPLE_PATH: "FluorEssence (.txt)",
+    FLUORESSENCE_ALLCOL_PATH: "FluorEssence (.txt)",
+    FLWINLAB_PATH: "FlWinlab",
+    LAMBDASPX_REFLECTANCE_PATH: "LambdaSpx (.dsp)",
+    LAMBDASPX_TRANSMITTANCE_PATH: "LambdaSpx (.dsp)",
+    LAMBDASPX_ABSORBANCE_PATH: "LambdaSpx (.dsp)",
+    LAMBDASPX_ABSORBANCE2_PATH: "LambdaSpx (.dsp)",
+    PRODATA_TAS_3PROP_PATH: "ProData (.csv)",
+    PRODATA_PLL_12WL_1PROP_PATH: "ProData (.csv)",
+    SBTPS_IV1_PATH: "SBTPS (.IV)",
+    SBTPS_IV2_PATH: "SBTPS (.IV)",
+    SBTPS_IV3_PATH: "SBTPS (.IV)",
+    SBTPS_SEQ1_PATH: "SBTPS (.SEQ)",
+    SBTPS_SEQ2_PATH: "SBTPS (.SEQ)",
+    SBTPS_SEQ3_PATH: "SBTPS (.SEQ)",
+    SIMPLE_TAB_PATH: "Simple (tab)",
+    SIMPLE_SEMICOLON_PATH: "Simple (semicolon)",
+    SPECTRASUITE_HEADER_PATH: "SpectraSuite (.txt)",
+    SPECTRASUITE_HEADER_BST_PATH: "SpectraSuite (.txt)",
+    SPECTRUM_PATH: "UvWinlab/Spectrum (.csv)",
+    SPECTRUM_MULTIPLE_PATH: "UvWinlab/Spectrum (.csv)",
+    UVWINLAB_PATH: "UvWinlab/Spectrum (.csv)",
+    UVWINLAB_ASCII_PATH: "UVWinLab (.asc)",
+    VESTA_PATH: "Vesta (.xy)",
+    WIRE1_PATH: "WiRE (.wdf)",
+    WIRE2_PATH: "WiRE (.wdf)",
+    ZEM3_PATH: "Zem3 (tab)",
+    ZEM3_TXT_PATH: "Zem3 (tab)",
+}

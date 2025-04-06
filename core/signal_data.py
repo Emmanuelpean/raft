@@ -130,7 +130,10 @@ class Dimension(object):
     def get_value_label_html(self) -> str:
         """Return the value label for display"""
 
-        return f"{self.get_quantity_label_html()}: {self.data:g} {self.get_unit_label_html()}"
+        if self.unit:
+            return f"{self.get_quantity_label_html()}: {self.data:g} {self.get_unit_label_html()}"
+        else:
+            return f"{self.get_quantity_label_html()}: {self.data:g}"
 
     def get_label_raw(self) -> str:
         """Get a simple label of the dimension"""

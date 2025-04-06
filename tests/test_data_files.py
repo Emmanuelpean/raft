@@ -236,111 +236,111 @@ class TestDataFiles:
         }
         self.assert_signal(data, expected)
 
-    # def test_read_brml_rawdata_file(self) -> None:
-    #
-    #     with zipfile.ZipFile(resource.diffrac_brml) as brml:
-    #         datafile = brml.infolist()[-3]
-    #         data = read_brml_rawdata_file(brml, datafile)
-    #
-    #     expected = {
-    #         "x_data": np.array([10.0001, 10.0197, 10.0394, 59.9705, 59.9901, 60.0097]),
-    #         "y_data": np.array([191.0, 208.0, 224.0, 95.0, 68.0, 86.0]),
-    #         "x_quantity": "2 theta",
-    #         "y_quantity": "intensity",
-    #         "x_unit": "deg",
-    #         "y_unit": "counts",
-    #         "name": "Diffrac",
-    #         "shortname": "RawData0",
-    #         "z_dict": {
-    #             "TimeStamp": Dimension(dt.datetime(2017, 8, 4, 16, 43, 2, 345953), "time", ""),
-    #             "IntegrationTime": Dimension(0.15, "time", "s"),
-    #             "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
-    #             "measure_time": Dimension(412.58348, "time", "s"),
-    #             "Chi": Dimension(-0.0, "Chi", "°"),
-    #             "Phi": Dimension(0.0, "Phi", "°"),
-    #             "X": Dimension(-0.0, "X", "mm"),
-    #             "Y": Dimension(-0.0, "Y", "mm"),
-    #             "Z": Dimension(1.4, "Z", "mm"),
-    #         },
-    #     }
-    #
-    #     self.assert_signal(data, expected)
-    #
-    # def test_diffrac(self) -> None:
-    #
-    #     data = DiffracBrmlFile(resource.diffrac_brml)
-    #     expected = {
-    #         "x_data": np.array([10.0001, 10.0197, 10.0394, 59.9705, 59.9901, 60.0097]),
-    #         "y_data": np.array([191.0, 208.0, 224.0, 95.0, 68.0, 86.0]),
-    #         "x_quantity": "2 theta",
-    #         "y_quantity": "intensity",
-    #         "x_unit": "deg",
-    #         "y_unit": "counts",
-    #         "name": "Diffrac",
-    #         "shortname": "RawData0",
-    #         "z_dict": {
-    #             "TimeStamp": Dimension(dt.datetime(2017, 8, 4, 16, 43, 2, 345953), "time", ""),
-    #             "IntegrationTime": Dimension(0.15, "time", "s"),
-    #             "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
-    #             "measure_time": Dimension(412.58348, "time", "s"),
-    #             "Chi": Dimension(-0.0, "Chi", "°"),
-    #             "Phi": Dimension(0.0, "Phi", "°"),
-    #             "X": Dimension(-0.0, "X", "mm"),
-    #             "Y": Dimension(-0.0, "Y", "mm"),
-    #             "Z": Dimension(1.4, "Z", "mm"),
-    #         },
-    #     }
-    #     self.assert_signal(data[0], expected)
-    #
-    #     data = DiffracBrmlFile(resource.diffrac_timelapse)
-    #     expected = {
-    #         "x_data": np.array([12.0001, 12.0021, 12.0041, 14.4961, 14.4981, 14.5001]),
-    #         "y_data": np.array([0.0, 0.0, 178.0, 52.0, 48.0, 53.0]),
-    #         "x_quantity": "2 theta",
-    #         "y_quantity": "intensity",
-    #         "x_unit": "deg",
-    #         "y_unit": "counts",
-    #         "name": "Diffrac_multiple",
-    #         "shortname": "RawData79",
-    #         "z_dict": {
-    #             "TimeStamp": Dimension(dt.datetime(2017, 10, 11, 9, 29, 34, 753172), "time", ""),
-    #             "IntegrationTime": Dimension(0.5, "time", "s"),
-    #             "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
-    #             "measure_time": Dimension(676.947589, "time", "s"),
-    #             "Theta": Dimension(2.0186, "Theta", "°"),
-    #             "Chi": Dimension(-0.0, "Chi", "°"),
-    #             "Phi": Dimension(0.0, "Phi", "°"),
-    #             "X": Dimension(-0.0, "X", "mm"),
-    #             "Y": Dimension(-0.0, "Y", "mm"),
-    #             "Z": Dimension(-0.0395, "Z", "mm"),
-    #         },
-    #     }
-    #     self.assert_signal(data[-1], expected)
-    #
-    #     data = DiffracBrmlFile(resource.diffrac_brml_psd)
-    #     expected = {
-    #         "x_data": np.array([8.5001, 8.5118762, 8.52365241, 10.73757886, 10.74935506, 10.76113126]),
-    #         "y_data": np.array([5.000e00, 1.000e00, 2.129e03, 0.000e00, 1.000e00, 1.000e00]),
-    #         "x_quantity": "2 theta",
-    #         "y_quantity": "intensity",
-    #         "x_unit": "deg",
-    #         "y_unit": "counts",
-    #         "name": "Diffrac_PSD",
-    #         "shortname": "RawData0",
-    #         "z_dict": {
-    #             "TimeStamp": Dimension(dt.datetime(2018, 3, 5, 12, 11, 11, 816786), "time", ""),
-    #             "IntegrationTime": Dimension(5.0, "time", "s"),
-    #             "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
-    #             "measure_time": Dimension(23.337641, "time", "s"),
-    #             "Theta": Dimension(4.8153, "Theta", "°"),
-    #             "Chi": Dimension(-0.0, "Chi", "°"),
-    #             "Phi": Dimension(0.0, "Phi", "°"),
-    #             "X": Dimension(-0.0, "X", "mm"),
-    #             "Y": Dimension(-0.0, "Y", "mm"),
-    #             "Z": Dimension(0.8455, "Z", "mm"),
-    #         },
-    #     }
-    #     self.assert_signal(data[0], expected)
+    def test_read_brml_rawdata_file(self) -> None:
+
+        with zipfile.ZipFile(resource.DIFFRAC_PATH) as brml:
+            datafile = brml.infolist()[-3]
+            data = read_brml_rawdata_file(brml, datafile)
+
+        expected = {
+            "x_data": np.array([10.0001, 10.0197, 10.0394, 59.9705, 59.9901, 60.0097]),
+            "y_data": np.array([191.0, 208.0, 224.0, 95.0, 68.0, 86.0]),
+            "x_quantity": "2 theta",
+            "y_quantity": "intensity",
+            "x_unit": "deg",
+            "y_unit": "counts",
+            "name": "Diffrac",
+            "shortname": "RawData0",
+            "z_dict": {
+                "TimeStamp": Dimension(dt.datetime(2017, 8, 4, 16, 43, 2, 345953), "time", ""),
+                "IntegrationTime": Dimension(0.15, "time", "s"),
+                "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
+                "measure_time": Dimension(412.58348, "time", "s"),
+                "Chi": Dimension(-0.0, "Chi", "°"),
+                "Phi": Dimension(0.0, "Phi", "°"),
+                "X": Dimension(-0.0, "X", "mm"),
+                "Y": Dimension(-0.0, "Y", "mm"),
+                "Z": Dimension(1.4, "Z", "mm"),
+            },
+        }
+
+        self.assert_signal(data, expected)
+
+    def test_diffrac(self) -> None:
+
+        data = DiffracBrmlFile(resource.DIFFRAC_PATH)
+        expected = {
+            "x_data": np.array([10.0001, 10.0197, 10.0394, 59.9705, 59.9901, 60.0097]),
+            "y_data": np.array([191.0, 208.0, 224.0, 95.0, 68.0, 86.0]),
+            "x_quantity": "2 theta",
+            "y_quantity": "intensity",
+            "x_unit": "deg",
+            "y_unit": "counts",
+            "name": "Diffrac",
+            "shortname": "RawData0",
+            "z_dict": {
+                "TimeStamp": Dimension(dt.datetime(2017, 8, 4, 16, 43, 2, 345953), "time", ""),
+                "IntegrationTime": Dimension(0.15, "time", "s"),
+                "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
+                "measure_time": Dimension(412.58348, "time", "s"),
+                "Chi": Dimension(-0.0, "Chi", "°"),
+                "Phi": Dimension(0.0, "Phi", "°"),
+                "X": Dimension(-0.0, "X", "mm"),
+                "Y": Dimension(-0.0, "Y", "mm"),
+                "Z": Dimension(1.4, "Z", "mm"),
+            },
+        }
+        self.assert_signal(data[0], expected)
+
+        data = DiffracBrmlFile(resource.DIFFRAC_TIMELAPSE_PATH)
+        expected = {
+            "x_data": np.array([12.0001, 12.0021, 12.0041, 14.4961, 14.4981, 14.5001]),
+            "y_data": np.array([0.0, 0.0, 178.0, 52.0, 48.0, 53.0]),
+            "x_quantity": "2 theta",
+            "y_quantity": "intensity",
+            "x_unit": "deg",
+            "y_unit": "counts",
+            "name": "Diffrac_multiple",
+            "shortname": "RawData79",
+            "z_dict": {
+                "TimeStamp": Dimension(dt.datetime(2017, 10, 11, 9, 29, 34, 753172), "time", ""),
+                "IntegrationTime": Dimension(0.5, "time", "s"),
+                "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
+                "measure_time": Dimension(676.947589, "time", "s"),
+                "Theta": Dimension(2.0186, "Theta", "°"),
+                "Chi": Dimension(-0.0, "Chi", "°"),
+                "Phi": Dimension(0.0, "Phi", "°"),
+                "X": Dimension(-0.0, "X", "mm"),
+                "Y": Dimension(-0.0, "Y", "mm"),
+                "Z": Dimension(-0.0395, "Z", "mm"),
+            },
+        }
+        self.assert_signal(data[-1], expected)
+
+        data = DiffracBrmlFile(resource.DIFFRAC_PSD_PATH)
+        expected = {
+            "x_data": np.array([8.5001, 8.5118762, 8.52365241, 10.73757886, 10.74935506, 10.76113126]),
+            "y_data": np.array([5.000e00, 1.000e00, 2.129e03, 0.000e00, 1.000e00, 1.000e00]),
+            "x_quantity": "2 theta",
+            "y_quantity": "intensity",
+            "x_unit": "deg",
+            "y_unit": "counts",
+            "name": "Diffrac_PSD",
+            "shortname": "RawData0",
+            "z_dict": {
+                "TimeStamp": Dimension(dt.datetime(2018, 3, 5, 12, 11, 11, 816786), "time", ""),
+                "IntegrationTime": Dimension(5.0, "time", "s"),
+                "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
+                "measure_time": Dimension(23.337641, "time", "s"),
+                "Theta": Dimension(4.8153, "Theta", "°"),
+                "Chi": Dimension(-0.0, "Chi", "°"),
+                "Phi": Dimension(0.0, "Phi", "°"),
+                "X": Dimension(-0.0, "X", "mm"),
+                "Y": Dimension(-0.0, "Y", "mm"),
+                "Z": Dimension(0.8455, "Z", "mm"),
+            },
+        }
+        self.assert_signal(data[0], expected)
 
     def test_easylog(self) -> None:
 
@@ -460,7 +460,7 @@ class TestDataFiles:
         }
         self.assert_signal(data[0], expected)
 
-        data = EdinstFile(resource.f980_irts_comma, delimiter=",")
+        data = EdinstFile(resource.F980_IRF_COMMA_PATH, delimiter=",")
         expected = {
             "x_data": np.array([0.0, 1.953125, 3.90625, 494.14063, 496.09375, 498.04688]),
             "y_data": np.array([26.0, 29.0, 30.0, 38.0, 43.0, 26.0]),
@@ -558,6 +558,22 @@ class TestDataFiles:
 
     def test_fluoressence(self) -> None:
 
+        data = FluorEssenceFile(resource.FLUORESSENCE_PATH)
+        expected = {
+            "x_data": np.array([490.0, 491.0, 492.0, 698.0, 699.0, 700.0]),
+            "y_data": np.array(
+                [2322.54697681, 2377.29177909, 2484.62736598, 3092.58586409, 3032.20574198, 2840.89992558]
+            ),
+            "x_quantity": "wavelength",
+            "y_quantity": "intensity",
+            "x_unit": np.str_("nm"),
+            "y_unit": np.str_("CPS / MicroAmps"),
+            "name": "FluorEssence",
+            "shortname": "(S1c / R1c)",
+            "z_dict": {},
+        }
+        self.assert_signal(data["S1c / R1c"], expected)
+
         data = FluorEssenceFile(resource.FLUORESSENCE_ALLCOL_PATH)
         expected = {
             "x_data": np.array([700.0, 701.0, 702.0, 848.0, 849.0, 850.0]),
@@ -571,6 +587,7 @@ class TestDataFiles:
             "z_dict": {},
         }
         self.assert_signal(data["S1c / R1c"], expected)
+
         expected = {
             "x_data": np.array([700.0, 701.0, 702.0, 848.0, 849.0, 850.0]),
             "y_data": np.array([9800.0, 10220.0, 9850.0, 6660.0, 6230.0, 6230.0]),
@@ -583,6 +600,28 @@ class TestDataFiles:
             "z_dict": {},
         }
         self.assert_signal(data["S1"], expected)
+
+        data = FluorEssenceFile(resource.FLUORESSENCE_MULTIPLE_PATH)
+        expected = {
+            "x_data": np.array([650.0, 651.0, 652.0, 848.0, 849.0, 850.0]),
+            "y_data": np.array([111.93601741, 96.76899294, 100.82534075, 1940.96407674, 2386.23609332, 1665.61854766]),
+            "x_quantity": "wavelength",
+            "y_quantity": "intensity",
+            "x_unit": np.str_("nm"),
+            "y_unit": np.str_("CPS / MicroAmps"),
+            "name": "FluorEssence_multiple",
+            "shortname": "05/12/2017 17:24:47",
+            "z_dict": {
+                "Short Name": Dimension(np.str_("B"), "", ""),
+                "Long Name": Dimension(np.str_("05/12/2017 17:24:47"), "", ""),
+                "Units": Dimension(np.str_("CPS / MicroAmps"), "", ""),
+                "SourceName": Dimension(np.str_("S1c / R1c"), "", ""),
+                "CycleNumber": Dimension(np.str_("1"), "", ""),
+                "TimeStamp": Dimension(np.str_("05/12/2017 17:24:47"), "", ""),
+                "pyda:TimeStamp": Dimension(dt.datetime(2017, 5, 12, 17, 24, 47, 0), "time", ""),
+            },
+        }
+        self.assert_signal(data[0], expected)
 
     def test_flwinlab(self) -> None:
 
@@ -700,10 +739,10 @@ class TestDataFiles:
             "x_unit": "s",
             "y_unit": "V",
             "name": "prodata-tas_3prop",
-            "shortname": "Repeats: 1 ",
+            "shortname": "Repeats: 1",
             "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2017, 7, 27, 17, 39, 4), "time", ""),
-                "z": Dimension(3.0, "repeats", ""),
+                "TimeStamp": Dimension(dt.datetime(2017, 7, 27, 17, 39, 4, 0), "time", ""),
+                "z": Dimension(np.float64(3.0), "repeats", ""),
             },
         }
         self.assert_signal(data["100 % T Baseline"][0], expected)
@@ -982,37 +1021,37 @@ class TestDataFiles:
         }
         self.assert_signal(data, expected)
 
-    # def test_wire(self) -> None:
-    #
-    #     data = WireFile(resource.wire_wdf1)
-    #     expected = {
-    #         "x_data": np.array([794.19726562, 795.4375, 796.67578125, 1940.97460938, 1942.00976562, 1943.04492188]),
-    #         "y_data": np.array(
-    #             [84046.1640625, 84312.3671875, 84407.1796875, 130683.1796875, 130495.21875, 129160.390625]
-    #         ),
-    #         "x_quantity": "wavenumber",
-    #         "y_quantity": "intensity",
-    #         "x_unit": "cm^-1",
-    #         "y_unit": "",
-    #         "name": "Single scan measurement 4",
-    #         "shortname": "",
-    #         "z_dict": {},
-    #     }
-    #     self.assert_signal(data, expected)
-    #
-    #     data = WireFile(resource.wire_wdf2)
-    #     expected = {
-    #         "x_data": np.array([830.99182129, 832.17248535, 833.35412598, 1897.29064941, 1898.23693848, 1899.18322754]),
-    #         "y_data": np.array([28863.01171875, 28688.14453125, 28792.6875, 21222.15625, 20938.0703125, 20763.609375]),
-    #         "x_quantity": "wavenumber",
-    #         "y_quantity": "intensity",
-    #         "x_unit": "cm^-1",
-    #         "y_unit": "",
-    #         "name": "Single scan measurement 3",
-    #         "shortname": "",
-    #         "z_dict": {},
-    #     }
-    #     self.assert_signal(data, expected)
+    def test_wire(self) -> None:
+
+        data = WireFile(resource.WIRE1_PATH)
+        expected = {
+            "x_data": np.array([794.19726562, 795.4375, 796.67578125, 1940.97460938, 1942.00976562, 1943.04492188]),
+            "y_data": np.array(
+                [84046.1640625, 84312.3671875, 84407.1796875, 130683.1796875, 130495.21875, 129160.390625]
+            ),
+            "x_quantity": "wavenumber",
+            "y_quantity": "intensity",
+            "x_unit": "cm^-1",
+            "y_unit": "",
+            "name": "Single scan measurement 4",
+            "shortname": "",
+            "z_dict": {},
+        }
+        self.assert_signal(data, expected)
+
+        data = WireFile(resource.WIRE2_PATH)
+        expected = {
+            "x_data": np.array([830.99182129, 832.17248535, 833.35412598, 1897.29064941, 1898.23693848, 1899.18322754]),
+            "y_data": np.array([28863.01171875, 28688.14453125, 28792.6875, 21222.15625, 20938.0703125, 20763.609375]),
+            "x_quantity": "wavenumber",
+            "y_quantity": "intensity",
+            "x_unit": "cm^-1",
+            "y_unit": "",
+            "name": "Single scan measurement 3",
+            "shortname": "",
+            "z_dict": {},
+        }
+        self.assert_signal(data, expected)
 
     def test_zem3(self) -> None:
         data = Zem3(resource.ZEM3_PATH)
@@ -1044,95 +1083,9 @@ class TestDataFiles:
         self.assert_signal(data["Delta Temp(C)"], expected)
 
 
-class TestDetectFileType:
+def test_detect_file_type() -> None:
+    """Check that the test files are properly detected"""
 
-    def test_beampro(self) -> None:
-
-        assert detect_file_type(resource.BEAMPRO_PATH)[1] == 'Beampro (.txt)'
-
-    def test_dektak(self) -> None:
-
-        assert detect_file_type(resource.DEKTAK_PATH)[1] == 'Dektak (.csv)'
-
-    # def test_diffrac(self) -> None:
-    #
-    #     assert detect_file_type(resource.diffrac_brml)[1] == 'Diffrac (.brml)'
-    #     assert detect_file_type(resource.diffrac_timelapse)[1] == 'Diffrac (.brml)'
-    #     assert detect_file_type(resource.diffrac_brml_psd)[1] == 'Diffrac (.brml)'
-
-    def test_easylog(self) -> None:
-
-        assert detect_file_type(resource.EASYLOG_PATH)[1] == 'EasyLog (.txt)'
-
-    def test_edinst(self) -> None:
-
-        assert detect_file_type(resource.F980_IRF_PATH)[1] == 'F980/Fluoracle (.txt, tab)'
-        assert detect_file_type(resource.F980_EMSCAN_PATH)[1] == 'F980/Fluoracle (.txt, tab)'
-        assert detect_file_type(resource.F980_IRF_MULTIPLE_PATH)[1] == 'F980/Fluoracle (.txt, tab)'
-        assert detect_file_type(resource.f980_irts_comma)[1] == 'F980/Fluoracle (.txt, comma)'
-
-        assert detect_file_type(resource.FLUORACLE_EMISSION_PATH)[1] == 'F980/Fluoracle (.txt, tab)'
-        assert detect_file_type(resource.FLUORACLE_ABSORPTANCE_PATH)[1] == 'F980/Fluoracle (.txt, tab)'
-        assert detect_file_type(resource.FLUORACLE_MULTIPLE_EMISSION_PATH)[1] == 'F980/Fluoracle (.txt, tab)'
-
-    def test_fluoressence(self) -> None:
-
-        # assert detect_file_type(resource.fluoressence_file)[1] == 'F980/Fluoracle (.txt, tab)'
-        assert detect_file_type(resource.FLUORESSENCE_MULTIPLE_PATH)[1] == 'FluorEssence (.txt)'
-        assert detect_file_type(resource.FLUORESSENCE_ALLCOL_PATH)[1] == 'FluorEssence (.txt)'
-
-    def test_flwinlab(self) -> None:
-
-        assert detect_file_type(resource.FLWINLAB_PATH)[1] == 'FlWinlab'
-
-    def test_lambdaspx(self) -> None:
-
-        assert detect_file_type(resource.LAMBDASPX_REFLECTANCE_PATH)[1] == 'LambdaSpx (.dsp)'
-        assert detect_file_type(resource.LAMBDASPX_TRANSMITTANCE_PATH)[1] == 'LambdaSpx (.dsp)'
-        assert detect_file_type(resource.LAMBDASPX_ABSORBANCE_PATH)[1] == 'LambdaSpx (.dsp)'
-        assert detect_file_type(resource.LAMBDASPX_ABSORBANCE2_PATH)[1] == 'LambdaSpx (.dsp)'
-
-    def test_prodata(self) -> None:
-
-        assert detect_file_type(resource.PRODATA_TAS_3PROP_PATH)[1] == 'UvWinlab/Spectrum (.csv)'
-        assert detect_file_type(resource.PRODATA_PLL_12WL_1PROP_PATH)[1] == 'UvWinlab/Spectrum (.csv)'
-
-    def test_sbtps(self) -> None:
-
-        assert detect_file_type(resource.SBTPS_IV1_PATH)[1] == 'SBTPS (.IV)'
-        assert detect_file_type(resource.SBTPS_IV2_PATH)[1] == 'SBTPS (.IV)'
-        assert detect_file_type(resource.SBTPS_IV3_PATH)[1] == 'SBTPS (.IV)'
-        assert detect_file_type(resource.SBTPS_SEQ1_PATH)[1] == 'SBTPS (.SEQ)'
-        assert detect_file_type(resource.SBTPS_SEQ2_PATH)[1] == 'SBTPS (.SEQ)'
-        assert detect_file_type(resource.SBTPS_SEQ3_PATH)[1] == 'SBTPS (.SEQ)'
-
-    def test_simple(self) -> None:
-
-        assert detect_file_type(resource.SIMPLE_TAB_PATH)[1] == 'Simple (tab)'
-        assert detect_file_type(resource.SIMPLE_SEMICOLON_PATH)[1] == 'Simple (semicolon)'
-
-    def test_spectrasuite(self) -> None:
-
-        assert detect_file_type(resource.SPECTRASUITE_HEADER_PATH)[1] == 'SpectraSuite (.txt)'
-        assert detect_file_type(resource.SPECTRASUITE_HEADER_BST_PATH)[1] == 'SpectraSuite (.txt)'
-
-    def test_spectrum(self) -> None:
-
-        assert detect_file_type(resource.SPECTRUM_PATH)[1] == 'UvWinlab/Spectrum (.csv)'
-        assert detect_file_type(resource.SPECTRUM_MULTIPLE_PATH)[1] == 'UvWinlab/Spectrum (.csv)'
-        assert detect_file_type(resource.UVWINLAB_PATH)[1] == 'UvWinlab/Spectrum (.csv)'
-        assert detect_file_type(resource.UVWINLAB_ASCII_PATH)[1] == 'UVWinLab (.asc)'
-
-    def test_vesta(self) -> None:
-
-        assert detect_file_type(resource.VESTA_PATH)[1] == 'Vesta (.xy)'
-
-    # def test_wire(self) -> None:
-    #
-    #     assert detect_file_type(resource.wire_wdf1)[1] == 'WiRE (.wdf)'
-    #     assert detect_file_type(resource.wire_wdf2)[1] == 'WiRE (.wdf)'
-
-    def test_zem3(self) -> None:
-
-        assert detect_file_type(resource.ZEM3_PATH)[1] == 'Zem3 (tab)'
-        assert detect_file_type(resource.ZEM3_TXT_PATH)[1] == 'Zem3 (tab)'
+    for path in resource.FILE_TYPE_DICT:
+        print(path)
+        assert detect_file_type(path)[1] == resource.FILE_TYPE_DICT[path]
