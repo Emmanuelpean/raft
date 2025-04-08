@@ -135,11 +135,6 @@ else:
     # else display the data
     else:
 
-        # Plot the signal
-        main_columns = st.columns([4, 1])
-        plot_spot = main_columns[0].empty()
-        info_spot = main_columns[1].container()
-
         # ----------------------------------------------- DATA SELECTION -----------------------------------------------
 
         # Select the data type to plot if signal is a dictionary
@@ -446,6 +441,12 @@ else:
             n_buttons = len([e for e in buttons if e is not None and e is not False])
 
             if n_buttons:
+
+                # Plot the signal
+                main_columns = st.columns([4, 1])
+                plot_spot = main_columns[0].empty()
+                info_spot = main_columns[1].container()
+
                 column_index = 0
 
                 info_spot.markdown("### About your data")
@@ -521,9 +522,13 @@ else:
                         info_spot.html(fwhm.get_value_label_html())
                     else:
                         info_spot.markdown("Could not calculate the FWHM.")
+            else:
+
+                plot_spot = st.empty()
 
         # If multiple signals are selected
         else:
+            plot_spot = st.empty()
             figure = plot(signal)
 
         plot_spot.plotly_chart(figure, use_container_width=True)
