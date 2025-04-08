@@ -182,12 +182,12 @@ class SignalData(object):
         self.y = y
         if not self.x.quantity:
             self.x.quantity = "X-quantity"
-        if not self.x.unit:
-            self.x.unit = "X-unit"
+            if not self.x.unit:
+                self.x.unit = "X-unit"
         if not self.y.quantity:
             self.y.quantity = "Y-quantity"
-        if not self.y.unit:
-            self.y.unit = "Y-unit"
+            if not self.y.unit:
+                self.y.unit = "Y-unit"
         self.name = name
         self.shortname = shortname
         if z_dict is None:

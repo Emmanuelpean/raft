@@ -202,6 +202,10 @@ class TestDimension:
         dim = Dimension(5, "length", "m")
         assert dim.get_value_label_html() == "Length: 5 m"
 
+        # Test without unit
+        dim = Dimension(5, "length")
+        assert dim.get_value_label_html() == "Length: 5"
+
     def test_get_label_raw(self) -> None:
         """Test get_label_raw method"""
 
@@ -311,20 +315,11 @@ class TestSignalData:
         new_signal = signal.remove_background([0, 1])
         assert are_close(new_signal.y.data, signal.y.data - 3.02752297)
 
-    def test_smooth(self, sample_signal) -> None:
-        """Test smooth method"""
-
-        smoothed = sample_signal.smooth(5, 3)
-        assert isinstance(smoothed, SignalData)
-        assert are_identical(smoothed.x.data, sample_signal.x.data)
-        assert are_close(smoothed.y.data[:3], np.array([0.01174766, 0.04138229, 0.13916725]))
-        assert smoothed.name == sample_signal.name
-        assert smoothed.shortname == sample_signal.shortname + " (smoothed)"
-        assert smoothed.z_dict == sample_signal.z_dict
-
-        # Should return original signal on error
-        result = sample_signal.smooth(5, 10001)
-        assert result == sample_signal
+        # Nan value
+        y = sample_dimensions[1](sample_dimensions[1].data * float("nan"))
+        signal = SignalData(sample_dimensions[0], y, "Test Signal")
+        with pytest.raises(AssertionError):
+            signal.remove_background([0, 1])
 
     def test_reduce_range(self, sample_signal) -> None:
         """Test reduce_range method"""
@@ -347,6 +342,38 @@ class TestSignalData:
         assert reduced.shortname == sample_signal.shortname
         assert reduced.z_dict == sample_signal.z_dict
 
+    def test_smooth(self, sample_signal) -> None:
+        """Test smooth method"""
+
+        smoothed = sample_signal.smooth(5, 3)
+        assert isinstance(smoothed, SignalData)
+        assert are_identical(smoothed.x.data, sample_signal.x.data)
+        assert are_close(smoothed.y.data[:3], np.array([0.01174766, 0.04138229, 0.13916725]))
+        assert smoothed.name == sample_signal.name
+        assert smoothed.shortname == "Smoothed"
+        assert smoothed.z_dict == sample_signal.z_dict
+
+    def test_normalise(self, sample_dimensions) -> None:
+
+        x_dim, y_dim = sample_dimensions
+        y_dim = y_dim(y_dim.data * 5 + 3)
+        signal = SignalData(x_dim, y_dim)
+        norm_signal = signal.normalise()
+        assert are_close(norm_signal.x.data, signal.x.data)
+        assert are_close(norm_signal.y.data[:3], [0.38194312, 0.40246058, 0.45958455])
+        assert are_close(norm_signal.y.data.max(), 1.0)
+
+    def test_feature_scale(self, sample_dimensions) -> None:
+
+        x_dim, y_dim = sample_dimensions
+        y_dim = y_dim(y_dim.data * 5 + 3)
+        signal = SignalData(x_dim, y_dim)
+        norm_signal = signal.feature_scale(2, 7)
+        assert are_close(norm_signal.x.data, signal.x.data)
+        assert are_close(norm_signal.y.data[:3], [6.94445502, 6.78031533, 6.32332358])
+        assert are_close(norm_signal.y.data.max(), 7.0)
+        assert are_close(norm_signal.y.data.min(), 2.0)
+
     def test_fit(self, sample_dimensions, sample_signal) -> None:
 
         fit = sample_signal.fit(gaussian, dict(a=4, mu=5, sigma=3, c=4))
@@ -356,7 +383,7 @@ class TestSignalData:
         assert are_close(fit[0].x.data, sample_dimensions[0].data)
         assert are_close(fit[0].y.data, sample_dimensions[1].data)
 
-    def test_get_point(self, sample_signal) -> None:
+    def test_get_point(self, sample_dimensions, sample_signal) -> None:
         """Test _get_point method"""
 
         # Test min point
@@ -380,6 +407,24 @@ class TestSignalData:
         assert y_max.quantity == "max. " + sample_signal.y.quantity
         assert y_max.unit == sample_signal.y.unit
         assert i_max.data == max_index
+
+        # Test max point with failed interpolation
+        x_dim, y_dim = sample_dimensions
+        signal = SignalData(x_dim, x_dim)
+        x_max, y_max, i_max = signal._get_point("max", interpolation=True)
+        max_index = signal.y.data.argmax()
+        assert x_max.data == signal.x.data[max_index]
+        assert x_max.quantity == "max. " + signal.x.quantity
+        assert x_max.unit == signal.x.unit
+        assert y_max.data == signal.y.data[max_index]
+        assert y_max.quantity == "max. " + signal.y.quantity
+        assert y_max.unit == signal.y.unit
+        assert i_max.data == max_index
+
+        # Test max point with successful interpolation
+        x_max, y_max, i_max = sample_signal._get_point("max", interpolation=True)
+        assert are_close(x_max.data, 3.0)
+        assert are_close(y_max.data, 1.0)
 
     def test_get_max(self, sample_signal) -> None:
         """Test get_max method"""
@@ -430,8 +475,8 @@ class TestSignalData:
         assert result[0].quantity == "extremum time"
         assert result[0].unit == "s"
         assert are_close(result[1].data, -1.0)
-        assert result[1].quantity == "extremum "
-        assert result[1].unit == ""
+        assert result[1].quantity == "extremum Y-quantity"
+        assert result[1].unit == "Y-unit"
         assert are_close(result[2].data, 6)
         assert result[2].quantity == ""
         assert result[2].unit == ""
@@ -460,7 +505,7 @@ class TestSignalData:
         ext_i = Dimension(np.array([1, 0]))
         signal = SignalData(ext_i, ext_i)
         fwhm_dim, x_left, y_left, x_right, y_right = signal.get_fwhm()
-        assert fwhm_dim.data == 0
+        assert np.isnan(fwhm_dim.data)
         assert x_left.data is None
         assert y_left.data is None
         assert x_right.data == 1
@@ -470,7 +515,7 @@ class TestSignalData:
         ext_i = Dimension(np.array([0, 1]))
         signal = SignalData(ext_i, ext_i)
         fwhm_dim, x_left, y_left, x_right, y_right = signal.get_fwhm()
-        assert fwhm_dim.data == 0
+        assert np.isnan(fwhm_dim.data)
         assert x_left.data == 0
         assert y_left.data == 0
         assert x_right.data is None
