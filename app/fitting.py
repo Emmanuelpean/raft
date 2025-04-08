@@ -28,35 +28,30 @@ def fit_data(
     :param p0 : Initial guesses for the parameters. If None, the solver will try to determine them
     :param bounds : Lower and upper bounds on parameters"""
 
-    try:
-        keys = get_model_parameters(fit_function)
-        p0 = [p0[key] for key in keys]
+    keys = get_model_parameters(fit_function)
+    p0 = [p0[key] for key in keys]
 
-        # Perform the curve fit
-        fit_kwargs = dict(f=fit_function, xdata=x_data, ydata=y_data, p0=p0)
-        if bounds is not None:
-            bounds = np.transpose([bounds[key] for key in keys])
-            fit_kwargs.update(bounds=bounds)
-        # noinspection PyTupleAssignmentBalance
-        params, covariance = sco.curve_fit(**fit_kwargs)
+    # Perform the curve fit
+    fit_kwargs = dict(f=fit_function, xdata=x_data, ydata=y_data, p0=p0)
+    if bounds is not None:
+        bounds = np.transpose([bounds[key] for key in keys])
+        fit_kwargs.update(bounds=bounds)
+    # noinspection PyTupleAssignmentBalance
+    params, covariance = sco.curve_fit(**fit_kwargs)
 
-        # Calculate the standard deviations of the parameters
-        param_errors = np.sqrt(np.diag(covariance))
+    # Calculate the standard deviations of the parameters
+    param_errors = np.sqrt(np.diag(covariance))
 
-        # Calculate the fitted y values
-        y_fit = fit_function(x_data, *params)
+    # Calculate the fitted y values
+    y_fit = fit_function(x_data, *params)
 
-        # Calculate R-squared
-        residuals = y_data - y_fit
-        ss_res = np.sum(residuals**2)
-        ss_tot = np.sum((y_data - np.mean(y_data)) ** 2)
-        r_squared = 1 - (ss_res / ss_tot)
+    # Calculate R-squared
+    residuals = y_data - y_fit
+    ss_res = np.sum(residuals**2)
+    ss_tot = np.sum((y_data - np.mean(y_data)) ** 2)
+    r_squared = 1 - (ss_res / ss_tot)
 
-        return params, param_errors, y_fit, r_squared
-
-    except Exception as e:
-        print(f"Error during fitting: {str(e)}")
-        return None, None, None, None
+    return params, param_errors, y_fit, r_squared
 
 
 def linear(x: np.ndarray, m: float, b: float) -> np.ndarray:

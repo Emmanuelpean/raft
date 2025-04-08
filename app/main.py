@@ -135,7 +135,10 @@ else:
     # else display the data
     else:
 
-        plot_spot = st.empty()
+        # Plot the signal
+        main_columns = st.columns([4, 1])
+        plot_spot = main_columns[0].empty()
+        info_spot = main_columns[1].container()
 
         # ----------------------------------------------- DATA SELECTION -----------------------------------------------
 
@@ -327,6 +330,7 @@ else:
             # ------------------------------------------------- FITTING ------------------------------------------------
 
             FITTING_LABEL = "Fitting"
+            fit_signal, fit_params, param_errors, r_squared = None, None, None, None
             if ss.fitting_model in MODELS:
 
                 # Get the fit function, equation and guess function, and the function parameters
@@ -342,10 +346,12 @@ else:
                     ss.guess_values = guess_values
 
                 fit_function = MODELS[ss.fitting_model][0]
-                fit_signal, fit_params, param_errors, r_squared = signal.fit(fit_function, ss.guess_values)
-                expander_label = f"__✔ {FITTING_LABEL} ({ss.fitting_model})__"
+                try:
+                    fit_signal, fit_params, param_errors, r_squared = signal.fit(fit_function, ss.guess_values)
+                    expander_label = f"__✔ {FITTING_LABEL} ({ss.fitting_model})__"
+                except:
+                    pass
             else:
-                fit_signal, fit_params, param_errors, r_squared = None, None, None, None
                 expander_label = FITTING_LABEL
             expander_status = get_expander_status("fitting_label", expander_label)
 
@@ -437,18 +443,16 @@ else:
             )
 
             buttons = (fit_params, max_button, min_button, fwhm_button)
-            n_buttons = len([e for e in buttons if e is not None])
+            n_buttons = len([e for e in buttons if e is not None and e is not False])
 
             if n_buttons:
                 column_index = 0
 
-                st.markdown("### About your data")
-                columns = st.columns(n_buttons)
+                info_spot.markdown("### About your data")
 
                 # Fit
                 if fit_params is not None:
-                    col = columns[column_index]
-                    col.markdown("##### Fitting Results")
+                    info_spot.markdown("##### Fitting Results")
 
                     # Add the R2 to the list of parameters and errors
                     fit_params = list(fit_params) + [r_squared]
@@ -468,17 +472,15 @@ else:
                     )
                     df = df.transpose()
                     df.columns.name = "Parameter"
-                    col.html("Equation: " + equation)
-                    col.html(generate_html_table(df))
-                    column_index += 1
+                    info_spot.html("Equation: " + equation)
+                    info_spot.html(generate_html_table(df))
 
                 # Max point
                 if max_button:
-                    col = columns[column_index]
-                    col.markdown("##### Maximum")
+                    info_spot.markdown("##### Maximum")
                     x_max, y_max, i_max = signal.get_max(max_interp_button)
-                    col.html(x_max.get_value_label_html())
-                    col.html(y_max.get_value_label_html())
+                    info_spot.html(x_max.get_value_label_html())
+                    info_spot.html(y_max.get_value_label_html())
 
                     # Display the maximum point
                     scatter_plot(
@@ -487,15 +489,13 @@ else:
                         y_max.data,
                         "Max. Point",
                     )
-                    column_index += 1
 
                 # Min point
                 if min_button:
-                    col = columns[column_index]
-                    col.markdown("##### Minimum")
+                    info_spot.markdown("##### Minimum")
                     x_min, y_min, i_min = signal.get_min(min_interp_button)
-                    col.html(x_min.get_value_label_html())
-                    col.html(y_min.get_value_label_html())
+                    info_spot.html(x_min.get_value_label_html())
+                    info_spot.html(y_min.get_value_label_html())
 
                     # Display the minimum point
                     scatter_plot(
@@ -504,12 +504,10 @@ else:
                         y_min.data,
                         "Min. Point",
                     )
-                    column_index += 1
 
                 # FWHM
                 if fwhm_button:
-                    col = columns[column_index]
-                    col.markdown("##### FWHM")
+                    info_spot.markdown("##### FWHM")
                     fwhm, x_left, y_left, x_right, y_right = signal.get_fwhm(fwhm_button_interp)
 
                     # Display the FWHM
@@ -520,9 +518,9 @@ else:
                             [y_left.data, y_right.data],
                             "FWHM",
                         )
-                        col.html(fwhm.get_value_label_html())
+                        info_spot.html(fwhm.get_value_label_html())
                     else:
-                        col.markdown("Could not calculate the FWHM.")
+                        info_spot.markdown("Could not calculate the FWHM.")
 
         # If multiple signals are selected
         else:
