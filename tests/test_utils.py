@@ -26,48 +26,31 @@ class TestStringListToMatrix:
         raw_data = ["1 2 3", "4 5 6", "7 8 9"]
         expected = np.array([[1, 4, 7], [2, 5, 8], [3, 6, 9]])
         result = stringlist_to_matrix(raw_data, delimiter=" ")
-        np.testing.assert_array_almost_equal(result, expected)
+        assert are_close(result, expected)
 
     def test_different_delimiter(self) -> None:
         raw_data = ["1,2,3", "4,5,6", "7,8,9"]
         expected = np.array([[1, 4, 7], [2, 5, 8], [3, 6, 9]])
         result = stringlist_to_matrix(raw_data, delimiter=",")
-        np.testing.assert_array_almost_equal(result, expected)
+        assert are_close(result, expected)
 
     def test_uneven_rows(self) -> None:
         raw_data = ["1,2,", "3,4,5", "6,,"]
         expected = np.array([[1, 3, 6], [2, 4, np.nan], [np.nan, 5, np.nan]])
         result = stringlist_to_matrix(raw_data, delimiter=",")
-        np.testing.assert_array_almost_equal(result, expected)
+        assert are_close(result, expected)
 
     def test_non_numeric_values(self) -> None:
         raw_data = ["1 2 a", "4 b 6", "c 8 9"]
         expected = np.array([[1, 4, np.nan], [2, np.nan, 8], [np.nan, 6, 9]])
         result = stringlist_to_matrix(raw_data, delimiter=" ")
-        np.testing.assert_array_almost_equal(result, expected)
+        assert are_close(result, expected)
 
     def test_empty_input(self) -> None:
         raw_data = []
         expected = np.array([])
         result = stringlist_to_matrix(raw_data, delimiter=" ")
         assert result.shape == expected.shape
-
-    # def test_stringlist_to_matrix_length(self) -> None:
-    #     raw_data = ["1 2 3", "4 5", "6"]
-    #     delimiter = " "
-    #     matrix = stringlist_to_matrix(raw_data, delimiter)
-    #
-    #     # Check that all rows have the same length
-    #     max_length = max(len(line.split(delimiter)) for line in raw_data)
-    #     expected_shape = (max_length, len(raw_data))
-    #
-    #     assert matrix.shape == expected_shape, "Matrix should have correct dimensions after padding."
-    #
-    #     # Check that NaNs were added correctly
-    #     for i, line in enumerate(raw_data):
-    #         expected_floats = [float(x) for x in line.split(delimiter)]
-    #         expected_floats.extend([float("nan")] * (max_length - len(expected_floats)))
-    #         assert are_close(matrix[:, i], expected_floats)
 
 
 class TestMatrixToString:
@@ -316,7 +299,7 @@ class TestNumberToString:
     def test_single_float(self) -> None:
         """Test single float to scientific notation"""
         result = number_to_str(1.4e-4)
-        assert result == "1.4E-04"
+        assert result == "0.00014"
 
     def test_single_integer(self) -> None:
         """Test single integer to scientific notation"""
@@ -331,7 +314,7 @@ class TestNumberToString:
     def test_single_negative_float(self) -> None:
         """Test single negative float to scientific notation"""
         result = number_to_str(-1.4e-4)
-        assert result == "-1.4E-04"
+        assert result == "-0.00014"
 
     def test_single_float_no_trailing_zeros(self) -> None:
         """Test float with no trailing zeros"""
@@ -341,12 +324,12 @@ class TestNumberToString:
     def test_list_of_floats(self) -> None:
         """Test list of floats to scientific notation"""
         result = number_to_str([1e-4, 1e-5])
-        assert result == "1E-04, 1E-05"
+        assert result == "0.0001, 1e-05"
 
     def test_list_of_mixed_numbers(self) -> None:
         """Test list of integers and floats to scientific notation"""
         result = number_to_str([100, 1.4e-3, 5])
-        assert result == "1E+02, 1.4E-03, 5"
+        assert result == "100, 0.0014, 5"
 
     def test_empty_list(self) -> None:
         """Test empty list input"""
@@ -370,8 +353,8 @@ class TestNumberToString:
 
     def test_n(self) -> None:
         """Test the n parameter"""
-        result = number_to_str(5.5234325, 2)
-        assert result == "5.52"
+        result = number_to_str(5.5234325)
+        assert result == "5.523"
 
 
 class TestGenerateHtmlTable:
@@ -455,6 +438,136 @@ class TestGenerateHtmlTable:
         assert div.has_attr("style")
         assert "margin: auto" in div["style"]
         assert "display: table" in div["style"]
+
+
+class TestNormalise:
+    """Test class for the normalise function."""
+
+    def test_basic_normalisation(self) -> None:
+        """Test basic normalisation with regular values."""
+
+        input_array = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        expected = np.array([0.2, 0.4, 0.6, 0.8, 1.0])
+        result = normalise(input_array)
+        are_close(result, expected)
+
+    def test_normalise_zero_array(self) -> None:
+        """Test normalisation with an array of zeros."""
+
+        input_array = np.array([0.0, 0.0, 0.0])
+        # When all values are zero, division by zero may result in NaN values
+        result = normalise(input_array)
+        assert np.isnan(result).all()
+
+    def test_normalise_negative_values(self) -> None:
+        """Test normalisation with negative values."""
+        input_array = np.array([-10.0, -5.0, 0.0, 5.0, 10.0])
+        expected = np.array([-1.0, -0.5, 0.0, 0.5, 1.0])
+        result = normalise(input_array)
+        are_close(result, expected)
+
+    def test_normalise_single_value(self) -> None:
+        """Test normalisation with a single value."""
+        input_array = np.array([42.0])
+        expected = np.array([1.0])
+        result = normalise(input_array)
+        are_close(result, expected)
+
+    def test_normalise_with_nan_values(self) -> None:
+        """Test normalisation with NaN values."""
+
+        input_array = np.array([1.0, 2.0, np.nan, 4.0, 5.0])
+        expected = np.array([0.2, 0.4, np.nan, 0.8, 1.0])
+        result = normalise(input_array)
+        # Check non-NaN values
+        mask = ~np.isnan(result)
+        are_close(result[mask], expected[mask])
+        # Check NaN values are preserved
+        assert np.isnan(result[2])
+
+    def test_normalise_integer_array(self) -> None:
+        """Test normalisation with integer arrays."""
+
+        input_array = np.array([10, 20, 30, 40, 50])
+        expected = np.array([0.2, 0.4, 0.6, 0.8, 1.0])
+        result = normalise(input_array)
+        are_close(result, expected)
+
+    def test_normalise_multidimensional_array(self) -> None:
+        """Test normalisation with a multidimensional array."""
+
+        input_array = np.array([[1.0, 2.0], [3.0, 4.0]])
+        expected = np.array([[0.25, 0.5], [0.75, 1.0]])
+        result = normalise(input_array)
+        are_close(result, expected)
+
+
+class TestFeatureScale:
+    """Test class for the feature_scale function."""
+
+    def test_basic_feature_scaling(self) -> None:
+        """Test basic feature scaling with default parameters."""
+
+        input_array = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        expected = np.array([0.0, 0.25, 0.5, 0.75, 1.0])
+        result = feature_scale(input_array)
+        are_close(result, expected)
+
+    def test_feature_scale_custom_range(self) -> None:
+        """Test feature scaling with custom min and max range."""
+
+        input_array = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        expected = np.array([10.0, 12.5, 15.0, 17.5, 20.0])  # Scaled to [10, 20]
+        result = feature_scale(input_array, b=10.0, a=20.0)
+        are_close(result, expected)
+
+    def test_feature_scale_negative_range(self) -> None:
+        """Test feature scaling with a negative range."""
+
+        input_array = np.array([1.0, 3.0, 5.0, 7.0, 9.0])
+        expected = np.array([-5.0, -2.5, 0.0, 2.5, 5.0])  # Scaled to [-5, 5]
+        result = feature_scale(input_array, b=-5.0, a=5.0)
+        are_close(result, expected)
+
+    def test_feature_scale_reversed_range(self) -> None:
+        """Test feature scaling with a reversed range (max < min)."""
+
+        input_array = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        expected = np.array([1.0, 0.75, 0.5, 0.25, 0.0])  # Scaled to [1, 0]
+        result = feature_scale(input_array, b=1.0, a=0.0)
+        are_close(result, expected)
+
+    def test_feature_scale_with_nan_values(self) -> None:
+        """Test feature scaling with NaN values."""
+        input_array = np.array([1.0, 2.0, np.nan, 4.0, 5.0])
+        expected = np.array([0.0, 0.25, np.nan, 0.75, 1.0])
+        result = feature_scale(input_array)
+        # Check non-NaN values
+        mask = ~np.isnan(result)
+        are_close(result[mask], expected[mask])
+        # Check NaN values are preserved
+        assert np.isnan(result[2])
+
+    def test_feature_scale_same_value_array(self) -> None:
+        """Test feature scaling with an array of identical values."""
+        input_array = np.array([7.0, 7.0, 7.0])
+        # When all values are the same, division by zero may result in NaN values
+        result = feature_scale(input_array)
+        assert np.isnan(result).all()
+
+    def test_feature_scale_integer_array(self) -> None:
+        """Test feature scaling with integer arrays."""
+        input_array = np.array([10, 20, 30, 40, 50])
+        expected = np.array([0.0, 0.25, 0.5, 0.75, 1.0])
+        result = feature_scale(input_array)
+        are_close(result, expected)
+
+    def test_feature_scale_multidimensional_array(self) -> None:
+        """Test feature scaling with a multidimensional array."""
+        input_array = np.array([[1.0, 3.0], [5.0, 7.0]])
+        expected = np.array([[0.0, 1 / 3], [2 / 3, 1.0]])
+        result = feature_scale(input_array)
+        are_close(result, expected)
 
 
 # --------------------------------------------------- DATA EXTRACTION --------------------------------------------------

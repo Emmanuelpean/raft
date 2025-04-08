@@ -23,7 +23,7 @@ import plotly.graph_objects as go
 import scipy.signal as ss
 
 import constants
-from utils import merge_dicts, interpolate_point
+from utils import merge_dicts, interpolate_point, normalise, feature_scale
 from fitting import fit_data
 
 
@@ -307,6 +307,30 @@ class SignalData(object):
             self.z_dict,
         )
 
+    def normalise(self) -> SignalData:
+        """Normalise the signal"""
+
+        y = self.y(normalise(self.y.data))
+        return SignalData(
+            self.x,
+            y,
+            self.name,
+            self.shortname,
+            self.z_dict,
+        )
+
+    def feature_scale(self, *args, **kwargs) -> SignalData:
+        """Feature scale the signal"""
+
+        y = self.y(feature_scale(self.y.data, *args, **kwargs))
+        return SignalData(
+            self.x,
+            y,
+            self.name,
+            self.shortname,
+            self.z_dict,
+        )
+
     def fit(self, *args, **kwargs) -> tuple[SignalData, np.ndarray, np.ndarray, float]:
         """Fit the data
         :param args: arguments passed to fit_data
@@ -396,7 +420,7 @@ class SignalData(object):
             fwhm = float("nan")
 
         return (
-            self.x(data=np.abs(fwhm), quantity=constants.fwhm_qt),  # TODO missing x unit?
+            self.x(data=np.abs(fwhm), quantity=constants.fwhm_qt),
             self.x(data=x_left),
             self.y(data=y_left),
             self.x(data=x_right),

@@ -4,9 +4,9 @@ import base64
 from operator import itemgetter
 
 import numpy as np
+import pandas as pd
 import scipy.interpolate as sci
 import streamlit as st
-import pandas as pd
 
 
 # --------------------------------------------------- DATA CONVERSION --------------------------------------------------
@@ -215,6 +215,26 @@ def generate_html_table(df: pd.DataFrame) -> str:
 
     html.append("</table>")
     return '<div style="margin: auto; display: table;">' + "\n".join(html) + "</div>"
+
+
+def normalise(ndarray: np.ndarray) -> np.ndarray:
+    """Normalise a numpy array
+    :param ndarray: ndarray of floats or ints"""
+
+    return ndarray / np.nanmax(ndarray)
+
+
+def feature_scale(
+    ndarray: np.ndarray,
+    a: float = 1.0,
+    b: float = 0.0,
+) -> np.ndarray:
+    """Feature scale a numpy array
+    :param ndarray: ndarray of floats or ints
+    :param b: minimum value
+    :param a: maximum value"""
+
+    return b + (ndarray - np.nanmin(ndarray)) * (a - b) / (np.nanmax(ndarray) - np.nanmin(ndarray))
 
 
 # --------------------------------------------------- DATA EXTRACTION --------------------------------------------------

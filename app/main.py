@@ -24,17 +24,6 @@ st.set_page_config("Raft", page_icon=ICON_FILENAME, layout="wide")
 st.sidebar.html(render_image(LOGO_FILENAME, 35))  # sidebar logo
 
 
-def reset_guess_values() -> None:
-    """Reset the stored guess values"""
-    ss.guess_values = None
-
-
-# Session state
-ss = st.session_state
-if "guess_values" not in ss:
-    reset_guess_values()
-
-
 # Change the default style
 @st.cache_resource
 def set_style() -> None:
@@ -45,10 +34,59 @@ def set_style() -> None:
 
 set_style()
 
+# ---------------------------------------------------- SESSION STATE ---------------------------------------------------
+
+# Session state
+ss = st.session_state
+
+
+def reset_stored_guess_values(reset: bool = False) -> None:
+    """Reset the stored guess values
+    :param reset: if True, reset the stored value"""
+
+    if "guess_values" not in ss or reset:
+        ss.guess_values = None
+
+
+reset_stored_guess_values()
+
+
+ss.settings_defaults = {
+    "background_label": "",
+    "bckg_range_input1": "",
+    "bckg_range_input2": "",
+    "range_label": "",
+    "range_input1": "",
+    "range_input2": "",
+    "smoothing_label": "",
+    "sg_fw": 0,
+    "sg_po": 0,
+    "fitting_label": "",
+    "fitting_model": "None",
+    "norm_label": "",
+    "norm_type": "None",
+    "norm_a": "1",
+    "norm_b": "0",
+}
+
+
+# Add the settings to the session state using their default value
+def set_settings(reset: bool = False) -> None:
+    """Store the settings in the session state using their default value
+    :param reset: if True, reset the stored value"""
+
+    for key in ss.settings_defaults:
+        if key not in ss or reset:
+            ss[key] = ss.settings_defaults[key]
+    reset_stored_guess_values(reset)
+
+
+set_settings()
+
 # ----------------------------------------------------- DATA INPUT -----------------------------------------------------
 
 # File uploader
-file = st.sidebar.file_uploader("File uploader", label_visibility="hidden")
+file = st.sidebar.file_uploader(label="File uploader", label_visibility="hidden", on_change=lambda: set_settings(True))
 
 # File type
 filetypes = ["Detect"] + sorted(FUNCTIONS.keys())
@@ -78,7 +116,7 @@ else:
     # -------------------------------------------------- DATA LOADING --------------------------------------------------
 
     # Attempt to load the data by testing every file types
-    if filetype == "Detect":
+    if filetype == filetypes[0]:
 
         signal, extension = detect_file_type(file)
         filetype_message.markdown(f"Detected: {extension}")
@@ -140,43 +178,18 @@ else:
 
             # ----------------------------------------------- BACKGROUND -----------------------------------------------
 
-            ss.defaults = {
-                "background_label": "",
-                "bckg_range_input1": "",
-                "bckg_range_input2": "",
-                "range_label": "",
-                "range_input1": "",
-                "range_input2": "",
-                "smoothing_label": "",
-                "sg_fw": 0,
-                "sg_po": 0,
-                "fitting_label": "",
-                "fitting_model": "None",
-            }
-
-            def add_to_session_state(variable: str) -> None:
-                """Add a variable to the session state if not already stored
-                :param variable: name of the variable"""
-
-                if variable not in ss:
-                    ss[variable] = ss.defaults[variable]
-
             def get_expander_status(ss_label: str, label: str) -> bool:
                 """Get the expander status based on the session state label
                 :param ss_label: session state label key
                 :param label: current label"""
 
                 status = ss[ss_label] != label  # True (opened) if label has changed
-                if ss[ss_label] == ss.defaults[ss_label]:
+                if ss[ss_label] == ss.settings_defaults[ss_label]:
                     status = False
                 ss[ss_label] = label
                 return status
 
-            add_to_session_state("background_label")
-            add_to_session_state("bckg_range_input1")
-            add_to_session_state("bckg_range_input2")
-
-            EXPANDER_LABEL = "Background Range"
+            EXPANDER_LABEL = "Background Removal"
             try:
                 xrange = [float(ss.bckg_range_input1), float(ss.bckg_range_input2)]
                 signal = signal.remove_background(xrange)
@@ -207,10 +220,6 @@ else:
 
             # ----------------------------------------------- DATA RANGE -----------------------------------------------
 
-            add_to_session_state("range_label")
-            add_to_session_state("range_input1")
-            add_to_session_state("range_input2")
-
             RANGE_LABEL = "Data Range"
             try:
                 xrange = [float(ss.range_input1), float(ss.range_input2)]
@@ -239,14 +248,54 @@ else:
                     key="range_input2",
                 )
 
+            # ---------------------------------------------- NORMALISATION ---------------------------------------------
+
+            NORM_LABEL = "Normalisation"
+            expander_label = NORM_LABEL
+            if ss["norm_type"] != "None":
+                try:
+                    if ss["norm_type"] == "Max Normalisation":
+                        signal = signal.normalise()
+                    elif ss["norm_type"] == "Feature Scaling":
+                        signal = signal.feature_scale(float(ss["norm_a"]), float(ss["norm_b"]))
+                        print(signal.x)
+                        print(signal.y)
+
+                    expander_label = f"__✔ {NORM_LABEL} ({ss['norm_type']})__"
+                except:
+                    pass
+
+            expander_status = get_expander_status("norm_label", expander_label)
+
+            with st.sidebar.expander(expander_label, expanded=expander_status):
+
+                st.radio(
+                    label="f",
+                    options=["None", "Max Normalisation", "Feature Scaling"],
+                    key="norm_type",
+                    horizontal=True,
+                    label_visibility="collapsed",
+                )
+
+                # Refresh the session state
+                ss["norm_a"] = ss["norm_a"]
+                ss["norm_b"] = ss["norm_b"]
+
+                if ss["norm_type"] == "Feature Scaling":
+                    columns = st.columns(2)
+                    columns[0].text_input(
+                        label="Maximum Value",
+                        key="norm_a",
+                    )
+                    columns[1].text_input(
+                        label="Minimum Value",
+                        key="norm_b",
+                    )
+
             # Plot the signal
             figure = plot(signal)
 
             # ------------------------------------------------ SMOOTHING -----------------------------------------------
-
-            add_to_session_state("smoothing_label")
-            add_to_session_state("sg_fw")
-            add_to_session_state("sg_po")
 
             SMOOTHING_LABEL = "Smoothing"
             if ss.sg_fw > 0 and ss.sg_po > 0:
@@ -277,9 +326,6 @@ else:
 
             # ------------------------------------------------- FITTING ------------------------------------------------
 
-            add_to_session_state("fitting_label")
-            add_to_session_state("fitting_model")
-
             FITTING_LABEL = "Fitting"
             if ss.fitting_model in MODELS:
 
@@ -308,7 +354,7 @@ else:
                 st.selectbox(
                     label="Model",
                     options=["None"] + list(MODELS.keys()),
-                    on_change=reset_guess_values,
+                    on_change=lambda: reset_stored_guess_values(True),
                     key="fitting_model",
                     help="Use the selected model to fit the data.",
                 )
@@ -328,21 +374,21 @@ else:
                         options=parameters,
                     )
 
-                    key = ss.fitting_model + parameter + "guess_value"
-                    if key not in ss:
-                        ss[key] = number_to_str(ss.guess_values[parameter], 2)
+                    ss_key = ss.fitting_model + parameter + "guess_value"
+                    if ss_key not in ss:
+                        ss[ss_key] = number_to_str(ss.guess_values[parameter], 2)
 
                     def store_guess_value() -> None:
                         """Store the guess value as a float in the guess_values dictionary"""
 
                         try:
-                            ss.guess_values[parameter] = float(ss[key])
+                            ss.guess_values[parameter] = float(ss[ss_key])
                         except:
                             pass
 
                     columns[1].text_input(
                         label="Guess Value",
-                        key=key,
+                        key=ss_key,
                         on_change=lambda: store_guess_value(),
                     )
 

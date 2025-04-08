@@ -6,6 +6,8 @@
 * [X] Add interpolation to max/min point calculation
 * [X] Added background removal
 * [ ] Add normalisation options
+* [ ] Reset settings for different data types
+* [ ] Prevent graph from changing by storing figure in session state?
 
 ## Tests
 * [X] Add tests
