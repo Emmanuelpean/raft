@@ -6,6 +6,7 @@ from operator import itemgetter
 import numpy as np
 import scipy.interpolate as sci
 import streamlit as st
+import pandas as pd
 
 
 # --------------------------------------------------- DATA CONVERSION --------------------------------------------------
@@ -127,8 +128,93 @@ def read_txt_file(path: str) -> str:
     """Read the content of a text file and store it as a resource.
     :param path: file path"""
 
-    with open(path) as ofile:
+    with open(path, encoding="utf-8") as ofile:
         return ofile.read()
+
+
+def number_to_str(
+    value: float | int | list[float | int] | None,
+    n: None | int = None,
+) -> str:
+    """Convert a number to scientific notation without trailing zeros
+
+    Examples
+    --------
+    >>> number_to_str(1.4e-4)
+    '1.4E-04'
+    >>> number_to_str(None)
+    ''
+    >>> number_to_str([1e-4, 1e-5])
+    '1E-04, 1E-05'"""
+
+    if value is None:
+        return ""
+    if value == 0:
+        return "0"
+    elif isinstance(value, (float, int, np.integer)):
+        # For values between -1000 and 1000, display as float with 4 significant digits
+        if -1000 <= value <= 1000:
+            # Format with appropriate significant digits
+            if abs(value) >= 100:
+                # 3 digits before decimal point, need 1 after
+                string = f"{value:.1f}"
+            elif abs(value) >= 10:
+                # 2 digits before decimal point, need 2 after
+                string = f"{value:.2f}"
+            elif abs(value) >= 1:
+                # 1 digit before decimal point, need 3 after
+                string = f"{value:.3f}"
+            else:
+                string = f"{value:.4g}"
+
+            # Remove trailing zeros after decimal point
+            if "." in string:
+                string = string.rstrip("0").rstrip(".")
+            return string
+        else:
+            # For values outside -1000 to 1000 range, use scientific notation
+            if n is not None:
+                string = f"{value:.{n}E}"
+            else:
+                string = f"{value:E}"
+            mantissa, exponent = string.split("E")
+
+            if exponent in ("+00", "-00"):
+                return (mantissa[0] + mantissa[1:].strip("0")).strip(".")
+            else:
+                return (mantissa[0] + mantissa[1:].strip("0")).strip(".") + "E" + exponent
+    else:
+        return ", ".join([number_to_str(f) for f in value])
+
+
+def generate_html_table(df: pd.DataFrame) -> str:
+    """Generate an HTML table from a pandas DataFrame with merged cells for rows
+    where all values are identical. Includes row names (index), column names,
+    and displays the columns name in the upper-left corner cell.
+    :param df: pandas DataFrame to convert to HTML"""
+
+    html = ['<table border="1" style="border-collapse: collapse; text-align: center;">']
+
+    # Add header row with columns name in the corner cell
+    corner_cell_content = df.columns.name if df.columns.name else ""
+    header = f'<tr><th style="padding: 8px; text-align: center;">{corner_cell_content}</th>'
+    for col in df.columns:
+        header += f'<th style="padding: 8px; text-align: center;">{col}</th>'
+    header += "</tr>"
+    html.append(header)
+
+    # Process each row
+    for idx, row in df.iterrows():
+        values = row.tolist()
+
+        row_html = f'<tr><td style="padding: 8px; font-weight: bold; text-align: center;">{idx}</td>'
+        for val in values:
+            row_html += f'<td style="padding: 8px; text-align: center;">{val}</td>'
+        row_html += "</tr>"
+        html.append(row_html)
+
+    html.append("</table>")
+    return '<div style="margin: auto; display: table;">' + "\n".join(html) + "</div>"
 
 
 # --------------------------------------------------- DATA EXTRACTION --------------------------------------------------
@@ -264,7 +350,7 @@ def are_identical(
     obj2: any,
     rtol: float | None = None,
 ) -> bool:
-    """Check if two objects are identical.
+    """Check if two objects have identical values. This does not check if the types are the same
     :param obj1: list or dictionary to compare.
     :param obj2: list or dictionary to compare.
     :param rtol: Relative tolerance for floating-point comparisons using np.allclose."""

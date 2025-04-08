@@ -10,7 +10,7 @@ import numpy as np
 from renishawWiRE import WDFReader
 
 import constants
-from signal_data import SignalData, Dimension
+from signaldata import SignalData, Dimension
 from utils import grep, get_data_index, stringlist_to_matrix, sort_lists, get_header_as_dicts
 
 
@@ -824,40 +824,6 @@ def VestaDiffractionFile(filename: str) -> SignalData:
 
 
 # -------------------------------------------------------- WIRE --------------------------------------------------------
-
-#
-# def WireFile(filename: str | BytesIO) -> SignalData | None:
-#     """Read Renishaw WiRE files.
-#     :param filename: file path or BytesIO object"""
-#
-#     temp_file_path = ""
-#
-#     if not isinstance(filename, str):
-#         temp_file_path = "temp_"
-#         with open(temp_file_path, "wb") as ofile:
-#             ofile.write(filename.read())
-#             filename = temp_file_path
-#
-#     try:
-#         reader = WDFReader(filename)
-#
-#         x_data = np.array(reader.xdata[::-1], dtype=float)
-#         y_data = np.array(reader.spectra[::-1], dtype=float)
-#
-#         if reader.xlist_unit.name == "RamanShift":
-#             x = Dimension(x_data, constants.wavenumber_qt, constants.cm_1_unit)
-#         else:
-#             x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
-#
-#         y = Dimension(y_data, constants.intensity_qt)
-#         return SignalData(x, y, reader.title)
-#
-#     except Exception as e:
-#         raise e  # Explicitly re-raise the exception
-#
-#     finally:
-#         if temp_file_path:
-#             os.remove(temp_file_path)
 
 
 def WireFile(filename: str | BytesIO) -> SignalData:

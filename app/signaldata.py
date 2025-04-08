@@ -24,6 +24,7 @@ import scipy.signal as ss
 
 import constants
 from utils import merge_dicts, interpolate_point
+from fitting import fit_data
 
 
 def get_label(
@@ -179,6 +180,14 @@ class SignalData(object):
 
         self.x = x
         self.y = y
+        if not self.x.quantity:
+            self.x.quantity = "X-quantity"
+        if not self.x.unit:
+            self.x.unit = "X-unit"
+        if not self.y.quantity:
+            self.y.quantity = "Y-quantity"
+        if not self.y.unit:
+            self.y.unit = "Y-unit"
         self.name = name
         self.shortname = shortname
         if z_dict is None:
@@ -222,40 +231,67 @@ class SignalData(object):
         else:
             kwargs = dict()
 
-        figure.add_trace(
-            trace,
-            **kwargs,
-        )
+        figure.add_trace(trace, **kwargs)
 
+        font = dict(size=16, color="black")
         figure.update_xaxes(
             title_text=self.x.get_label_html(),
             tickformat=",",
+            title_font=font,
+            tickfont=font,
+            showgrid=True,
+            gridcolor="lightgray",
             **kwargs,
         )
         figure.update_yaxes(
             title_text=self.y.get_label_html(),
+            tickformat=",",
+            title_font=font,
+            tickfont=font,
+            showgrid=True,
+            gridcolor="lightgray",
             **kwargs,
+        )
+
+        figure.update_layout(
+            {"uirevision": "foo"},
+            margin=dict(l=0, r=0, t=40, b=0, pad=0),
+            legend=dict(font=font),
         )
 
         return figure
 
     # ---------------------------------------------- SIGNAL TRANSFORMATION ---------------------------------------------
 
+    def remove_background(self, xrange: list[float | int] | tuple[float | int] | np.ndarray[float | int]) -> SignalData:
+        """Remove the background signal
+        :param xrange: range of values where the average background signal is calculated"""
+
+        index1 = np.abs(self.x.data - xrange[0]).argmin()
+        index2 = np.abs(self.x.data - xrange[1]).argmin()
+        mean_val = np.mean(self.y.data[index1:index2])
+        if np.isnan(mean_val):
+            raise AssertionError()
+        return SignalData(
+            self.x(data=self.x.data),
+            self.y(data=self.y.data - mean_val),
+            self.name,
+            self.shortname,
+            self.z_dict,
+        )
+
     def smooth(self, *args) -> SignalData:
         """Smooth the y data
         :param args: arguments passed to the scipy.signal savgol_filter function"""
 
-        try:
-            y = ss.savgol_filter(self.y.data, *args)
-            return SignalData(
-                self.x,
-                self.y(data=y),
-                self.name,
-                self.shortname + " (smoothed)",
-                self.z_dict,
-            )
-        except:
-            return self
+        y = ss.savgol_filter(self.y.data, *args)
+        return SignalData(
+            self.x,
+            self.y(data=y),
+            self.name,
+            "Smoothed",
+            self.z_dict,
+        )
 
     def reduce_range(self, xrange: list[float | int] | tuple[float | int] | np.ndarray[float | int]) -> SignalData:
         """Reduce the x-axis range
@@ -271,33 +307,54 @@ class SignalData(object):
             self.z_dict,
         )
 
+    def fit(self, *args, **kwargs) -> tuple[SignalData, np.ndarray, np.ndarray, float]:
+        """Fit the data
+        :param args: arguments passed to fit_data
+        :param kwargs: keyword arguments passed to fit_data"""
+
+        params, param_errors, y_fit, r_squared = fit_data(self.x.data, self.y.data, *args, **kwargs)
+        return SignalData(self.x, self.y(y_fit), "Fit"), params, param_errors, r_squared
+
     # ------------------------------------------------- DATA EXTRACTION ------------------------------------------------
 
-    def _get_point(self, point: str) -> tuple[Dimension, Dimension, Dimension]:
+    def _get_point(
+        self,
+        point: str,
+        interpolation: bool = False,
+    ) -> tuple[Dimension, Dimension, Dimension]:
         """Get the extrema point of a signal
-        :param point: 'max', 'min'"""
+        :param point: 'max', 'min'
+        :param interpolation: if True, use interpolation to increase the accuracy of the measurement"""
 
         if point == "min":
             method, quantity = "argmin", constants.min_qt
         else:
             method, quantity = "argmax", constants.max_qt
-        index = getattr(self.y.data, method)()
+        x_data, y_data = self.x.data, self.y.data
+        index = getattr(y_data, method)()
+
+        if interpolation:
+            try:
+                x_data, y_data = interpolate_point(self.x.data, self.y.data, index, kind="cubic")
+                index = getattr(y_data, method)()
+            except:
+                pass
 
         # Point dimensions
-        x_e = self.x(data=self.x.data[index], quantity=quantity + " " + self.x.quantity)
-        y_e = self.y(data=self.y.data[index], quantity=quantity + " " + self.y.quantity)
+        x_e = self.x(data=x_data[index], quantity=quantity + " " + self.x.quantity)
+        y_e = self.y(data=y_data[index], quantity=quantity + " " + self.y.quantity)
 
         return x_e, y_e, Dimension(index)
 
-    def get_max(self) -> tuple[Dimension, Dimension, Dimension]:
+    def get_max(self, *args, **kwargs) -> tuple[Dimension, Dimension, Dimension]:
         """Get the maximum intensity signal"""
 
-        return self._get_point("max")
+        return self._get_point("max", *args, **kwargs)
 
-    def get_min(self) -> tuple[Dimension, Dimension, Dimension]:
+    def get_min(self, *args, **kwargs) -> tuple[Dimension, Dimension, Dimension]:
         """Get the minimum intensity signal"""
 
-        return self._get_point("min")
+        return self._get_point("min", *args, **kwargs)
 
     def get_extrema(self) -> tuple[Dimension, Dimension, Dimension]:
         """Get the extremum intensity signal"""
@@ -336,7 +393,7 @@ class SignalData(object):
         if x_left is not None and x_right is not None:
             fwhm = x_right - x_left
         else:
-            fwhm = 0
+            fwhm = float("nan")
 
         return (
             self.x(data=np.abs(fwhm), quantity=constants.fwhm_qt),  # TODO missing x unit?
@@ -378,7 +435,7 @@ class SignalData(object):
             try:
                 x_int, y_int = interpolate_point(x, y, index)
                 return self.get_halfint_point(x_int, y_int, False, halfint)
-            except IndexError:  # pragma: no cover
+            except:  # pragma: no cover
                 print("Interpolation failed")
                 pass
 

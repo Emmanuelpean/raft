@@ -1,11 +1,20 @@
 # To-Do List
 
 ## Feature Enhancements
-* [ ] Increase the size of the plot text.
+* [X] Increase the size of the plot text.
+* [X] Add fitting options.
+* [X] Add interpolation to max/min point calculation
+* [X] Added background removal
+* [ ] Add normalisation options
 
 ## Tests
-* [ ] Add tests for app.py.
+* [X] Add tests
+* [X] Add type hints
+* [X] Add test for to_scientific new n parameter
 
 ## Bug fixes
-* [ ] Fix bug preventing the loading of diffrac and wire files
-* [ ] Fix name error in License
+* [X] Fix bug preventing the loading of diffrac and wire files
+* [X] Fix name error in License
+* [X] Fix Max. wavenumber (cm<sup>-1</sup>) in range label
+* [X] FWHM should not be displayed if could not be calculated
+* [X] When changing the model, the value of the selected parameter does not change

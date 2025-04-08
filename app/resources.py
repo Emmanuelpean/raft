@@ -10,7 +10,7 @@ CSS_STYLE_PATH = path.join(resources_path, "style.css")
 
 LOGO_TEXT_FILENAME = path.join(resources_path, "medias/logo_text.svg")
 LOGO_FILENAME = path.join(resources_path, "medias/logo.svg")
-
+ICON_FILENAME = path.join(resources_path, "medias/icon.png")
 
 # ----------------------------------------------------- TEST FILES -----------------------------------------------------
 

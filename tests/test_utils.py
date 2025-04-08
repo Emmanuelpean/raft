@@ -12,6 +12,7 @@ import os
 from unittest.mock import mock_open, patch
 
 import pytest
+from bs4 import BeautifulSoup
 
 from app.utils import *
 
@@ -307,6 +308,153 @@ class TestRenderImage:
 
         # This assumes the original function is correctly decorated with @st.cache_resource
         assert hasattr(render_image, "__wrapped__")
+
+
+class TestNumberToString:
+    """Test cases for the to_scientific function"""
+
+    def test_single_float(self) -> None:
+        """Test single float to scientific notation"""
+        result = number_to_str(1.4e-4)
+        assert result == "1.4E-04"
+
+    def test_single_integer(self) -> None:
+        """Test single integer to scientific notation"""
+        result = number_to_str(5000)
+        assert result == "5E+03"
+
+    def test_none_input(self) -> None:
+        """Test None input"""
+        result = number_to_str(None)
+        assert result == ""
+
+    def test_single_negative_float(self) -> None:
+        """Test single negative float to scientific notation"""
+        result = number_to_str(-1.4e-4)
+        assert result == "-1.4E-04"
+
+    def test_single_float_no_trailing_zeros(self) -> None:
+        """Test float with no trailing zeros"""
+        result = number_to_str(1.0e5)
+        assert result == "1E+05"
+
+    def test_list_of_floats(self) -> None:
+        """Test list of floats to scientific notation"""
+        result = number_to_str([1e-4, 1e-5])
+        assert result == "1E-04, 1E-05"
+
+    def test_list_of_mixed_numbers(self) -> None:
+        """Test list of integers and floats to scientific notation"""
+        result = number_to_str([100, 1.4e-3, 5])
+        assert result == "1E+02, 1.4E-03, 5"
+
+    def test_empty_list(self) -> None:
+        """Test empty list input"""
+        result = number_to_str([])
+        assert result == ""
+
+    def test_large_number(self) -> None:
+        """Test large number to scientific notation"""
+        result = number_to_str(1e100)
+        assert result == "1E+100"
+
+    def test_edge_case_zero(self) -> None:
+        """Test zero as an edge case"""
+        result = number_to_str(0)
+        assert result == "0"
+
+    def test_single_integer_with_zero_trailing(self) -> None:
+        """Test integer with trailing zeros"""
+        result = number_to_str(5000000)
+        assert result == "5E+06"
+
+    def test_n(self) -> None:
+        """Test the n parameter"""
+        result = number_to_str(5.5234325, 2)
+        assert result == "5.52"
+
+
+class TestGenerateHtmlTable:
+    @pytest.fixture
+    def sample_dataframe(self) -> pd.DataFrame:
+        """Create a sample dataframe for testing."""
+
+        data = {"A": [1, 2, 3, 4], "B": [5, 6, 7, 8], "C": [9, 10, 11, 12]}
+        df = pd.DataFrame(data, index=["row1", "row2", "row3", "row4"])
+        return df
+
+    @pytest.fixture
+    def dataframe_with_identical_rows(self) -> pd.DataFrame:
+        """Create a dataframe with some identical rows."""
+
+        data = {"A": [1, 2, 2, 3], "B": [5, 2, 2, 7], "C": [9, 2, 2, 11]}
+        df = pd.DataFrame(data, index=["row1", "row2", "row3", "row4"])
+        return df
+
+    @pytest.fixture
+    def dataframe_with_column_name(self) -> pd.DataFrame:
+        """Create a dataframe with a column name."""
+
+        data = {"A": [1, 2, 3], "B": [4, 5, 6], "C": [7, 8, 9]}
+        df = pd.DataFrame(data, index=["row1", "row2", "row3"])
+        df.columns.name = "Categories"
+        return df
+
+    def test_basic_table_generation(self, sample_dataframe) -> None:
+        """Test basic HTML table generation."""
+
+        html = generate_html_table(sample_dataframe)
+
+        # Verify structure using BeautifulSoup
+        soup = BeautifulSoup(html, "html.parser")
+
+        # Check table exists
+        table = soup.find("table")
+        assert table is not None
+
+        # Check number of rows (header + data rows)
+        rows = table.find_all("tr")
+        assert len(rows) == 5  # 1 header + 4 data rows
+
+        # Check header row
+        header_cells = rows[0].find_all(["th"])
+        assert len(header_cells) == 4  # corner cell + 3 columns
+
+        # Check data cells
+        data_rows = rows[1:]
+        for i, row in enumerate(data_rows):
+            cells = row.find_all("td")
+            assert cells[0].text == f"row{i + 1}"  # Check row name
+
+    def test_column_name_in_corner(self, dataframe_with_column_name) -> None:
+        """Test that the column name appears in the corner cell."""
+        html = generate_html_table(dataframe_with_column_name)
+
+        soup = BeautifulSoup(html, "html.parser")
+        corner_cell = soup.find("tr").find("th")
+
+        assert corner_cell.text == "Categories"
+
+    def test_empty_corner_cell_with_no_column_name(self, sample_dataframe) -> None:
+        """Test that the corner cell is empty when no column name is provided."""
+        html = generate_html_table(sample_dataframe)
+
+        soup = BeautifulSoup(html, "html.parser")
+        corner_cell = soup.find("tr").find("th")
+
+        assert corner_cell.text == ""
+
+    def test_div_wrapper(self, sample_dataframe) -> None:
+        """Test that the table is wrapped in a div with correct styling."""
+        html = generate_html_table(sample_dataframe)
+
+        soup = BeautifulSoup(html, "html.parser")
+        div = soup.find("div")
+
+        assert div is not None
+        assert div.has_attr("style")
+        assert "margin: auto" in div["style"]
+        assert "display: table" in div["style"]
 
 
 # --------------------------------------------------- DATA EXTRACTION --------------------------------------------------

@@ -10,8 +10,9 @@ robustness of the functions."""
 import plotly.subplots as ps
 import pytest
 
-from app.signal_data import *
+from app.signaldata import *
 from app.utils import are_close, are_identical
+from app.fitting import gaussian
 
 
 class TestGetLabel:
@@ -302,6 +303,14 @@ class TestSignalData:
         # noinspection PyUnresolvedReferences
         assert trace.name == sample_signal.get_name(True)
 
+    def test_remove_background(self, sample_dimensions) -> None:
+        """Test remove_background method"""
+
+        y = sample_dimensions[1](sample_dimensions[1].data + 3)
+        signal = SignalData(sample_dimensions[0], y, "Test Signal")
+        new_signal = signal.remove_background([0, 1])
+        assert are_close(new_signal.y.data, signal.y.data - 3.02752297)
+
     def test_smooth(self, sample_signal) -> None:
         """Test smooth method"""
 
@@ -337,6 +346,15 @@ class TestSignalData:
         assert reduced.name == sample_signal.name
         assert reduced.shortname == sample_signal.shortname
         assert reduced.z_dict == sample_signal.z_dict
+
+    def test_fit(self, sample_dimensions, sample_signal) -> None:
+
+        fit = sample_signal.fit(gaussian, dict(a=4, mu=5, sigma=3, c=4))
+        assert are_close(fit[1], [1.00000000e00, 3.00000000e00, 1.00000000e00, -1.90398713e-11])
+        assert are_close(fit[2], [1.21468176e-11, 1.40104267e-11, 1.40703837e-11, 3.39731184e-12])
+        assert are_close(fit[3], 1.0)
+        assert are_close(fit[0].x.data, sample_dimensions[0].data)
+        assert are_close(fit[0].y.data, sample_dimensions[1].data)
 
     def test_get_point(self, sample_signal) -> None:
         """Test _get_point method"""
