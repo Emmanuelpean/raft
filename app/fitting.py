@@ -141,8 +141,7 @@ def voigt(x: np.ndarray, a: float, mu: float, sigma: float, gamma: float, c: flo
 def guess_linear(x: np.ndarray, y: np.ndarray) -> tuple[float, float]:
     """Generate initial parameter guesses for linear function: f(x) = m*x + b"""
 
-    m_guess = np.polyfit(x, y, 1)[0]  # Slope
-    b_guess = np.mean(y) - m_guess * np.mean(x)  # Intercept
+    m_guess, b_guess = np.polyfit(x, y, 1)  # Slope
     return float(m_guess), float(b_guess)
 
 

@@ -210,11 +210,13 @@ class SignalData(object):
         figure: go.Figure | None = None,
         position: None | list | tuple = None,
         condition: bool = False,
+        **kwargs,
     ) -> go.Figure:
         """Plot the signal data in a plotly figure
         :param figure: plotly figure object
         :param position: subplot position
-        :param condition: argument passed to get_name"""
+        :param condition: argument passed to get_name
+        :param kwargs: keyword arguments passed to Scatter"""
 
         if figure is None:
             figure = go.Figure()
@@ -224,6 +226,7 @@ class SignalData(object):
             y=self.y.data,
             name=self.get_name(condition),
             showlegend=True,
+            **kwargs,
         )
 
         if position:

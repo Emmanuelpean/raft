@@ -8,9 +8,11 @@ CSS_STYLE_PATH = path.join(resources_path, "style.css")
 # ------------------------------------------------------- IMAGES -------------------------------------------------------
 
 
-LOGO_TEXT_FILENAME = path.join(resources_path, "medias/logo_text.svg")
-LOGO_FILENAME = path.join(resources_path, "medias/logo.svg")
-ICON_FILENAME = path.join(resources_path, "medias/icon.png")
+LOGO_TEXT_PATH = path.join(resources_path, "medias/logo_text.svg")
+LOGO_PATH = path.join(resources_path, "medias/logo.svg")
+ICON_PATH = path.join(resources_path, "medias/icon.png")
+DATA_PROCESSING_PATH = path.join(resources_path, "medias/data_processing.svg")
+
 
 # ----------------------------------------------------- TEST FILES -----------------------------------------------------
 

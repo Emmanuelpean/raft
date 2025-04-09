@@ -7,6 +7,8 @@ returned.
 Tests should cover various edge cases, valid inputs, and any other conditions that are necessary to confirm the
 robustness of the functions."""
 
+import pytest
+
 from app.fitting import *
 from app.utils import are_close
 
@@ -247,8 +249,8 @@ class TestFitData:
         true_params = dict(a=-5.0, b=0.4, c=1.0)
         bounds = dict(a=[0, 100], b=[0, 1], c=[0, 100000])
         x_data, y_data = self.generate_noisy_data(exponential_decay, true_params)
-        fit_output = fit_data(x_data, y_data, exponential_decay, true_params, bounds)
-        assert fit_output[0] is None
+        with pytest.raises(ValueError):
+            fit_data(x_data, y_data, exponential_decay, true_params, bounds)
 
 
 def print_expected_from_tuple(values: tuple | list) -> None:

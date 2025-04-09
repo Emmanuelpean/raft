@@ -9,19 +9,21 @@ import streamlit as st
 from data_files import FUNCTIONS, detect_file_type
 from fitting import MODELS, get_model_parameters
 from plot import plot, scatter_plot
-from resources import LOGO_FILENAME, LOGO_TEXT_FILENAME, CSS_STYLE_PATH, ICON_FILENAME
+from resources import LOGO_PATH, LOGO_TEXT_PATH, CSS_STYLE_PATH, ICON_PATH, DATA_PROCESSING_PATH
 from signaldata import SignalData, Dimension
 from utils import render_image, matrix_to_string, read_txt_file, number_to_str, generate_html_table
 
 __version__ = "2.0.0"
 __date__ = "March 2025"
+__author__ = "Emmanuel V. Péan"
+
 
 dirname = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # -------------------------------------------------------- SETUP -------------------------------------------------------
 
-st.set_page_config("Raft", page_icon=ICON_FILENAME, layout="wide")
-st.sidebar.html(render_image(LOGO_FILENAME, 35))  # sidebar logo
+st.set_page_config("Raft", page_icon=ICON_PATH, layout="wide")
+st.sidebar.html(render_image(LOGO_PATH, 35))  # sidebar logo
 
 
 # Change the default style
@@ -81,6 +83,13 @@ def set_settings(reset: bool = False) -> None:
     reset_stored_guess_values(reset)
 
 
+def refresh_session_state() -> None:
+    """Refresh the session state. To be called when new widgets are displayed"""
+
+    for key in ss.settings_defaults:
+        ss[key] = ss[key]
+
+
 set_settings()
 
 # ----------------------------------------------------- DATA INPUT -----------------------------------------------------
@@ -103,13 +112,12 @@ signal = None
 
 # If no file is provided or no signal is stored
 if not file:
-    st.html(render_image(LOGO_TEXT_FILENAME, 30))  # main logo
-    st.info(
-        f"""RAFT is a free tool to plot the content a various data files. Just drag and drop your file and get 
-        the relevant information from it!  
-        App created and maintained by [Emmanuel V. Péan](https://emmanuelpean.streamlit.app/).  
-        [Version {__version__}](https://github.com/Emmanuelpean/raft) (last updated: {__date__})."""
-    )
+    st.html(render_image(LOGO_TEXT_PATH, 30))  # main logo
+    text = f"""*Raft* is a free tool to plot the content a various data files. Just drag and drop your file and get 
+    the relevant information from it!  
+    App created and maintained by [{__author__}](https://emmanuelpean.streamlit.app/).  
+    [Version {__version__}](https://github.com/Emmanuelpean/raft) (last updated: {__date__})."""
+    st.info(text)
 
 else:
 
@@ -161,6 +169,8 @@ else:
 
         # If only 1 signal is selected
         if isinstance(signal, SignalData):
+
+            refresh_session_state()
 
             # ----------------------------------------------- DATA EXPORT ----------------------------------------------
 
@@ -256,9 +266,6 @@ else:
                         signal = signal.normalise()
                     elif ss["norm_type"] == "Feature Scaling":
                         signal = signal.feature_scale(float(ss["norm_a"]), float(ss["norm_b"]))
-                        print(signal.x)
-                        print(signal.y)
-
                     expander_label = f"__✔ {NORM_LABEL} ({ss['norm_type']})__"
                 except:
                     pass
@@ -275,20 +282,19 @@ else:
                     label_visibility="collapsed",
                 )
 
-                # Refresh the session state
-                ss["norm_a"] = ss["norm_a"]
-                ss["norm_b"] = ss["norm_b"]
+                disabled = ss["norm_type"] != "Feature Scaling"
 
-                if ss["norm_type"] == "Feature Scaling":
-                    columns = st.columns(2)
-                    columns[0].text_input(
-                        label="Maximum Value",
-                        key="norm_a",
-                    )
-                    columns[1].text_input(
-                        label="Minimum Value",
-                        key="norm_b",
-                    )
+                columns = st.columns(2)
+                columns[0].text_input(
+                    label="Maximum Value",
+                    key="norm_a",
+                    disabled=disabled,
+                )
+                columns[1].text_input(
+                    label="Minimum Value",
+                    key="norm_b",
+                    disabled=disabled,
+                )
 
             # Plot the signal
             figure = plot(signal)
@@ -308,6 +314,7 @@ else:
             with st.sidebar.expander(expander_label, expanded=expander_status):
 
                 smoothing_cols = st.columns(2)
+
                 smoothing_cols[0].number_input(
                     label="Filter Length",
                     min_value=0,
@@ -485,10 +492,10 @@ else:
 
                     # Display the maximum point
                     scatter_plot(
-                        figure,
-                        x_max.data,
-                        y_max.data,
-                        "Max. Point",
+                        figure=figure,
+                        x_data=x_max.data,
+                        y_data=y_max.data,
+                        label="Max. Point",
                     )
 
                 # Min point
@@ -500,10 +507,10 @@ else:
 
                     # Display the minimum point
                     scatter_plot(
-                        figure,
-                        x_min.data,
-                        y_min.data,
-                        "Min. Point",
+                        figure=figure,
+                        x_data=x_min.data,
+                        y_data=y_min.data,
+                        label="Min. Point",
                     )
 
                 # FWHM
@@ -514,10 +521,10 @@ else:
                     # Display the FWHM
                     if not np.isnan(fwhm.data):
                         scatter_plot(
-                            figure,
-                            [x_left.data, x_right.data],
-                            [y_left.data, y_right.data],
-                            "FWHM",
+                            figure=figure,
+                            x_data=[x_left.data, x_right.data],
+                            y_data=[y_left.data, y_right.data],
+                            label="FWHM",
                         )
                         info_spot.html(fwhm.get_value_label_html())
                     else:
@@ -532,6 +539,53 @@ else:
             figure = plot(signal)
 
         plot_spot.plotly_chart(figure, use_container_width=True)
+
+# ----------------------------------------------------- INFORMATION ----------------------------------------------------
+
+with st.expander("Data Processing"):
+    text = """*Raft* also offers basic data processing capabilities, allowing you to quickly and easily extract meaningful 
+    information from your data. The available options include:"""
+    st.markdown(text)
+
+    st.markdown("""##### Background Removal""")
+    text = """If a __lower__ and __upper range__ of x-values is provided, the corresponding y-values are averaged and 
+    subtracted from the entire y-values to remove the background."""
+    st.markdown(text)
+
+    st.markdown("""##### Data Range""")
+    text = """If a __lower__ and __upper range__ of x-values is provided, the data are limited to this range"""
+    st.markdown(text)
+
+    st.markdown("##### Normalisation")
+    text = """Two normalisation options are available:
+* __Max normalisation__ – the y-values are normalised with respect to their maximum value.
+* __Feature scaling__ – the y-values are normalised based on specified minimum and maximum values."""
+    st.markdown(text)
+
+    st.markdown("##### Smoothing")
+    text = """Applies a Savitzky–Golay smoothing filter using the specified __filter length__ and __polynomial order__ 
+    (__subplot a__)."""
+    st.markdown(text)
+
+    st.markdown("##### Fitting")
+    models = "".join(["\n* " + key for key in MODELS.keys()])
+    text = f"""Data can be fitted using the following __models__: {models}
+    Initial guess values are automatically estimated from the data but can be manually adjusted."""
+    st.markdown(text)
+
+    st.markdown("##### Data Extraction")
+    text = """The following information can be extracted from the processed data:
+* __Maximum point__: The x and y coordinates corresponding to the peak y-value in the data (__subplot c__).
+* __Minimum point__: The x and y coordinates corresponding to the lowest y-value in the data (__subplot c__).
+
+For both maximum and minimum points, the precision of the estimated positions can be enhanced using cubic __interpolation__ 
+around the peak maximum, which refines the estimate beyond the raw data resolution.
+* __Full Width at Half Maximum (FWHM)__: The width of the peak measured between the two x-values where the y-value equals 
+half of the maximum y-value. This provides a useful metric of the peak’s sharpness or spread (__subplot b__).
+
+Similar to the max/min points, the precision of the FWHM measurement can be further refined using linear __interpolation__. """
+    st.markdown(text)
+    st.html(render_image(DATA_PROCESSING_PATH, 50))
 
 # ------------------------------------------------------ CHANGELOG -----------------------------------------------------
 

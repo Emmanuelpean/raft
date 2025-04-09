@@ -5,9 +5,12 @@
 * [X] Add fitting options.
 * [X] Add interpolation to max/min point calculation
 * [X] Added background removal
-* [ ] Add normalisation options
-* [ ] Reset settings for different data types
+* [X] Add normalisation options
+* [X] Reset settings for different data types
 * [ ] Prevent graph from changing by storing figure in session state?
+* [X] Display visual graphs explaining the use of interpolation
+* [X] Disable the feature scaling options instead of hiding them
+* [ ] Review plot
 
 ## Tests
 * [X] Add tests
