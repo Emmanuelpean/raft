@@ -10,12 +10,21 @@
 * [ ] Prevent graph from changing by storing figure in session state?
 * [X] Display visual graphs explaining the use of interpolation
 * [X] Disable the feature scaling options instead of hiding them
-* [ ] Review plot
+* [ ] Review plot module and functions
+* [X] Improve the number_to_string function and split between display and input
+* [X] Normalise the smoothed signal
+* [X] Move "Download Data" to the bottom and include the smoothed data and fitted
+* [X] Add interpolation
+* [X] Add derivative
+* [ ] Add draggable processing expanders.
+* [X] Update description
+* [ ] Add default guess values if guess value function fails
 
 ## Tests
 * [X] Add tests
 * [X] Add type hints
 * [X] Add test for to_scientific new n parameter
+* [ ] Check tests
 
 ## Bug fixes
 * [X] Fix bug preventing the loading of diffrac and wire files

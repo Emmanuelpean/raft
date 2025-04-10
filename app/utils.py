@@ -1,6 +1,7 @@
 """utils module"""
 
 import base64
+import math
 from operator import itemgetter
 
 import numpy as np
@@ -9,7 +10,16 @@ import scipy.interpolate as sci
 import streamlit as st
 
 
-# --------------------------------------------------- DATA CONVERSION --------------------------------------------------
+@st.cache_resource
+def read_file(path: str) -> str:
+    """Read the content of a file and store it as a resource.
+    :param path: file path"""
+
+    with open(path, encoding="utf-8") as ofile:
+        return ofile.read()
+
+
+# -------------------------------------------------- STRING CONVERSION -------------------------------------------------
 
 
 def stringlist_to_matrix(
@@ -33,8 +43,7 @@ def stringlist_to_matrix(
 
         lines.append(line_float)
 
-    # Check the length of the lines matches (used for no delimiter data with missing data)
-    # TODO to test with dektak file
+    # Check the number of elements in all lines are consistent
     for line in lines:
         while len(line) < len(lines[0]):
             line.append(float("nan"))
@@ -65,6 +74,7 @@ def matrix_to_string(
 
     string = "\n".join(rows)
 
+    # Add the header
     if header is not None:
         string = delimiter.join(header) + "\n" + string
 
@@ -82,6 +92,9 @@ def get_header_as_dicts(
 
     keys, *values = np.transpose([line.split(delimiter) for line in header])  # split headers
     return [dict(zip(keys, v)) for v in values]  # store in dictionaries
+
+
+# --------------------------------------------------- DATA CONVERSION --------------------------------------------------
 
 
 @st.cache_resource
@@ -123,68 +136,46 @@ def generate_download_link(
     return rf'<a href="data:text/csv;base64,{b64}" download="{name}.csv">{text}</a>'
 
 
-@st.cache_resource
-def read_txt_file(path: str) -> str:
-    """Read the content of a text file and store it as a resource.
-    :param path: file path"""
-
-    with open(path, encoding="utf-8") as ofile:
-        return ofile.read()
-
-
 def number_to_str(
     value: float | int | list[float | int] | None,
-    n: None | int = None,
+    n: int = 4,
+    display: bool = False,
 ) -> str:
     """Convert a number to scientific notation without trailing zeros
+    :param value: value to convert
+    :param n: if the value is outside the range -1000 - 1000, number of floating digits
+    :param display: if True, do not remove trailing zeros and use html"""
 
-    Examples
-    --------
-    >>> number_to_str(1.4e-4)
-    '1.4E-04'
-    >>> number_to_str(None)
-    ''
-    >>> number_to_str([1e-4, 1e-5])
-    '1E-04, 1E-05'"""
+    if isinstance(value, (list, tuple, np.ndarray)):
+        return ", ".join(number_to_str(v, n, display) for v in value)
+
+    if isinstance(value, (int, np.integer)):
+        return str(value)
 
     if value is None:
         return ""
+
     if value == 0:
         return "0"
-    elif isinstance(value, (float, int, np.integer)):
-        # For values between -1000 and 1000, display as float with 4 significant digits
-        if -1000 <= value <= 1000:
-            # Format with appropriate significant digits
-            if abs(value) >= 100:
-                # 3 digits before decimal point, need 1 after
-                string = f"{value:.1f}"
-            elif abs(value) >= 10:
-                # 2 digits before decimal point, need 2 after
-                string = f"{value:.2f}"
-            elif abs(value) >= 1:
-                # 1 digit before decimal point, need 3 after
-                string = f"{value:.3f}"
-            else:
-                string = f"{value:.4g}"
 
-            # Remove trailing zeros after decimal point
-            if "." in string:
-                string = string.rstrip("0").rstrip(".")
-            return string
+    abs_val = abs(value)
+
+    if 1e-2 <= abs_val <= 1000:
+        if display:
+            return f"{value:.{n}f}"
         else:
-            # For values outside -1000 to 1000 range, use scientific notation
-            if n is not None:
-                string = f"{value:.{n}E}"
-            else:
-                string = f"{value:E}"
-            mantissa, exponent = string.split("E")
+            return f"{value:.{n}g}"
 
-            if exponent in ("+00", "-00"):
-                return (mantissa[0] + mantissa[1:].strip("0")).strip(".")
-            else:
-                return (mantissa[0] + mantissa[1:].strip("0")).strip(".") + "E" + exponent
+    # Scientific notation
+    order = int(math.floor(math.log10(abs_val)))
+    mantissa = value / 10**order
+
+    if display:
+        mantissa_str = f"{mantissa:.{n}f}"
+        return f"{mantissa_str} &#10005; 10<sup>{order}</sup>"
     else:
-        return ", ".join([number_to_str(f) for f in value])
+        mantissa_str = f"{mantissa:.{n}g}".rstrip("0").rstrip(".")
+        return f"{mantissa_str}E{order}"
 
 
 def generate_html_table(df: pd.DataFrame) -> str:
@@ -217,24 +208,37 @@ def generate_html_table(df: pd.DataFrame) -> str:
     return '<div style="margin: auto; display: table;">' + "\n".join(html) + "</div>"
 
 
-def normalise(ndarray: np.ndarray) -> np.ndarray:
-    """Normalise a numpy array
-    :param ndarray: ndarray of floats or ints"""
+# ------------------------------------------------- DATA NORMALISATION -------------------------------------------------
 
-    return ndarray / np.nanmax(ndarray)
+
+def normalise(
+    ndarray: np.ndarray,
+    other: None | np.ndarray = None,
+) -> np.ndarray:
+    """Normalise a numpy array
+    :param ndarray: ndarray of floats or ints
+    :param other: if provided, normalise ndarray with respect to a"""
+
+    if other is None:
+        other = ndarray
+    return ndarray / np.nanmax(other)
 
 
 def feature_scale(
     ndarray: np.ndarray,
     a: float = 1.0,
     b: float = 0.0,
+    other: None | np.ndarray = None,
 ) -> np.ndarray:
-    """Feature scale a numpy array
+    """Feature scale a numpy array ndarray
     :param ndarray: ndarray of floats or ints
-    :param b: minimum value
-    :param a: maximum value"""
+    :param other: if provided, normalise ndarray with respect to a
+    :param a: minimum value
+    :param b: maximum value"""
 
-    return b + (ndarray - np.nanmin(ndarray)) * (a - b) / (np.nanmax(ndarray) - np.nanmin(ndarray))
+    if other is None:
+        other = ndarray
+    return b + (ndarray - np.nanmin(other)) * (a - b) / (np.nanmax(other) - np.nanmin(other))
 
 
 # --------------------------------------------------- DATA EXTRACTION --------------------------------------------------
@@ -360,6 +364,52 @@ def interpolate_point(
     new_x = np.linspace(np.min(x), np.max(x), 1000)
     interp = sci.interp1d(x, y, **kwargs)
     return new_x, interp(new_x)
+
+
+def interpolate_data(
+    x: np.ndarray,
+    y: np.ndarray,
+    dx: int | float,
+    **kwargs,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Interpolate the y data of a signal
+    :param x: x data
+    :param y: y data
+    :param dx: step (float) or array or number of points (int) of the new x data.
+    :param kwargs: keyword arguments passed to the scipy interp1d function"""
+
+    if dx <= 0:
+        raise AssertionError("dx cannot be negative")
+
+    if isinstance(dx, int):
+        new_x = np.linspace(np.min(x), np.max(x), dx)
+    else:
+        new_x = np.arange(np.min(x), np.max(x), dx)
+
+    # Interpolate the ys with the new x
+    interp = sci.interp1d(x, y, **kwargs)
+    new_y = interp(new_x)
+
+    return new_x, new_y
+
+
+def get_derivative(
+    x: np.ndarray,
+    y: np.ndarray,
+    n: int = 1,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Get the nth derivative of a ndarray
+    :param np.ndarray x: x values
+    :param np.ndarray y: y values (float or SignalData)
+    :param int n: order of the derivative"""
+
+    for i in range(n):
+        dx = np.diff(x)
+        dy = np.diff(y)
+        y = dy / dx
+        x = (x[1:] + x[:-1]) / 2
+
+    return x, y
 
 
 # ---------------------------------------------------- DATA CHECKING ---------------------------------------------------

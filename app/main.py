@@ -11,19 +11,31 @@ from fitting import MODELS, get_model_parameters
 from plot import plot, scatter_plot
 from resources import LOGO_PATH, LOGO_TEXT_PATH, CSS_STYLE_PATH, ICON_PATH, DATA_PROCESSING_PATH
 from signaldata import SignalData, Dimension
-from utils import render_image, matrix_to_string, read_txt_file, number_to_str, generate_html_table
+from utils import render_image, matrix_to_string, read_file, number_to_str, generate_html_table
 
 __version__ = "2.0.0"
+__name__ = "Raft"
 __date__ = "March 2025"
 __author__ = "Emmanuel V. Péan"
+__github__ = "https://github.com/Emmanuelpean/raft"
 
 
-dirname = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # -------------------------------------------------------- SETUP -------------------------------------------------------
 
-st.set_page_config("Raft", page_icon=ICON_PATH, layout="wide")
+st.set_page_config(__name__, page_icon=ICON_PATH, layout="wide")
 st.sidebar.html(render_image(LOGO_PATH, 35))  # sidebar logo
+
+
+BACKGROUND_LABEL = "Background Subtraction"
+RANGE_LABEL = "Data Range"
+INTERP_LABEL = "Interpolation"
+DERIVE_LABEL = "Derivative"
+SMOOTHING_LABEL = "Smoothing"
+NORM_LABEL = "Normalisation"
+FITTING_LABEL = "Fitting"
+EXTRACTION_LABEL = "Data Extraction"
 
 
 # Change the default style
@@ -69,7 +81,16 @@ ss.settings_defaults = {
     "norm_type": "None",
     "norm_a": "1",
     "norm_b": "0",
+    "interp_label": "",
+    "interp_type": "None",
+    "interp_dx": "",
+    "interp_n": "",
+    "derive_label": "",
+    "derive_order": 0,
 }
+
+if "expanded" not in st.session_state:
+    st.session_state["expanded"] = False
 
 
 # Add the settings to the session state using their default value
@@ -113,11 +134,6 @@ signal = None
 # If no file is provided or no signal is stored
 if not file:
     st.html(render_image(LOGO_TEXT_PATH, 30))  # main logo
-    text = f"""*Raft* is a free tool to plot the content a various data files. Just drag and drop your file and get 
-    the relevant information from it!  
-    App created and maintained by [{__author__}](https://emmanuelpean.streamlit.app/).  
-    [Version {__version__}](https://github.com/Emmanuelpean/raft) (last updated: {__date__})."""
-    st.info(text)
 
 else:
 
@@ -140,7 +156,6 @@ else:
     if signal is None:
         st.warning("Unable to read that file")
 
-    # else display the data
     else:
 
         # ----------------------------------------------- DATA SELECTION -----------------------------------------------
@@ -167,26 +182,12 @@ else:
             if col_selection in signal_dict:
                 signal = signal_dict[col_selection]
 
+        # ----------------------------------------------- DATA PROCESSING ----------------------------------------------
+
         # If only 1 signal is selected
         if isinstance(signal, SignalData):
 
-            refresh_session_state()
-
-            # ----------------------------------------------- DATA EXPORT ----------------------------------------------
-
-            header = [signal.x.get_label_raw(), signal.y.get_label_raw()]
-            export_data = matrix_to_string([signal.x.data, signal.y.data], header)
-            st.sidebar.download_button(
-                "Download data",
-                export_data,
-                "data.csv",
-                use_container_width=True,
-                key="download_button",
-            )
-
-            # ----------------------------------------------- BACKGROUND -----------------------------------------------
-
-            def get_expander_status(ss_label: str, label: str) -> bool:
+            def expander(ss_label: str, label: str) -> bool:
                 """Get the expander status based on the session state label
                 :param ss_label: session state label key
                 :param label: current label"""
@@ -195,18 +196,21 @@ else:
                 if ss[ss_label] == ss.settings_defaults[ss_label]:
                     status = False
                 ss[ss_label] = label
-                return status
 
-            EXPANDER_LABEL = "Background Removal"
+                return st.sidebar.expander(expander_label, expanded=status)
+
+            refresh_session_state()
+
+            # ----------------------------------------------- BACKGROUND -----------------------------------------------
+
             try:
                 xrange = [float(ss.bckg_range_input1), float(ss.bckg_range_input2)]
                 signal = signal.remove_background(xrange)
-                expander_label = f"__✔ {EXPANDER_LABEL} {xrange[0]} - {xrange[1]}__"
+                expander_label = f"__✔ {BACKGROUND_LABEL} {xrange[0]} - {xrange[1]}__"
             except:
-                expander_label = EXPANDER_LABEL
-            expander_status = get_expander_status("background_label", expander_label)
+                expander_label = BACKGROUND_LABEL
 
-            with st.sidebar.expander(expander_label, expanded=expander_status):
+            with expander("background_label", expander_label):
 
                 columns = st.columns(2)
 
@@ -228,16 +232,14 @@ else:
 
             # ----------------------------------------------- DATA RANGE -----------------------------------------------
 
-            RANGE_LABEL = "Data Range"
             try:
                 xrange = [float(ss.range_input1), float(ss.range_input2)]
                 signal = signal.reduce_range(xrange)
                 expander_label = f"__✔ {RANGE_LABEL} {xrange[0]} - {xrange[1]}__"
             except:
                 expander_label = RANGE_LABEL
-            expander_status = get_expander_status("range_label", expander_label)
 
-            with st.sidebar.expander(expander_label, expanded=expander_status):
+            with expander("range_label", expander_label):
 
                 range_cols = st.columns(2)
 
@@ -256,62 +258,78 @@ else:
                     key="range_input2",
                 )
 
-            # ---------------------------------------------- NORMALISATION ---------------------------------------------
+            # ---------------------------------------------- INTERPOLATION ---------------------------------------------
 
-            NORM_LABEL = "Normalisation"
-            expander_label = NORM_LABEL
-            if ss["norm_type"] != "None":
-                try:
-                    if ss["norm_type"] == "Max Normalisation":
-                        signal = signal.normalise()
-                    elif ss["norm_type"] == "Feature Scaling":
-                        signal = signal.feature_scale(float(ss["norm_a"]), float(ss["norm_b"]))
-                    expander_label = f"__✔ {NORM_LABEL} ({ss['norm_type']})__"
-                except:
-                    pass
+            expander_label = INTERP_LABEL
+            dx = None
+            try:
+                if ss.interp_type == "Fixed Step":
+                    dx = float(ss.interp_dx)
+                    signal = signal.interpolate(dx=dx)
+                elif ss.interp_type == "Point Count":
+                    n_count = int(ss.interp_n)
+                    signal = signal.interpolate(dx=n_count)
+                    dx = np.mean(np.diff(signal.x.data))
+                if dx:
+                    expander_label = (
+                        f"__✔ {INTERP_LABEL} (step = {number_to_str(dx, 3)} {signal.x.get_unit_label_html()})__"
+                    )
+            except:
+                pass
 
-            expander_status = get_expander_status("norm_label", expander_label)
+            with expander("interp_label", expander_label):
 
-            with st.sidebar.expander(expander_label, expanded=expander_status):
-
+                help_str = """Interpolate the data using different methods:
+* __Fixed Step__ interpolation – Data are interpolated using a specified step size.
+* __Point Count__ interpolation – Data are interpolated to fit a specified number of points."""
                 st.radio(
-                    label="f",
-                    options=["None", "Max Normalisation", "Feature Scaling"],
-                    key="norm_type",
+                    label="Interpolation Type",
+                    options=["None", "Fixed Step", "Point Count"],
+                    key="interp_type",
                     horizontal=True,
-                    label_visibility="collapsed",
+                    on_change=refresh_session_state,
+                    help=help_str,
                 )
 
-                disabled = ss["norm_type"] != "Feature Scaling"
+                if ss["interp_type"] != "None":
+                    st.text_input(
+                        label="f",
+                        key={"Fixed Step": "interp_dx", "Point Count": "interp_n"}[ss.interp_type],
+                        label_visibility="collapsed",
+                        disabled=ss["interp_type"] == "None",
+                    )
 
-                columns = st.columns(2)
-                columns[0].text_input(
-                    label="Maximum Value",
-                    key="norm_a",
-                    disabled=disabled,
-                )
-                columns[1].text_input(
-                    label="Minimum Value",
-                    key="norm_b",
-                    disabled=disabled,
-                )
+            # ----------------------------------------------- DERIVATION -----------------------------------------------
 
-            # Plot the signal
-            figure = plot(signal)
+            expander_label = DERIVE_LABEL
+            try:
+                if ss.derive_order > 0:
+                    signal = signal.derive(n=ss.derive_order)
+                    expander_label = f"__✔ {DERIVE_LABEL} ({ss.derive_order} order)__"
+            except:
+                pass
+
+            with expander("derive_label", expander_label):
+
+                st.number_input(
+                    label="Derivative Order",
+                    min_value=0,
+                    key="derive_order",
+                    help="Calculate the n-th order derivative.",
+                )
 
             # ------------------------------------------------ SMOOTHING -----------------------------------------------
 
-            SMOOTHING_LABEL = "Smoothing"
-            if ss.sg_fw > 0 and ss.sg_po > 0:
-                signals_s = signal.smooth(ss.sg_fw, ss.sg_po)
-                signals_s.plot(figure)
-                signal = signals_s
-                expander_label = f"__✔ {SMOOTHING_LABEL} ({ss.sg_fw}, {ss.sg_po})__"
-            else:
-                expander_label = SMOOTHING_LABEL
-            expander_status = get_expander_status("smoothing_label", expander_label)
+            signal_s = None
+            expander_label = SMOOTHING_LABEL
+            try:
+                if ss.sg_fw > 0 and ss.sg_po > 0:
+                    signal_s = signal.smooth(ss.sg_fw, ss.sg_po)
+                    expander_label = f"__✔ {SMOOTHING_LABEL} ({ss.sg_fw}, {ss.sg_po})__"
+            except:
+                pass
 
-            with st.sidebar.expander(expander_label, expanded=expander_status):
+            with expander("smoothing_label", expander_label):
 
                 smoothing_cols = st.columns(2)
 
@@ -329,11 +347,70 @@ else:
                     key="sg_po",
                 )
 
+            # ---------------------------------------------- NORMALISATION ---------------------------------------------
+
+            expander_label = NORM_LABEL
+            try:
+                if ss["norm_type"] == "Max. Normalisation":
+                    if signal_s:
+                        signal = signal.normalise(other=signal_s.y.data)
+                        signal_s = signal_s.normalise()
+                    else:
+                        signal = signal.normalise()
+                    expander_label = f"__✔ {NORM_LABEL} ({ss['norm_type']})__"
+                elif ss["norm_type"] == "Feature Scaling":
+                    kwargs = dict(a=float(ss["norm_a"]), b=float(ss["norm_b"]))
+                    if signal_s:
+                        signal = signal.feature_scale(other=signal_s.y.data, **kwargs)
+                        signal_s = signal_s.feature_scale(**kwargs)
+                    else:
+                        signal = signal.feature_scale(**kwargs)
+                    expander_label = f"__✔ {NORM_LABEL} ({ss['norm_type']} {kwargs['a']} - {kwargs['b']})__"
+            except:
+                pass
+
+            with expander("norm_label", expander_label):
+
+                help_str = """Data can be normalised using different methods:
+* __Max. normalisation__ – the y-values are normalised with respect to their maximum value.
+* __Feature scaling__ – the y-values are normalised based on specified minimum and maximum values."""
+                st.radio(
+                    label="Normalisation Type",
+                    options=["None", "Max. Normalisation", "Feature Scaling"],
+                    key="norm_type",
+                    horizontal=True,
+                    on_change=refresh_session_state,
+                    help=help_str,
+                )
+
+                if ss["norm_type"] == "Feature Scaling":
+
+                    columns = st.columns(2)
+
+                    columns[0].text_input(
+                        label="Maximum Value",
+                        key="norm_a",
+                    )
+
+                    columns[1].text_input(
+                        label="Minimum Value",
+                        key="norm_b",
+                    )
+
+            # Plot the signal and store it as the raw signal
+            figure = plot(signal)
+            raw_signal = signal
+
+            # If the smoothed signal exist, plot it and replace the studied signal with it
+            if signal_s:
+                signal_s.plot(figure)
+                signal = signal_s
+
             # ------------------------------------------------- FITTING ------------------------------------------------
 
-            FITTING_LABEL = "Fitting"
-            fit_signal, fit_params, param_errors, r_squared = None, None, None, None
-            if ss.fitting_model in MODELS:
+            fit_signal, fit_params, param_errors, r_squared, equation, parameters = None, None, None, None, "", []
+            expander_label = FITTING_LABEL
+            try:
 
                 # Get the fit function, equation and guess function, and the function parameters
                 fit_function, equation, guess_function = MODELS[ss.fitting_model]
@@ -347,17 +424,12 @@ else:
                 if ss.guess_values is None:
                     ss.guess_values = guess_values
 
-                fit_function = MODELS[ss.fitting_model][0]
-                try:
-                    fit_signal, fit_params, param_errors, r_squared = signal.fit(fit_function, ss.guess_values)
-                    expander_label = f"__✔ {FITTING_LABEL} ({ss.fitting_model})__"
-                except:
-                    pass
-            else:
-                expander_label = FITTING_LABEL
-            expander_status = get_expander_status("fitting_label", expander_label)
+                fit_signal, fit_params, param_errors, r_squared = signal.fit(fit_function, ss.guess_values)
+                expander_label = f"__✔ {FITTING_LABEL} ({ss.fitting_model})__"
+            except:
+                pass
 
-            with st.sidebar.expander(expander_label, expanded=expander_status):
+            with expander("fitting_label", expander_label):
 
                 st.selectbox(
                     label="Model",
@@ -370,21 +442,21 @@ else:
                 if ss.fitting_model in MODELS:
 
                     # Display the equation
-                    # noinspection PyUnboundLocalVariable
                     st.html("Equation: " + equation)
 
                     # Guess parameter and value
                     columns = st.columns(2)
 
-                    # noinspection PyUnboundLocalVariable
                     parameter = columns[0].selectbox(
                         label="Parameter",
                         options=parameters,
+                        key="parameter_model_key",
                     )
 
                     ss_key = ss.fitting_model + parameter + "guess_value"
+
                     if ss_key not in ss:
-                        ss[ss_key] = number_to_str(ss.guess_values[parameter], 2)
+                        ss[ss_key] = number_to_str(ss.guess_values[parameter], 4, False)
 
                     def store_guess_value() -> None:
                         """Store the guess value as a float in the guess_values dictionary"""
@@ -397,16 +469,37 @@ else:
                     columns[1].text_input(
                         label="Guess Value",
                         key=ss_key,
-                        on_change=lambda: store_guess_value(),
+                        on_change=store_guess_value,
                     )
 
+            # Plot the fit if it exists and replace the studied signal with it
             if fit_signal is not None:
                 fit_signal.plot(figure)
                 signal = fit_signal
 
+            # ----------------------------------------------- DATA EXPORT ----------------------------------------------
+
+            header = [raw_signal.x.get_label_raw(), raw_signal.y.get_label_raw()]
+            data = [raw_signal.x.data, raw_signal.y.data]
+            if signal_s:
+                header += [raw_signal.y.get_label_raw() + " (smoothed)"]
+                data += [signal_s.y.data]
+            if fit_signal:
+                header += [raw_signal.y.get_label_raw() + " (fit)"]
+                data += [fit_signal.y.data]
+
+            export_data = matrix_to_string(data, header)
+            st.sidebar.download_button(
+                label="Download Data",
+                data=export_data,
+                file_name="data.csv",
+                use_container_width=True,
+                key="download_button",
+            )
+
             # --------------------------------------------- DATA EXTRACTION --------------------------------------------
 
-            st.sidebar.markdown(f"#### Data Extraction")
+            st.sidebar.markdown(f"#### {EXTRACTION_LABEL}")
 
             # Max point
             columns = st.sidebar.columns(2)
@@ -450,13 +543,13 @@ else:
             if n_buttons:
 
                 # Plot the signal
-                main_columns = st.columns([4, 1])
-                plot_spot = main_columns[0].empty()
+                main_columns = st.columns([3.5, 1])
+                plot_spot = main_columns[0].container()
                 info_spot = main_columns[1].container()
 
                 column_index = 0
 
-                info_spot.markdown("### About your data")
+                info_spot.markdown("#### About your data")
 
                 # Fit
                 if fit_params is not None:
@@ -468,9 +561,9 @@ else:
                     parameters += ["R<sup>2</sup>"]
 
                     # Convert the parameters and errors to strings
-                    fit_params_str = [number_to_str(f, 2) for f in fit_params]
+                    fit_params_str = [number_to_str(f, 4, True) for f in fit_params]
                     rel_error = np.array(param_errors) / np.array(fit_params)
-                    rel_error_str = [number_to_str(f * 100) for f in rel_error]
+                    rel_error_str = [f"{f * 100:.2f}" for f in rel_error]
 
                     # Generate the dataframe and display it
                     df = pd.DataFrame(
@@ -529,51 +622,74 @@ else:
                         info_spot.html(fwhm.get_value_label_html())
                     else:
                         info_spot.markdown("Could not calculate the FWHM.")
+
             else:
 
-                plot_spot = st.empty()
+                plot_spot = st.container()
 
         # If multiple signals are selected
         else:
-            plot_spot = st.empty()
+            plot_spot = st.container()
             figure = plot(signal)
 
         plot_spot.plotly_chart(figure, use_container_width=True)
 
+
 # ----------------------------------------------------- INFORMATION ----------------------------------------------------
 
+
+with st.expander("About", expanded=file is None):
+    text = f"""*Raft* is a free tool to plot the content a various data files. Just drag and drop your file and get 
+    the relevant information from it!  
+    App created and maintained by [{__author__}](https://emmanuelpean.streamlit.app/).  
+    [Version {__version__}]({__github__}) (last updated: {__date__})."""
+    st.info(text)
+
+
 with st.expander("Data Processing"):
-    text = """*Raft* also offers basic data processing capabilities, allowing you to quickly and easily extract meaningful 
-    information from your data. The available options include:"""
+    text = """*Raft* also offers basic data processing capabilities, allowing you to quickly and easily process and 
+    extract meaningful information from your data. Data are processed sequentially using a linear pipeline. This means 
+    each method in the list operates on the output of the previous one. In particular, normalisation and fitting are 
+    applied to the smoothed signal. The available options include:"""
     st.markdown(text)
 
-    st.markdown("""##### Background Removal""")
+    st.markdown(f"""##### {BACKGROUND_LABEL}""")
     text = """If a __lower__ and __upper range__ of x-values is provided, the corresponding y-values are averaged and 
     subtracted from the entire y-values to remove the background."""
     st.markdown(text)
 
-    st.markdown("""##### Data Range""")
-    text = """If a __lower__ and __upper range__ of x-values is provided, the data are limited to this range"""
+    st.markdown(f"""##### {RANGE_LABEL}""")
+    text = """If a __lower__ and __upper range__ of x-values is provided, the data are limited to this range."""
     st.markdown(text)
 
-    st.markdown("##### Normalisation")
-    text = """Two normalisation options are available:
-* __Max normalisation__ – the y-values are normalised with respect to their maximum value.
-* __Feature scaling__ – the y-values are normalised based on specified minimum and maximum values."""
+    st.markdown(f"""##### {INTERP_LABEL}""")
+    text = """Data can be interpolated using different methods:
+* __Fixed Step__ interpolation – Data are interpolated using a specified step size.
+* __Point Count__ interpolation – Data are interpolated to fit a specified number of points."""
     st.markdown(text)
 
-    st.markdown("##### Smoothing")
-    text = """Applies a Savitzky–Golay smoothing filter using the specified __filter length__ and __polynomial order__ 
+    st.markdown(f"""##### {DERIVE_LABEL}""")
+    text = """The n order derivative can be calculated by setting the __Derivative Order__."""
+    st.markdown(text)
+
+    st.markdown(f"""##### {SMOOTHING_LABEL}""")
+    text = """Applies a Savitzky–Golay smoothing filter using the specified __Filter Length__ and __Polynomial Order__ 
     (__subplot a__)."""
     st.markdown(text)
 
-    st.markdown("##### Fitting")
-    models = "".join(["\n* " + key for key in MODELS.keys()])
-    text = f"""Data can be fitted using the following __models__: {models}
-    Initial guess values are automatically estimated from the data but can be manually adjusted."""
+    st.markdown(f"##### {NORM_LABEL}")
+    text = """Data can be normalised using different methods:
+* __Max. normalisation__ – the y-values are normalised with respect to their maximum value.
+* __Feature scaling__ – the y-values are normalised based on specified minimum and maximum values."""
     st.markdown(text)
 
-    st.markdown("##### Data Extraction")
+    st.markdown(f"##### {FITTING_LABEL}")
+    models = "".join(["\n* " + key for key in MODELS.keys()])
+    text = f"""Data can be fitted using the following __models__: {models}\n
+Initial guess values are automatically estimated from the data but can be manually adjusted."""
+    st.markdown(text)
+
+    st.markdown(f"##### {EXTRACTION_LABEL}")
     text = """The following information can be extracted from the processed data:
 * __Maximum point__: The x and y coordinates corresponding to the peak y-value in the data (__subplot c__).
 * __Minimum point__: The x and y coordinates corresponding to the lowest y-value in the data (__subplot c__).
@@ -590,9 +706,9 @@ Similar to the max/min points, the precision of the FWHM measurement can be furt
 # ------------------------------------------------------ CHANGELOG -----------------------------------------------------
 
 with st.expander("Changelog"):
-    st.markdown(read_txt_file(os.path.join(dirname, "CHANGELOG.md")))
+    st.markdown(read_file(os.path.join(project_path, "CHANGELOG.md")))
 
 # ----------------------------------------------------- DISCLAIMER -----------------------------------------------------
 
 with st.expander("License & Disclaimer"):
-    st.markdown(read_txt_file(os.path.join(dirname, "LICENSE.txt")))
+    st.markdown(read_file(os.path.join(project_path, "LICENSE.txt")))

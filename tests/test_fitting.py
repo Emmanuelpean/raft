@@ -253,7 +253,7 @@ class TestFitData:
             fit_data(x_data, y_data, exponential_decay, true_params, bounds)
 
 
-def print_expected_from_tuple(values: tuple | list) -> None:
+def print_expected_from_tuple(values: tuple | list) -> None:  # pragma: no cover
     """Prints a list called 'expected' where each element corresponds to the elements in the input tuple."""
 
     expected = [v.item() if hasattr(v, "item") else v for v in values]

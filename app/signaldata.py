@@ -23,7 +23,15 @@ import plotly.graph_objects as go
 import scipy.signal as ss
 
 import constants
-from utils import merge_dicts, interpolate_point, normalise, feature_scale
+from utils import (
+    merge_dicts,
+    interpolate_point,
+    normalise,
+    feature_scale,
+    number_to_str,
+    interpolate_data,
+    get_derivative,
+)
 from fitting import fit_data
 
 
@@ -131,10 +139,11 @@ class Dimension(object):
     def get_value_label_html(self) -> str:
         """Return the value label for display"""
 
+        label = f"{self.get_quantity_label_html()}: {number_to_str(self.data, 4, True)}"
         if self.unit:
-            return f"{self.get_quantity_label_html()}: {self.data:g} {self.get_unit_label_html()}"
+            return f"{label} {self.get_unit_label_html()}"
         else:
-            return f"{self.get_quantity_label_html()}: {self.data:g}"
+            return label
 
     def get_label_raw(self) -> str:
         """Get a simple label of the dimension"""
@@ -310,10 +319,10 @@ class SignalData(object):
             self.z_dict,
         )
 
-    def normalise(self) -> SignalData:
+    def normalise(self, *args, **kwargs) -> SignalData:
         """Normalise the signal"""
 
-        y = self.y(normalise(self.y.data))
+        y = self.y(normalise(self.y.data, *args, **kwargs))
         return SignalData(
             self.x,
             y,
@@ -329,6 +338,30 @@ class SignalData(object):
         return SignalData(
             self.x,
             y,
+            self.name,
+            self.shortname,
+            self.z_dict,
+        )
+
+    def interpolate(self, *args, **kwargs) -> SignalData:
+        """Interpolate the signal"""
+
+        x_data, y_data = interpolate_data(self.x.data, self.y.data, *args, **kwargs)
+        return SignalData(
+            self.x(x_data),
+            self.y(y_data),
+            self.name,
+            self.shortname,
+            self.z_dict,
+        )
+
+    def derive(self, *args, **kwargs) -> SignalData:
+        """Calculate the signal derivative"""
+
+        x_data, y_data = get_derivative(self.x.data, self.y.data, *args, **kwargs)
+        return SignalData(
+            self.x(x_data),
+            self.y(y_data),
             self.name,
             self.shortname,
             self.z_dict,

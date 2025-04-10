@@ -17,105 +17,247 @@ from bs4 import BeautifulSoup
 from app.utils import *
 
 
-# --------------------------------------------------- DATA CONVERSION --------------------------------------------------
+# -------------------------------------------------- STRING CONVERSION -------------------------------------------------
 
 
 class TestStringListToMatrix:
 
     def test_basic_conversion(self) -> None:
+
         raw_data = ["1 2 3", "4 5 6", "7 8 9"]
         expected = np.array([[1, 4, 7], [2, 5, 8], [3, 6, 9]])
-        result = stringlist_to_matrix(raw_data, delimiter=" ")
+        result = stringlist_to_matrix(raw_data)
         assert are_close(result, expected)
 
-    def test_different_delimiter(self) -> None:
+    def test_comma_delimiter(self) -> None:
+
         raw_data = ["1,2,3", "4,5,6", "7,8,9"]
         expected = np.array([[1, 4, 7], [2, 5, 8], [3, 6, 9]])
         result = stringlist_to_matrix(raw_data, delimiter=",")
         assert are_close(result, expected)
 
     def test_uneven_rows(self) -> None:
+
         raw_data = ["1,2,", "3,4,5", "6,,"]
         expected = np.array([[1, 3, 6], [2, 4, np.nan], [np.nan, 5, np.nan]])
-        result = stringlist_to_matrix(raw_data, delimiter=",")
+        result = stringlist_to_matrix(raw_data, ",")
         assert are_close(result, expected)
 
     def test_non_numeric_values(self) -> None:
-        raw_data = ["1 2 a", "4 b 6", "c 8 9"]
-        expected = np.array([[1, 4, np.nan], [2, np.nan, 8], [np.nan, 6, 9]])
-        result = stringlist_to_matrix(raw_data, delimiter=" ")
+
+        raw_data = ["1 2 5", "4 b 6", "c 8 9"]
+        expected = np.array([[1, 4, np.nan], [2, np.nan, 8], [5, 6, 9]])
+        result = stringlist_to_matrix(raw_data)
         assert are_close(result, expected)
 
     def test_empty_input(self) -> None:
+
         raw_data = []
         expected = np.array([])
-        result = stringlist_to_matrix(raw_data, delimiter=" ")
+        result = stringlist_to_matrix(raw_data)
         assert result.shape == expected.shape
+
+    def test_uneven_lines(self) -> None:
+
+        raw_data = ["1998.97,-70.38,,", "1999.49,-77.46,,", "2000.00,-84.53,"]
+        result = stringlist_to_matrix(raw_data, ",")
+        assert are_close(result[0], [1998.97, 1999.49, 2000.0])
+        assert are_close(result[-1], [np.nan, np.nan, np.nan])
 
 
 class TestMatrixToString:
 
     def test_basic_conversion(self) -> None:
-        arrays = [np.array([1.2, 2, 5]), np.array([1.6, 2])]
+
+        arrays = [np.array([1.2, 2.0, 5.0]), np.array([1.6, 2.0, 5.0])]
         header = ["A", "B"]
         result = matrix_to_string(arrays, header)
-        expected = "A,B\n1.20000E+00,1.60000E+00\n2.00000E+00,2.00000E+00\n5.00000E+00,"
+        expected = "A,B\n1.20000E+00,1.60000E+00\n2.00000E+00,2.00000E+00\n5.00000E+00,5.00000E+00"
         assert result == expected
 
     def test_no_header(self) -> None:
+
         arrays = [np.array([1.2, 2, 5]), np.array([1.6, 2])]
         result = matrix_to_string(arrays)
         expected = "1.20000E+00,1.60000E+00\n2.00000E+00,2.00000E+00\n5.00000E+00,"
         assert result == expected
 
     def test_single_column(self) -> None:
+
         arrays = [np.array([1.2, 2, 5])]
         result = matrix_to_string(arrays, ["A"])
         expected = "A\n1.20000E+00\n2.00000E+00\n5.00000E+00"
         assert result == expected
 
     def test_mixed_lengths(self) -> None:
-        arrays = [np.array([1.2, 2]), np.array([1.6])]
+
+        arrays = [np.array([1.2, 2.0, 5.0]), np.array([1.6, 2.0])]
         header = ["A", "B"]
         result = matrix_to_string(arrays, header)
-        expected = "A,B\n1.20000E+00,1.60000E+00\n2.00000E+00,"
+        expected = "A,B\n1.20000E+00,1.60000E+00\n2.00000E+00,2.00000E+00\n5.00000E+00,"
+        assert result == expected
+
+        arrays = [np.array([1.2, 2.0, 6.0]), np.array([1.2, 2.0]), np.array([1.6, 2.0, 5.0])]
+        header = ["A", "B"]
+        result = matrix_to_string(arrays, header)
+        expected = (
+            "A,B\n1.20000E+00,1.20000E+00,1.60000E+00\n2.00000E+00,2.00000E+00,2.00000E+00\n6.00000E+00,,5.00000E+00"
+        )
+        assert result == expected
+
+        arrays = [np.array([1.2, 2.0]), np.array([1.6, 2.0, 5.0])]
+        header = ["A", "B"]
+        result = matrix_to_string(arrays, header)
+        expected = "A,B\n1.20000E+00,1.60000E+00\n2.00000E+00,2.00000E+00\n,5.00000E+00"
         assert result == expected
 
     def test_all_empty(self) -> None:
+
         arrays = [np.array([]), np.array([])]
         header = ["A", "B"]
         result = matrix_to_string(arrays, header)
         assert result == "A,B\n"
 
-    def test_no_trailing_comma(self) -> None:
-        arrays = [np.array([1.2, 2]), np.array([1.6, 2])]
-        header = ["A", "B"]
-        result = matrix_to_string(arrays, header)
-        expected = "A,B\n1.20000E+00,1.60000E+00\n2.00000E+00,2.00000E+00"
-        assert result == expected
-
 
 class TestGetHeaderAsDicts:
 
     def test_multiple_values(self) -> None:
+
         header = ["Key1\tVal1\tValA", "Key2\tVal2\tValB"]
         expected = [{"Key1": "Val1", "Key2": "Val2"}, {"Key1": "ValA", "Key2": "ValB"}]
         assert are_identical(get_header_as_dicts(header), expected)
 
     def test_different_delimiter(self) -> None:
+
         header = ["Name 1,A,B", "Unit,a,b"]
         expected = [{"Name 1": "A", "Unit": "a"}, {"Name 1": "B", "Unit": "b"}]
         assert are_identical(get_header_as_dicts(header, ","), expected)
 
     def test_empty_header(self) -> None:
+
         with pytest.raises(ValueError):
             get_header_as_dicts([])
+
+
+# --------------------------------------------------- DATA CONVERSION --------------------------------------------------
+
+
+class TestRenderImage:
+
+    def setup_method(self) -> None:
+        """Sample SVG content for testing"""
+
+        self.sample_svg_content = b'<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>'
+        self.encoded_svg = base64.b64encode(self.sample_svg_content).decode()
+
+    @patch("builtins.open", new_callable=mock_open)
+    def test_render_image_default_params(self, mock_file) -> None:
+        """Test render_image with default parameters."""
+
+        # Configure the mock to return our sample SVG content
+        mock_file.return_value.read.return_value = self.sample_svg_content
+
+        # Call the function with just the file path
+        result = render_image("test.svg")
+
+        # Verify the file was opened correctly
+        mock_file.assert_called_once_with("test.svg", "rb")
+
+        # Check the returned HTML string
+        expected_html = f'<center><img src="data:image/svg+xml;base64,{self.encoded_svg}" id="responsive-image" width="100%"/></center>'
+        assert result == expected_html
+
+    @patch("builtins.open", new_callable=mock_open)
+    def test_render_image_custom_width(self, mock_file) -> None:
+        """Test render_image with custom width."""
+
+        mock_file.return_value.read.return_value = self.sample_svg_content
+
+        # Call with custom width
+        result = render_image("test.svg", width=50)
+
+        # Check the width in the resulting HTML
+        expected_html = f'<center><img src="data:image/svg+xml;base64,{self.encoded_svg}" id="responsive-image" width="50%"/></center>'
+        assert result == expected_html
+
+    @patch("builtins.open", new_callable=mock_open)
+    def test_render_image_custom_itype(self, mock_file) -> None:
+        """Test render_image with custom image type."""
+
+        mock_file.return_value.read.return_value = self.sample_svg_content
+
+        # Call with custom image type
+        result = render_image("test.svg", itype="png")
+
+        # Check the image type in the resulting HTML
+        expected_html = f'<center><img src="data:image/png+xml;base64,{self.encoded_svg}" id="responsive-image" width="100%"/></center>'
+        assert result == expected_html
+
+    @patch("builtins.open", new_callable=mock_open)
+    def test_render_image_all_custom_params(self, mock_file) -> None:
+        """Test render_image with all custom parameters."""
+
+        mock_file.return_value.read.return_value = self.sample_svg_content
+
+        # Call with all custom parameters
+        result = render_image("test.svg", width=75, itype="jpeg")
+
+        # Check all parameters in the resulting HTML
+        expected_html = f'<center><img src="data:image/jpeg+xml;base64,{self.encoded_svg}" id="responsive-image" width="75%"/></center>'
+        assert result == expected_html
+
+    def test_render_image_file_not_found(self) -> None:
+        """Test render_image with non-existent file."""
+
+        # Test with a file that doesn't exist
+        with pytest.raises(FileNotFoundError):
+            render_image("nonexistent.svg")
+
+    @patch("builtins.open")
+    def test_render_image_read_error(self, mock_file) -> None:
+        """Test render_image with file read error."""
+
+        # Simulate a read error
+        mock_file.return_value.__enter__.return_value.read.side_effect = IOError("Read error")
+
+        with pytest.raises(IOError):
+            render_image("error.svg")
+
+    @pytest.mark.parametrize(
+        "width,expected_width",
+        [
+            (0, "0%"),
+            (100, "100%"),
+            (200, "200%"),
+        ],
+    )
+    @patch("builtins.open", new_callable=mock_open)
+    def test_render_image_various_widths(self, mock_file, width, expected_width) -> None:
+        """Test render_image with various width values."""
+
+        mock_file.return_value.read.return_value = self.sample_svg_content
+
+        result = render_image("test.svg", width=width)
+
+        assert f'width="{expected_width}"' in result
+
+    @pytest.mark.parametrize("itype", ["svg", "png", "jpeg", "gif", "webp"])
+    @patch("builtins.open", new_callable=mock_open)
+    def test_render_image_various_types(self, mock_file, itype) -> None:
+        """Test render_image with various image types."""
+
+        mock_file.return_value.read.return_value = self.sample_svg_content
+
+        result = render_image("test.svg", itype=itype)
+
+        assert f"data:image/{itype}+xml;base64" in result
 
 
 class TestGenerateDownloadLink:
 
     def test_basic_functionality(self) -> None:
         """Test basic functionality of generate_download_link."""
+
         x_data = [np.array([1, 2, 3])]
         y_data = [np.array([4, 5, 6])]
         header = ["X", "Y"]
@@ -126,6 +268,7 @@ class TestGenerateDownloadLink:
 
     def test_no_header(self) -> None:
         """Test when no header is provided."""
+
         x_data = [np.array([1, 2, 3])]
         y_data = [np.array([4, 5, 6])]
         text = "Download Data"
@@ -135,6 +278,7 @@ class TestGenerateDownloadLink:
 
     def test_with_special_characters(self) -> None:
         """Test if the function handles special characters in the header and text."""
+
         x_data = [np.array([1, 2])]
         y_data = [np.array([3, 4])]
         header = ["Col@1", "Col#2"]
@@ -154,6 +298,7 @@ class TestGenerateDownloadLink:
 
     def test_no_text_provided(self) -> None:
         """Test if no text is provided (empty string)."""
+
         x_data = [np.array([1, 2, 3])]
         y_data = [np.array([4, 5, 6])]
         header = ["X", "Y"]
@@ -162,217 +307,91 @@ class TestGenerateDownloadLink:
         assert 'href="data:text/csv;base64,' in result
         assert "Download" not in result  # Should not have any text if empty
 
-    def test_large_data(self) -> None:
-        """Test with large data to check performance (no specific checks)."""
-        x_data = [np.random.rand(100)]
-        y_data = [np.random.rand(100)]
-        header = [f"Col{i}" for i in range(100)]
-        result = generate_download_link((x_data, y_data), header, "Download Large Data")
-        assert '<a href="data:text/csv;base64,' in result
-        assert "Download Large Data" in result
-
-    def test_b64_encoding(self) -> None:
-        """Test to ensure base64 encoding is correct."""
-        x_data = [np.array([1, 2, 3])]
-        y_data = [np.array([4, 5, 6])]
-        header = ["X", "Y"]
-        result = generate_download_link((x_data, y_data), header, "Test Encoding")
-        # Check if base64 encoding exists within the result
-        assert "base64," in result
-
-
-class TestRenderImage:
-
-    def setup_method(self) -> None:
-        """Set up test environment before each test method."""
-        # Sample SVG content for testing
-        self.sample_svg_content = b'<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>'
-        self.encoded_svg = base64.b64encode(self.sample_svg_content).decode()
-
-    @patch("builtins.open", new_callable=mock_open)
-    def test_render_image_default_params(self, mock_file) -> None:
-        """Test render_image with default parameters."""
-        # Configure the mock to return our sample SVG content
-        mock_file.return_value.read.return_value = self.sample_svg_content
-
-        # Call the function with just the file path
-        result = render_image("test.svg")
-
-        # Verify the file was opened correctly
-        mock_file.assert_called_once_with("test.svg", "rb")
-
-        # Check the returned HTML string
-        expected_html = f'<center><img src="data:image/svg+xml;base64,{self.encoded_svg}" id="responsive-image" width="100%"/></center>'
-        assert result == expected_html
-
-    @patch("builtins.open", new_callable=mock_open)
-    def test_render_image_custom_width(self, mock_file) -> None:
-        """Test render_image with custom width."""
-        mock_file.return_value.read.return_value = self.sample_svg_content
-
-        # Call with custom width
-        result = render_image("test.svg", width=50)
-
-        # Check the width in the resulting HTML
-        expected_html = f'<center><img src="data:image/svg+xml;base64,{self.encoded_svg}" id="responsive-image" width="50%"/></center>'
-        assert result == expected_html
-
-    @patch("builtins.open", new_callable=mock_open)
-    def test_render_image_custom_itype(self, mock_file) -> None:
-        """Test render_image with custom image type."""
-        mock_file.return_value.read.return_value = self.sample_svg_content
-
-        # Call with custom image type
-        result = render_image("test.svg", itype="png")
-
-        # Check the image type in the resulting HTML
-        expected_html = f'<center><img src="data:image/png+xml;base64,{self.encoded_svg}" id="responsive-image" width="100%"/></center>'
-        assert result == expected_html
-
-    @patch("builtins.open", new_callable=mock_open)
-    def test_render_image_all_custom_params(self, mock_file) -> None:
-        """Test render_image with all custom parameters."""
-        mock_file.return_value.read.return_value = self.sample_svg_content
-
-        # Call with all custom parameters
-        result = render_image("test.svg", width=75, itype="jpeg")
-
-        # Check all parameters in the resulting HTML
-        expected_html = f'<center><img src="data:image/jpeg+xml;base64,{self.encoded_svg}" id="responsive-image" width="75%"/></center>'
-        assert result == expected_html
-
-    def test_render_image_file_not_found(self) -> None:
-        """Test render_image with non-existent file."""
-        # Test with a file that doesn't exist
-        with pytest.raises(FileNotFoundError):
-            render_image("nonexistent.svg")
-
-    @patch("builtins.open")
-    def test_render_image_read_error(self, mock_file) -> None:
-        """Test render_image with file read error."""
-        # Simulate a read error
-        mock_file.return_value.__enter__.return_value.read.side_effect = IOError("Read error")
-
-        with pytest.raises(IOError):
-            render_image("error.svg")
-
-    @pytest.mark.parametrize(
-        "width,expected_width",
-        [
-            (0, "0%"),
-            (100, "100%"),
-            (200, "200%"),
-        ],
-    )
-    @patch("builtins.open", new_callable=mock_open)
-    def test_render_image_various_widths(self, mock_file, width, expected_width) -> None:
-        """Test render_image with various width values."""
-        mock_file.return_value.read.return_value = self.sample_svg_content
-
-        result = render_image("test.svg", width=width)
-
-        assert f'width="{expected_width}"' in result
-
-    @pytest.mark.parametrize("itype", ["svg", "png", "jpeg", "gif", "webp"])
-    @patch("builtins.open", new_callable=mock_open)
-    def test_render_image_various_types(self, mock_file, itype) -> None:
-        """Test render_image with various image types."""
-        mock_file.return_value.read.return_value = self.sample_svg_content
-
-        result = render_image("test.svg", itype=itype)
-
-        assert f"data:image/{itype}+xml;base64" in result
-
-    def test_streamlit_cache_decorator(self) -> None:
-        """Test that the st.cache_resource decorator is applied to the function."""
-        # Verify that the function is decorated with st.cache_resource
-        # This is a bit tricky to test directly, but we can check if the function has
-        # the attributes that Streamlit adds to cached functions
-
-        # This assumes the original function is correctly decorated with @st.cache_resource
-        assert hasattr(render_image, "__wrapped__")
-
 
 class TestNumberToString:
     """Test cases for the to_scientific function"""
 
-    def test_single_float(self) -> None:
-        """Test single float to scientific notation"""
-        result = number_to_str(1.4e-4)
-        assert result == "0.00014"
-
-    def test_single_integer(self) -> None:
-        """Test single integer to scientific notation"""
-        result = number_to_str(5000)
-        assert result == "5E+03"
-
     def test_none_input(self) -> None:
         """Test None input"""
-        result = number_to_str(None)
-        assert result == ""
 
-    def test_single_negative_float(self) -> None:
-        """Test single negative float to scientific notation"""
-        result = number_to_str(-1.4e-4)
-        assert result == "-0.00014"
-
-    def test_single_float_no_trailing_zeros(self) -> None:
-        """Test float with no trailing zeros"""
-        result = number_to_str(1.0e5)
-        assert result == "1E+05"
-
-    def test_list_of_floats(self) -> None:
-        """Test list of floats to scientific notation"""
-        result = number_to_str([1e-4, 1e-5])
-        assert result == "0.0001, 1e-05"
-
-    def test_list_of_mixed_numbers(self) -> None:
-        """Test list of integers and floats to scientific notation"""
-        result = number_to_str([100, 1.4e-3, 5])
-        assert result == "100, 0.0014, 5"
-
-    def test_empty_list(self) -> None:
-        """Test empty list input"""
-        result = number_to_str([])
-        assert result == ""
-
-    def test_large_number(self) -> None:
-        """Test large number to scientific notation"""
-        result = number_to_str(1e100)
-        assert result == "1E+100"
+        assert number_to_str(None) == ""
 
     def test_edge_case_zero(self) -> None:
         """Test zero as an edge case"""
-        result = number_to_str(0)
-        assert result == "0"
 
-    def test_single_integer_with_zero_trailing(self) -> None:
-        """Test integer with trailing zeros"""
-        result = number_to_str(5000000)
-        assert result == "5E+06"
+        assert number_to_str(0) == "0"
 
-    def test_n(self) -> None:
-        """Test the n parameter"""
-        result = number_to_str(5.5234325)
-        assert result == "5.523"
+    def test_numbers_default(self) -> None:
+        """Test various numbers with default settings"""
+
+        # < 1e-2
+        assert number_to_str(1.4647336e-4) == "1.4647E-4"
+
+        # 1e-2 < value < 1
+        assert number_to_str(1.4647336e-2) == "0.01465"
+
+        # 1e4 > value > 1
+        assert number_to_str(153.43433) == "153.4"
+        assert number_to_str(153) == "153"  # trailing zeros
+
+        # value > 1e4
+        assert number_to_str(1536.43433) == "1.5364E3"
+        assert number_to_str(1536) == "1.536E3"  # trailing zeros
+
+    def test_numbers_n(self) -> None:
+        """Test various numbers with default settings"""
+
+        # < 1e-2
+        assert number_to_str(1.4647336e-4, n=5) == "1.46473E-4"
+
+        # 1e-2 < value < 1
+        assert number_to_str(1.4647336e-2, n=5) == "0.014647"
+
+        # 1e4 > value > 1
+        assert number_to_str(153.43433, n=5) == "153.43"
+        assert number_to_str(153, n=5) == "153"  # trailing zeros
+
+        # value > 1e4
+        assert number_to_str(1536.43433, n=5) == "1.53643E3"
+        assert number_to_str(1536, n=5) == "1.536E3"  # trailing zeros
+
+    def test_numbers_display(self) -> None:
+        """Test various numbers with default settings"""
+
+        # < 1e-2
+        assert number_to_str(1.4647336e-4, display=True) == "1.4647 &#10005; 10<sup>-4</sup>"
+
+        # 1e-2 < value < 1
+        assert number_to_str(1.4647336e-2, display=True) == "0.01465"
+
+        # 1e4 > value > 1
+        assert number_to_str(153.43433, display=True) == "153.4"
+        assert number_to_str(153, display=True) == "153.0"  # trailing zeros
+
+        # value > 1e4
+        assert number_to_str(1536.43433, display=True) == "1.5364 &#10005; 10<sup>3</sup>"
+        assert number_to_str(1536, display=True) == "1.5360 &#10005; 10<sup>3</sup>"  # trailing zeros
+
+    def test_negative_medium_numbers(self) -> None:
+        """Test single float to scientific notation"""
+
+        assert number_to_str(-1.46473e-2) == "-0.01465"
+
+    def test_list_of_floats(self) -> None:
+        """Test list of floats to scientific notation"""
+
+        result = number_to_str([1e-4, 1e-5])
+        assert result == "1E-4, 1E-5"
 
 
 class TestGenerateHtmlTable:
+
     @pytest.fixture
     def sample_dataframe(self) -> pd.DataFrame:
         """Create a sample dataframe for testing."""
 
         data = {"A": [1, 2, 3, 4], "B": [5, 6, 7, 8], "C": [9, 10, 11, 12]}
-        df = pd.DataFrame(data, index=["row1", "row2", "row3", "row4"])
-        return df
-
-    @pytest.fixture
-    def dataframe_with_identical_rows(self) -> pd.DataFrame:
-        """Create a dataframe with some identical rows."""
-
-        data = {"A": [1, 2, 2, 3], "B": [5, 2, 2, 7], "C": [9, 2, 2, 11]}
-        df = pd.DataFrame(data, index=["row1", "row2", "row3", "row4"])
-        return df
+        return pd.DataFrame(data, index=["row1", "row2", "row3", "row4"])
 
     @pytest.fixture
     def dataframe_with_column_name(self) -> pd.DataFrame:
@@ -411,6 +430,7 @@ class TestGenerateHtmlTable:
 
     def test_column_name_in_corner(self, dataframe_with_column_name) -> None:
         """Test that the column name appears in the corner cell."""
+
         html = generate_html_table(dataframe_with_column_name)
 
         soup = BeautifulSoup(html, "html.parser")
@@ -420,6 +440,7 @@ class TestGenerateHtmlTable:
 
     def test_empty_corner_cell_with_no_column_name(self, sample_dataframe) -> None:
         """Test that the corner cell is empty when no column name is provided."""
+
         html = generate_html_table(sample_dataframe)
 
         soup = BeautifulSoup(html, "html.parser")
@@ -429,6 +450,7 @@ class TestGenerateHtmlTable:
 
     def test_div_wrapper(self, sample_dataframe) -> None:
         """Test that the table is wrapped in a div with correct styling."""
+
         html = generate_html_table(sample_dataframe)
 
         soup = BeautifulSoup(html, "html.parser")
@@ -458,6 +480,15 @@ class TestNormalise:
         # When all values are zero, division by zero may result in NaN values
         result = normalise(input_array)
         assert np.isnan(result).all()
+
+    def test_normalise_other(self) -> None:
+        """Test feature scaling with custom min and max range."""
+
+        input_array = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        input_array2 = np.array([0.14285714, 0.28571429, 0.42857143, 0.57142857, 0.71428571])
+        expected = np.array([10.0, 11.66666667, 13.33333333, 15.0, 16.66666667])
+        result = normalise(input_array, other=input_array2)
+        are_close(result, expected)
 
     def test_normalise_negative_values(self) -> None:
         """Test normalisation with negative values."""
@@ -511,6 +542,15 @@ class TestFeatureScale:
         input_array = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         expected = np.array([0.0, 0.25, 0.5, 0.75, 1.0])
         result = feature_scale(input_array)
+        are_close(result, expected)
+
+    def test_feature_scale_other(self) -> None:
+        """Test feature scaling with custom min and max range."""
+
+        input_array = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        input_array2 = np.array([1.0, 2.0, 7.0, 4.0, 5.0])
+        expected = np.array([10.0, 11.66666667, 13.33333333, 15.0, 16.66666667])  # Scaled to [10, 20]
+        result = feature_scale(input_array, other=input_array2, b=10.0, a=20.0)
         are_close(result, expected)
 
     def test_feature_scale_custom_range(self) -> None:
@@ -571,6 +611,57 @@ class TestFeatureScale:
 
 
 # --------------------------------------------------- DATA EXTRACTION --------------------------------------------------
+
+
+class TestInterpolateData:
+
+    @pytest.fixture
+    def sample_data(self) -> tuple[np.ndarray, np.ndarray]:
+        """Sample data"""
+
+        x_data = np.array([1.0, 2.0, 3.0, 3.5])
+        y_data = x_data**2
+        return x_data, y_data
+
+    def test_float(self, sample_data) -> None:
+
+        x_data, y_data = interpolate_data(*sample_data, dx=0.3)
+        assert are_close(x_data, [1.0, 1.3, 1.6, 1.9, 2.2, 2.5, 2.8, 3.1, 3.4])
+        assert are_close(y_data, [1.0, 1.9, 2.8, 3.7, 5.0, 6.5, 8.0, 9.65, 11.6])
+
+    def test_int(self, sample_data) -> None:
+
+        x_data, y_data = interpolate_data(*sample_data, dx=2)
+        assert are_close(x_data, [1.0, 3.5])
+        assert are_close(y_data, [1.0, 12.25])
+
+    def test_negative_dx(self, sample_data) -> None:
+
+        with pytest.raises(AssertionError):
+            interpolate_data(*sample_data, dx=-2)
+
+
+class TestDerivative:
+
+    @pytest.fixture
+    def sample_data(self) -> tuple[np.ndarray, np.ndarray]:
+        """Sample data"""
+
+        x_data = np.array([1.0, 2.0, 3.0, 3.5])
+        y_data = x_data**3
+        return x_data, y_data
+
+    def test_first_derivative(self, sample_data) -> None:
+
+        output = get_derivative(*sample_data)
+        assert are_close(output[0], [1.5, 2.5, 3.25])
+        assert are_close(output[1], [7.0, 19.0, 31.75])
+
+    def test_second_derivative(self, sample_data) -> None:
+
+        output = get_derivative(*sample_data, n=2)
+        assert are_close(output[0], [2.0, 2.875])
+        assert are_close(output[1], [12.0, 17.0])
 
 
 class TestGetDataIndex:
@@ -962,7 +1053,7 @@ class TestReadTxtFile:
             f.write("Hello, World!")
 
         # Read the content using our function
-        content = read_txt_file(self.TEMP_FILE)
+        content = read_file(self.TEMP_FILE)
 
         # Assert the content matches what we wrote
         assert content == "Hello, World!"
@@ -975,7 +1066,7 @@ class TestReadTxtFile:
             f.write("Line 1\nLine 2\nLine 3")
 
         # Read the content using our function
-        content = read_txt_file(self.TEMP_FILE)
+        content = read_file(self.TEMP_FILE)
 
         # Assert the content matches what we wrote
         assert content == "Line 1\nLine 2\nLine 3"
@@ -987,4 +1078,4 @@ class TestReadTxtFile:
 
         # Check that the function raises FileNotFoundError
         with pytest.raises(FileNotFoundError):
-            read_txt_file(self.TEMP_FILE)
+            read_file(self.TEMP_FILE)

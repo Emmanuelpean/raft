@@ -200,11 +200,11 @@ class TestDimension:
 
         # Test with scalar value
         dim = Dimension(5, "length", "m")
-        assert dim.get_value_label_html() == "Length: 5 m"
+        assert dim.get_value_label_html() == "Length: 5.000 m"
 
         # Test without unit
         dim = Dimension(5, "length")
-        assert dim.get_value_label_html() == "Length: 5"
+        assert dim.get_value_label_html() == "Length: 5.000"
 
     def test_get_label_raw(self) -> None:
         """Test get_label_raw method"""
@@ -353,26 +353,55 @@ class TestSignalData:
         assert smoothed.shortname == "Smoothed"
         assert smoothed.z_dict == sample_signal.z_dict
 
-    def test_normalise(self, sample_dimensions) -> None:
+    def test_interpolate(self, sample_signal) -> None:
+
+        signal = sample_signal.interpolate(3.0)
+        assert are_close(signal.x.data, [0.0, 3.0, 6.0, 9.0])
+        assert are_close(signal.y.data, [1.11089965e-02, 1.00000000e00, 1.11089965e-02, 1.52299797e-08])
+
+    def test_derive(self, sample_signal) -> None:
+
+        signal = sample_signal.derive()
+        assert are_close(signal.x.data[:3], [0.25, 0.75, 1.25])
+        assert are_close(signal.y.data[:3], [6.56558742e-02, 1.82796699e-01, 3.78634368e-01])
+
+    def test_normalise(self, sample_dimensions, sample_signal) -> None:
 
         x_dim, y_dim = sample_dimensions
         y_dim = y_dim(y_dim.data * 5 + 3)
         signal = SignalData(x_dim, y_dim)
+
+        # With respect to itself
         norm_signal = signal.normalise()
         assert are_close(norm_signal.x.data, signal.x.data)
         assert are_close(norm_signal.y.data[:3], [0.38194312, 0.40246058, 0.45958455])
         assert are_close(norm_signal.y.data.max(), 1.0)
 
-    def test_feature_scale(self, sample_dimensions) -> None:
+        # With respect to another
+        norm_signal = signal.normalise(sample_signal.y.data)
+        assert are_close(norm_signal.x.data, signal.x.data)
+        assert are_close(norm_signal.y.data[:3], [3.05554498, 3.21968467, 3.67667642])
+        assert are_close(norm_signal.y.data.max(), 8.0)
+
+    def test_feature_scale(self, sample_dimensions, sample_signal) -> None:
 
         x_dim, y_dim = sample_dimensions
         y_dim = y_dim(y_dim.data * 5 + 3)
         signal = SignalData(x_dim, y_dim)
-        norm_signal = signal.feature_scale(2, 7)
+
+        # With respect to itself
+        norm_signal = signal.feature_scale(7, 2)
         assert are_close(norm_signal.x.data, signal.x.data)
-        assert are_close(norm_signal.y.data[:3], [6.94445502, 6.78031533, 6.32332358])
+        assert are_close(norm_signal.y.data[:3], [2.05554498, 2.21968467, 2.67667642])
         assert are_close(norm_signal.y.data.max(), 7.0)
         assert are_close(norm_signal.y.data.min(), 2.0)
+
+        # With respect to other
+        norm_signal = signal.feature_scale(7, 2, sample_signal.y.data)
+        assert are_close(norm_signal.x.data, signal.x.data)
+        assert are_close(norm_signal.y.data[:3], [17.27772491, 18.09842334, 20.38338208])
+        assert are_close(norm_signal.y.data.max(), 42.0)
+        assert are_close(norm_signal.y.data.min(), 17.0)
 
     def test_fit(self, sample_dimensions, sample_signal) -> None:
 

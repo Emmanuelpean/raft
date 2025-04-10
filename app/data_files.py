@@ -504,7 +504,11 @@ def ProDataSignal(filename: str) -> dict[str, list[SignalData]]:
 
     # Z dimension
     z_type = content[data_index - 2].strip("Time,")
-    z_data = np.array(content[data_index - 1].split(delimiter)[1:-1], dtype=float)
+    if z_type == "Repeat":
+        dtype = int
+    else:
+        dtype = float
+    z_data = np.array(content[data_index - 1].split(delimiter)[1:-1], dtype=dtype)
     z_data = z_data[nonzero_indices]
 
     if z_type == "Repeat":
@@ -555,23 +559,16 @@ def ProDataSignal(filename: str) -> dict[str, list[SignalData]]:
         signals.append(SignalData(x, Dimension(ys_data[i], y_quantity, y_unit), name, shortname, z_dict))
 
         if otb_data is not None:
-            otb_signals.append(
-                SignalData(
-                    x, Dimension(otb_data[i], constants.intensity_qt, constants.volt_unit), name, shortname, z_dict
-                )
-            )
+            y = Dimension(otb_data[i], constants.intensity_qt, constants.volt_unit)
+            otb_signals.append(SignalData(x, y, name, shortname, z_dict))
 
         if huntb_data is not None:
-            huntb_signals.append(
-                SignalData(
-                    x, Dimension(huntb_data[i], constants.intensity_qt, constants.volt_unit), name, shortname, z_dict
-                )
-            )
+            y = Dimension(huntb_data[i], constants.intensity_qt, constants.volt_unit)
+            huntb_signals.append(SignalData(x, y, name, shortname, z_dict))
 
         if rawabs_data is not None:
-            rawabs_signals.append(
-                SignalData(x, Dimension(rawabs_data[i], constants.absorbance_qt), name, shortname, z_dict)
-            )
+            y = Dimension(rawabs_data[i], constants.absorbance_qt)
+            rawabs_signals.append(SignalData(x, y, name, shortname, z_dict))
 
     data = {
         "dT/T": signals,
