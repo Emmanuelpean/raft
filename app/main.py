@@ -50,41 +50,40 @@ set_style()
 
 # ---------------------------------------------------- SESSION STATE ---------------------------------------------------
 
-# Session state
+
 ss = st.session_state
 
 
 ss.settings_defaults = {
-    "background_label": "",
+    "bckg_interacted": False,
     "bckg_range_input1": "",
     "bckg_range_input2": "",
-    "range_label": "",
+    "range_interacted": False,
     "range_input1": "",
     "range_input2": "",
-    "smoothing_label": "",
+    "smoothing_interacted": False,
     "sg_fw": 0,
     "sg_po": 0,
-    "fitting_label": "",
+    "fitting_interacted": False,
     "fitting_model": "None",
-    "norm_label": "",
+    "norm_interacted": False,
     "norm_type": "None",
     "norm_a": "1",
     "norm_b": "0",
-    "interp_label": "",
+    "interp_interacted": False,
     "interp_type": "None",
     "interp_dx": "",
     "interp_n": "",
-    "derive_label": "",
+    "derive_interacted": False,
     "derive_order": 0,
     "guess_values": None,
-    "fitting_open_status": False,
 }
 
-if "expanded" not in st.session_state:
-    st.session_state["expanded"] = False
 
-
-def set_setting(key: str, reset: bool = False) -> None:
+def set_default_setting(
+    key: str,
+    reset: bool = False,
+) -> None:
     """Store the specific setting in the session state using their default value
     :param key: setting key
     :param reset: if True, reset the stored value"""
@@ -94,12 +93,12 @@ def set_setting(key: str, reset: bool = False) -> None:
 
 
 # Add the settings to the session state using their default value
-def set_settings(reset: bool = False) -> None:
+def set_default_settings(reset: bool = False) -> None:
     """Store the settings in the session state using their default value
     :param reset: if True, reset the stored value"""
 
     for key in ss.settings_defaults:
-        set_setting(key, reset)
+        set_default_setting(key, reset)
 
 
 def refresh_session_state() -> None:
@@ -109,12 +108,30 @@ def refresh_session_state() -> None:
         ss[key] = ss[key]
 
 
-set_settings()
+def set_interact_value(
+    key: str,
+) -> callable:
+    """Return a function that sets an interaction session state value to True and refresh the session state
+    :param key: session state key"""
+
+    def function() -> None:
+        """Set the session state key value"""
+        ss[key] = True
+        refresh_session_state()
+
+    return function
+
+
+set_default_settings()
+
 
 # ----------------------------------------------------- DATA INPUT -----------------------------------------------------
 
+
 # File uploader
-file = st.sidebar.file_uploader(label="File uploader", label_visibility="hidden", on_change=lambda: set_settings(True))
+file = st.sidebar.file_uploader(
+    label="File uploader", label_visibility="hidden", on_change=lambda: set_default_settings(True)
+)
 
 # File type
 filetypes = ["Detect"] + sorted(FUNCTIONS.keys())
@@ -185,25 +202,6 @@ else:
         # If only 1 signal is selected
         if isinstance(signal, SignalData):
 
-            def expander(
-                ss_label: str,
-                label: str,
-                open_condition: bool = False,
-            ) -> bool:
-                """Get the expander status based on the session state label
-                :param ss_label: session state label key
-                :param label: current label
-                :param open_condition: if True, force the expanded status to True"""
-
-                status = ss[ss_label] != label  # True (opened) if label has changed
-                if ss[ss_label] == ss.settings_defaults[ss_label]:
-                    status = False
-                ss[ss_label] = label
-                if open_condition:
-                    status = True
-
-                return st.sidebar.expander(expander_label, expanded=status)
-
             refresh_session_state()
 
             # ----------------------------------------------- BACKGROUND -----------------------------------------------
@@ -215,7 +213,7 @@ else:
             except:
                 expander_label = BACKGROUND_LABEL
 
-            with expander("background_label", expander_label):
+            with st.sidebar.expander(expander_label, ss["bckg_interacted"]):
 
                 columns = st.columns(2)
 
@@ -225,6 +223,7 @@ else:
                     label=label1,
                     key="bckg_range_input1",
                     help=help_str,
+                    on_change=set_interact_value("bckg_interacted"),
                 )
 
                 label2 = Dimension(0, "Upper Range", signal.x.unit).get_label_raw()
@@ -233,6 +232,7 @@ else:
                     label=label2,
                     key="bckg_range_input2",
                     help=help_str,
+                    on_change=set_interact_value("bckg_interacted"),
                 )
 
             # ----------------------------------------------- DATA RANGE -----------------------------------------------
@@ -244,7 +244,7 @@ else:
             except:
                 expander_label = RANGE_LABEL
 
-            with expander("range_label", expander_label):
+            with st.sidebar.expander(expander_label, ss["range_interacted"]):
 
                 range_cols = st.columns(2)
 
@@ -254,6 +254,7 @@ else:
                     label=label1,
                     key="range_input1",
                     help=help_str,
+                    on_change=set_interact_value("range_interacted"),
                 )
 
                 label2 = Dimension(0, "Upper Range", signal.x.unit).get_label_raw()
@@ -261,6 +262,8 @@ else:
                 range_cols[1].text_input(
                     label=label2,
                     key="range_input2",
+                    help=help_str,
+                    on_change=set_interact_value("range_interacted"),
                 )
 
             # ---------------------------------------------- INTERPOLATION ---------------------------------------------
@@ -276,23 +279,23 @@ else:
                     signal = signal.interpolate(dx=n_count)
                     dx = np.mean(np.diff(signal.x.data))
                 if dx:
-                    expander_label = (
-                        f"__✔ {INTERP_LABEL} (step = {number_to_str(dx, 3)} {signal.x.get_unit_label_html()})__"
-                    )
+                    dx_str = number_to_str(dx, 3)
+                    expander_label = f"__✔ {INTERP_LABEL} (step = {dx_str} {signal.x.get_unit_label_html()})__"
             except:
                 pass
 
-            with expander("interp_label", expander_label):
+            with st.sidebar.expander(expander_label, ss["interp_interacted"]):
 
                 help_str = """Interpolate the data using different methods:
 * __Fixed Step__ interpolation – Data are interpolated using a specified step size.
 * __Point Count__ interpolation – Data are interpolated to fit a specified number of points."""
+
                 st.radio(
                     label="Interpolation Type",
                     options=["None", "Fixed Step", "Point Count"],
                     key="interp_type",
                     horizontal=True,
-                    on_change=refresh_session_state,
+                    on_change=set_interact_value("interp_interacted"),
                     help=help_str,
                 )
 
@@ -301,7 +304,7 @@ else:
                         label="f",
                         key={"Fixed Step": "interp_dx", "Point Count": "interp_n"}[ss.interp_type],
                         label_visibility="collapsed",
-                        disabled=ss["interp_type"] == "None",
+                        on_change=set_interact_value("interp_interacted"),
                     )
 
             # ----------------------------------------------- DERIVATION -----------------------------------------------
@@ -314,13 +317,14 @@ else:
             except:
                 pass
 
-            with expander("derive_label", expander_label):
+            with st.sidebar.expander(expander_label, ss["derive_interacted"]):
 
                 st.number_input(
                     label="Derivative Order",
                     min_value=0,
                     key="derive_order",
                     help="Calculate the n-th order derivative.",
+                    on_change=set_interact_value("derive_interacted"),
                 )
 
             # ------------------------------------------------ SMOOTHING -----------------------------------------------
@@ -334,7 +338,7 @@ else:
             except:
                 pass
 
-            with expander("smoothing_label", expander_label):
+            with st.sidebar.expander(expander_label, ss["smoothing_interacted"]):
 
                 smoothing_cols = st.columns(2)
 
@@ -343,6 +347,7 @@ else:
                     min_value=0,
                     help="Length of the Savitzky-Golay filter window",
                     key="sg_fw",
+                    on_change=set_interact_value("smoothing_interacted"),
                 )
 
                 smoothing_cols[1].number_input(
@@ -350,6 +355,7 @@ else:
                     min_value=0,
                     help="Order of the polynomial used to fit the samples",
                     key="sg_po",
+                    on_change=set_interact_value("smoothing_interacted"),
                 )
 
             # ---------------------------------------------- NORMALISATION ---------------------------------------------
@@ -374,17 +380,18 @@ else:
             except:
                 pass
 
-            with expander("norm_label", expander_label):
+            with st.sidebar.expander(expander_label, ss["norm_interacted"]):
 
                 help_str = """Data can be normalised using different methods:
 * __Max. normalisation__ – the y-values are normalised with respect to their maximum value.
 * __Feature scaling__ – the y-values are normalised based on specified minimum and maximum values."""
+
                 st.radio(
                     label="Normalisation Type",
                     options=["None", "Max. Normalisation", "Feature Scaling"],
                     key="norm_type",
                     horizontal=True,
-                    on_change=refresh_session_state,
+                    on_change=set_interact_value("norm_interacted"),
                     help=help_str,
                 )
 
@@ -395,11 +402,13 @@ else:
                     columns[0].text_input(
                         label="Maximum Value",
                         key="norm_a",
+                        on_change=set_interact_value("norm_interacted"),
                     )
 
                     columns[1].text_input(
                         label="Minimum Value",
                         key="norm_b",
+                        on_change=set_interact_value("norm_interacted"),
                     )
 
             # Plot the signal and store it as the raw signal
@@ -434,12 +443,12 @@ else:
             except:
                 pass
 
-            with expander("fitting_label", expander_label, ss.fitting_open_status):
+            with st.sidebar.expander(expander_label, ss["fitting_interacted"]):
 
                 st.selectbox(
                     label="Model",
                     options=["None"] + list(MODELS.keys()),
-                    on_change=lambda: set_setting("guess_values", True),
+                    on_change=set_interact_value("fitting_interacted"),
                     key="fitting_model",
                     help="Use the selected model to fit the data.",
                 )
@@ -452,15 +461,11 @@ else:
                     # Guess parameter and value
                     columns = st.columns(2)
 
-                    def keep_open() -> None:
-                        """Keep the fitting expander open"""
-                        ss.fitting_open_status = True
-
                     parameter = columns[0].selectbox(
                         label="Parameter",
                         options=parameters,
                         key="parameter_model_key",
-                        on_change=keep_open,
+                        on_change=set_interact_value("fitting_interacted"),
                     )
 
                     guess_value_key = ss.fitting_model + parameter + "guess_value"
@@ -471,6 +476,7 @@ else:
                     def store_guess_value() -> None:
                         """Store the guess value as a float in the guess_values dictionary"""
 
+                        set_interact_value("fitting_interacted")
                         try:
                             ss.guess_values[parameter] = float(ss[guess_value_key])
                         except:
