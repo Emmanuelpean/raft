@@ -54,17 +54,6 @@ set_style()
 ss = st.session_state
 
 
-def reset_stored_guess_values(reset: bool = False) -> None:
-    """Reset the stored guess values
-    :param reset: if True, reset the stored value"""
-
-    if "guess_values" not in ss or reset:
-        ss.guess_values = None
-
-
-reset_stored_guess_values()
-
-
 ss.settings_defaults = {
     "background_label": "",
     "bckg_range_input1": "",
@@ -87,10 +76,21 @@ ss.settings_defaults = {
     "interp_n": "",
     "derive_label": "",
     "derive_order": 0,
+    "guess_values": None,
+    "fitting_open_status": False,
 }
 
 if "expanded" not in st.session_state:
     st.session_state["expanded"] = False
+
+
+def set_setting(key: str, reset: bool = False) -> None:
+    """Store the specific setting in the session state using their default value
+    :param key: setting key
+    :param reset: if True, reset the stored value"""
+
+    if key not in ss or reset:
+        ss[key] = ss.settings_defaults[key]
 
 
 # Add the settings to the session state using their default value
@@ -99,9 +99,7 @@ def set_settings(reset: bool = False) -> None:
     :param reset: if True, reset the stored value"""
 
     for key in ss.settings_defaults:
-        if key not in ss or reset:
-            ss[key] = ss.settings_defaults[key]
-    reset_stored_guess_values(reset)
+        set_setting(key, reset)
 
 
 def refresh_session_state() -> None:
@@ -187,15 +185,22 @@ else:
         # If only 1 signal is selected
         if isinstance(signal, SignalData):
 
-            def expander(ss_label: str, label: str) -> bool:
+            def expander(
+                ss_label: str,
+                label: str,
+                open_condition: bool = False,
+            ) -> bool:
                 """Get the expander status based on the session state label
                 :param ss_label: session state label key
-                :param label: current label"""
+                :param label: current label
+                :param open_condition: if True, force the expanded status to True"""
 
                 status = ss[ss_label] != label  # True (opened) if label has changed
                 if ss[ss_label] == ss.settings_defaults[ss_label]:
                     status = False
                 ss[ss_label] = label
+                if open_condition:
+                    status = True
 
                 return st.sidebar.expander(expander_label, expanded=status)
 
@@ -416,25 +421,25 @@ else:
                 fit_function, equation, guess_function = MODELS[ss.fitting_model]
                 parameters = get_model_parameters(fit_function)
 
-                # Determine the default guess values
-                guess_values = guess_function(signal.x.data, signal.y.data)
-                guess_values = dict(zip(parameters, guess_values))
-
                 # Reset the guess value default dict is set to None
                 if ss.guess_values is None:
-                    ss.guess_values = guess_values
+                    try:
+                        guess_values = guess_function(signal.x.data, signal.y.data)
+                    except:
+                        guess_values = np.ones(len(parameters))
+                    ss.guess_values = dict(zip(parameters, guess_values))
 
                 fit_signal, fit_params, param_errors, r_squared = signal.fit(fit_function, ss.guess_values)
                 expander_label = f"__✔ {FITTING_LABEL} ({ss.fitting_model})__"
             except:
                 pass
 
-            with expander("fitting_label", expander_label):
+            with expander("fitting_label", expander_label, ss.fitting_open_status):
 
                 st.selectbox(
                     label="Model",
                     options=["None"] + list(MODELS.keys()),
-                    on_change=lambda: reset_stored_guess_values(True),
+                    on_change=lambda: set_setting("guess_values", True),
                     key="fitting_model",
                     help="Use the selected model to fit the data.",
                 )
@@ -447,28 +452,33 @@ else:
                     # Guess parameter and value
                     columns = st.columns(2)
 
+                    def keep_open() -> None:
+                        """Keep the fitting expander open"""
+                        ss.fitting_open_status = True
+
                     parameter = columns[0].selectbox(
                         label="Parameter",
                         options=parameters,
                         key="parameter_model_key",
+                        on_change=keep_open,
                     )
 
-                    ss_key = ss.fitting_model + parameter + "guess_value"
+                    guess_value_key = ss.fitting_model + parameter + "guess_value"
 
-                    if ss_key not in ss:
-                        ss[ss_key] = number_to_str(ss.guess_values[parameter], 4, False)
+                    if guess_value_key not in ss:
+                        ss[guess_value_key] = number_to_str(ss.guess_values[parameter], 4, False)
 
                     def store_guess_value() -> None:
                         """Store the guess value as a float in the guess_values dictionary"""
 
                         try:
-                            ss.guess_values[parameter] = float(ss[ss_key])
+                            ss.guess_values[parameter] = float(ss[guess_value_key])
                         except:
                             pass
 
                     columns[1].text_input(
                         label="Guess Value",
-                        key=ss_key,
+                        key=guess_value_key,
                         on_change=store_guess_value,
                     )
 
@@ -712,3 +722,5 @@ with st.expander("Changelog"):
 
 with st.expander("License & Disclaimer"):
     st.markdown(read_file(os.path.join(project_path, "LICENSE.txt")))
+
+ss.fitting_open_status = False
