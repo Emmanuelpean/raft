@@ -15,7 +15,11 @@
 * [X] Add interpolation
 * [X] Add derivative
 * [X] Update description
-* [ ] Add default guess values if guess value function fails
+* [X] Add default guess values if guess value function fails
+* [ ] Add precision to Dimension class for display purpose
+  * [ ] When loading data files, input the number of decimals (e.g. Repeat 1, 0 decimals)
+  * [ ] When displaying results, determine the precision from the calculation?
+* [ ] Delete temporary files Wire
 
 ## Tests
 * [X] Add tests
@@ -30,8 +34,16 @@
 * [X] FWHM should not be displayed if could not be calculated
 * [X] When changing the model, the value of the selected parameter does not change
 * [ ] Review plot module and functions
+* [X] Bug when changing fitting model
+* [ ] Handle nan values in number to string.
 
-
-## Future Features
+## Future Features 
 * [ ] Add draggable processing expanders.
 * [ ] Prevent graph from changing by storing figure in session state.
+
+
+## V 3.0
+* [ ] Add support for 3D data
+  * [ ] Allow user to select a z_dict quantity to the z-axis or by default use step of 1
+  * [ ] Plot the data extracted vs the z-axis
+  * [ ] Priority: Add caching for data loading

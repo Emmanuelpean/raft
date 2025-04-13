@@ -823,23 +823,37 @@ def VestaDiffractionFile(filename: str) -> SignalData:
 # -------------------------------------------------------- WIRE --------------------------------------------------------
 
 
+# noinspection PyTypeChecker
 def WireFile(filename: str | BytesIO) -> SignalData:
     """Read Renishaw WiRE files
     :param filename: file path"""
 
+    temp_filename = "temp_"
     if not isinstance(filename, str):
-        with open("temp_", "wb") as ofile:
+        with open(temp_filename, "wb") as ofile:
             ofile.write(filename.read())
-            filename = "temp_"
+            filename = temp_filename
 
-    reader = WDFReader(filename)
-    x_data, y_data = np.array(reader.xdata[::-1], dtype=float), np.array(reader.spectra[::-1], dtype=float)
-    if reader.xlist_unit.name == "RamanShift":
-        x = Dimension(x_data, constants.wavenumber_qt, constants.cm_1_unit)
-    else:
-        x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
-    y = Dimension(y_data, constants.intensity_qt)
-    return SignalData(x, y, reader.title)
+    try:
+        reader = WDFReader(filename)
+        x_data, y_data = np.array(reader.xdata[::-1], dtype=float), np.array(reader.spectra[::-1], dtype=float)
+        if reader.xlist_unit.name == "RamanShift":
+            x = Dimension(x_data, constants.wavenumber_qt, constants.cm_1_unit)
+        else:
+            x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
+        y = Dimension(y_data, constants.intensity_qt)
+        return SignalData(x, y, reader.title)
+    finally:
+        try:
+            # noinspection PyUnboundLocalVariable
+            reader.close()
+        except:
+            pass
+        if filename == temp_filename:
+            try:
+                os.remove(filename)
+            except:
+                pass
 
 
 # -------------------------------------------------------- ZEM3 --------------------------------------------------------

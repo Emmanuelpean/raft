@@ -130,7 +130,9 @@ set_default_settings()
 
 # File uploader
 file = st.sidebar.file_uploader(
-    label="File uploader", label_visibility="hidden", on_change=lambda: set_default_settings(True)
+    label="File uploader",
+    label_visibility="hidden",
+    on_change=lambda: set_default_settings(True),
 )
 
 # File type
@@ -164,7 +166,8 @@ else:
     else:
         try:
             signal = FUNCTIONS[filetype][0](file)
-        except:
+        except Exception as e:
+            print(e)
             pass
 
     # If the signal could be loaded, display a warning message
@@ -444,6 +447,12 @@ else:
                 pass
 
             with st.sidebar.expander(expander_label, ss["fitting_interacted"]):
+
+                def on_change() -> None:
+                    """Set fitting_interacted to True and reset guess_values"""
+
+                    set_interact_value("fitting_interacted")
+                    ss.guess_values = None
 
                 st.selectbox(
                     label="Model",
@@ -728,5 +737,3 @@ with st.expander("Changelog"):
 
 with st.expander("License & Disclaimer"):
     st.markdown(read_file(os.path.join(project_path, "LICENSE.txt")))
-
-ss.fitting_open_status = False
