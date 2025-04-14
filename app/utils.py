@@ -260,6 +260,8 @@ def get_data_index(
                 return index
             except ValueError:
                 continue
+        return None
+    return None
 
 
 def grep(

@@ -1086,5 +1086,64 @@ def test_detect_file_type() -> None:
     """Check that the test files are properly detected"""
 
     for path in resources.FILE_TYPE_DICT:
-        print(path)
         assert detect_file_type(path)[1] == resources.FILE_TYPE_DICT[path]
+
+
+class TestReadDataFile:
+
+    def test_single_file_detect(self) -> None:
+
+        signal, filetype = read_data_file(resources.SPECTRASUITE_HEADER_PATH, FILETYPES[0])
+        assert filetype == "SpectraSuite (.txt)"
+
+    def test_multiple_files_detect(self) -> None:
+
+        filenames = [resources.SPECTRASUITE_HEADER_PATH, resources.SPECTRASUITE_HEADER_BST_PATH]
+        signal, filetype = read_data_file(filenames, FILETYPES[0])
+        assert filetype == "SpectraSuite (.txt)"
+        assert len(signal) == 2
+
+    def test_multiple_files_different_detect(self) -> None:
+
+        filenames = [resources.SPECTRASUITE_HEADER_PATH, resources.EASYLOG_PATH, resources.SPECTRASUITE_HEADER_BST_PATH]
+        signal, filetype = read_data_file(filenames, FILETYPES[0])
+        assert filetype == "SpectraSuite (.txt)"
+        assert len(signal) == 2
+
+    def test_single_file_fixed(self) -> None:
+
+        signal, filetype = read_data_file(resources.SPECTRASUITE_HEADER_PATH, "SpectraSuite (.txt)")
+        assert filetype == "SpectraSuite (.txt)"
+
+    def test_multiple_files_fixed(self) -> None:
+
+        filenames = [resources.SPECTRASUITE_HEADER_PATH, resources.SPECTRASUITE_HEADER_BST_PATH]
+        signal, filetype = read_data_file(filenames, "SpectraSuite (.txt)")
+        assert filetype == "SpectraSuite (.txt)"
+        assert len(signal) == 2
+
+    def test_multiple_files_different_fixed(self) -> None:
+
+        filenames = [resources.SPECTRASUITE_HEADER_PATH, resources.SPECTRASUITE_HEADER_BST_PATH, resources.EASYLOG_PATH]
+        signal, filetype = read_data_file(filenames, "SpectraSuite (.txt)")
+        assert filetype == "SpectraSuite (.txt)"
+        assert len(signal) == 2
+
+    def test_single_file_fixed_incorrect(self) -> None:
+
+        signal, filetype = read_data_file(resources.SPECTRASUITE_HEADER_PATH, "EasyLog (.txt)")
+        assert filetype is None
+
+    def test_multiple_files_fixed_incorrect(self) -> None:
+
+        filenames = [resources.SPECTRASUITE_HEADER_PATH, resources.SPECTRASUITE_HEADER_BST_PATH]
+        signal, filetype = read_data_file(filenames, "EasyLog (.txt)")
+        assert filetype is None
+        assert len(signal) == 0
+
+    def test_multiple_files_different_fixed_incorrect(self) -> None:
+
+        filenames = [resources.SPECTRASUITE_HEADER_PATH, resources.SPECTRASUITE_HEADER_BST_PATH, resources.EASYLOG_PATH]
+        signal, filetype = read_data_file(filenames, "EasyLog (.txt)")
+        assert filetype is None
+        assert len(signal) == 0

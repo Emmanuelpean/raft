@@ -6,9 +6,9 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from data_files import FUNCTIONS, detect_file_type
+from data_files import FILETYPES, read_data_file
 from fitting import MODELS, get_model_parameters
-from plot import plot, scatter_plot
+from plot import plot, scatter_plot, subplots
 from resources import LOGO_PATH, LOGO_TEXT_PATH, CSS_STYLE_PATH, ICON_PATH, DATA_PROCESSING_PATH
 from signaldata import SignalData, Dimension
 from utils import render_image, matrix_to_string, read_file, number_to_str, generate_html_table
@@ -64,6 +64,7 @@ ss.settings_defaults = {
     "smoothing_interacted": False,
     "sg_fw": 0,
     "sg_po": 0,
+    "display_raw": True,
     "fitting_interacted": False,
     "fitting_model": "None",
     "norm_interacted": False,
@@ -125,22 +126,34 @@ def set_interact_value(
 set_default_settings()
 
 
+if "data" not in st.session_state:
+    st.session_state.data = None
+
+
 # ----------------------------------------------------- DATA INPUT -----------------------------------------------------
+
+
+def reset_data() -> None:
+    """Reset the settings and remove the stored data"""
+
+    set_default_settings(True)
+    st.session_state.data = None
 
 
 # File uploader
 file = st.sidebar.file_uploader(
     label="File uploader",
     label_visibility="hidden",
-    on_change=lambda: set_default_settings(True),
+    on_change=reset_data,
+    accept_multiple_files=False,
 )
 
 # File type
-filetypes = ["Detect"] + sorted(FUNCTIONS.keys())
 filetype_help = "Select the file type. If 'Detect' is selected, the file type will be automatically detected"
 filetype = st.sidebar.selectbox(
     label="Data file type",
-    options=filetypes,
+    options=FILETYPES,
+    on_change=reset_data,
     help=filetype_help,
     key="filetype_select",
 )
@@ -156,19 +169,18 @@ else:
 
     # -------------------------------------------------- DATA LOADING --------------------------------------------------
 
-    # Attempt to load the data by testing every file types
-    if filetype == filetypes[0]:
+    display_condition = filetype == FILETYPES[0]
 
-        signal, extension = detect_file_type(file)
-        filetype_message.markdown(f"Detected: {extension}")
+    if st.session_state.data is None:
+        print("Reading data")
+        signal, filetype = read_data_file(file, filetype)
+        st.session_state.data = [signal, filetype]
 
-    # Attempt to load the data using the provided function
     else:
-        try:
-            signal = FUNCTIONS[filetype][0](file)
-        except Exception as e:
-            print(e)
-            pass
+        signal, filetype = st.session_state.data
+
+    if display_condition:
+        filetype_message.markdown(f"Detected: {filetype}")
 
     # If the signal could be loaded, display a warning message
     if signal is None:
@@ -361,6 +373,13 @@ else:
                     on_change=set_interact_value("smoothing_interacted"),
                 )
 
+                st.toggle(
+                    label="Display Raw Data",
+                    key="display_raw",
+                    help="If toggled, display the raw data as well as the smoothed data.",
+                    on_change=set_interact_value("smoothing_interacted"),
+                )
+
             # ---------------------------------------------- NORMALISATION ---------------------------------------------
 
             expander_label = NORM_LABEL
@@ -415,7 +434,9 @@ else:
                     )
 
             # Plot the signal and store it as the raw signal
-            figure = plot(signal)
+            figure = subplots(1)[0]
+            if ss["display_raw"] or not signal_s:
+                signal.plot(figure)
             raw_signal = signal
 
             # If the smoothed signal exist, plot it and replace the studied signal with it

@@ -932,3 +932,49 @@ def detect_file_type(filename: str | BytesIO) -> tuple[any, str] | tuple[None, N
             pass
 
     return None, None
+
+
+def read_data_file(
+    filename: str | list[str],
+    filetype: str,
+) -> tuple[SignalData | None, str | None] | tuple[list[SignalData], str | None]:
+    """Read the file(s) content.
+    If filetype is "Detect" and filename is a list of files, detect the first file type and then reuse that type for
+    the other files. If a file cannot be loaded in the list, it is not returned.
+    :param filename: file name
+    :param filetype: file type"""
+
+    if isinstance(filename, list):
+
+        signal0, filetype = read_data_file(filename[0], filetype)
+
+        # Make sure that the file could be read
+        if signal0 is not None:
+            signals = []
+            for file in filename[1:]:
+                signal = read_data_file(file, filetype)[0]
+                if signal is not None:
+                    signals.append(signal)
+            # noinspection PyTypeChecker
+            return [signal0] + signals, filetype
+        else:
+            return [], None
+
+    else:
+
+        # Attempt to load the data by testing every file types
+        if filetype == FILETYPES[0]:
+            signal, filetype = detect_file_type(filename)
+            return signal, filetype
+
+        # Attempt to load the data using the provided function
+        else:
+            try:
+                signal = FUNCTIONS[filetype][0](filename)
+                return signal, filetype
+            except Exception as e:
+                print(e)
+                return None, None
+
+
+FILETYPES = ["Detect"] + sorted(FUNCTIONS.keys())

@@ -244,7 +244,7 @@ def guess_logarithmic(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float
     a_guess, c_guess = np.polyfit(log_x, y_pos, 1)
 
     # Heuristic for b: scale based on median x
-    b_guess = 1.0 / np.median(x_pos)
+    b_guess = 1.0 / float(np.median(x_pos))
 
     return float(a_guess), float(b_guess), float(c_guess)
 
@@ -285,7 +285,7 @@ def guess_sine(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float, float
     """Generate initial parameter guesses for sine function: f(x) = a * sin(b * x + c) + d"""
 
     # d is the vertical offset (mean of y)
-    d_guess = np.mean(y)
+    d_guess = float(np.mean(y))
 
     # a is half the peak-to-peak amplitude
     a_guess = (np.max(y) - np.min(y)) / 2

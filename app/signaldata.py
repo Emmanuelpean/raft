@@ -275,7 +275,7 @@ class SignalData(object):
 
     # ---------------------------------------------- SIGNAL TRANSFORMATION ---------------------------------------------
 
-    def remove_background(self, xrange: list[float | int] | tuple[float | int] | np.ndarray[float | int]) -> SignalData:
+    def remove_background(self, xrange: list[float | int] | tuple[float | int]) -> SignalData:
         """Remove the background signal
         :param xrange: range of values where the average background signal is calculated"""
 
@@ -305,7 +305,7 @@ class SignalData(object):
             self.z_dict,
         )
 
-    def reduce_range(self, xrange: list[float | int] | tuple[float | int] | np.ndarray[float | int]) -> SignalData:
+    def reduce_range(self, xrange: list[float | int] | tuple[float | int]) -> SignalData:
         """Reduce the x-axis range
         :param xrange: data range"""
 
