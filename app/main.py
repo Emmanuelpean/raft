@@ -27,13 +27,9 @@ __date__ = "March 2025"
 __author__ = "Emmanuel V. Péan"
 __github__ = "https://github.com/Emmanuelpean/raft"
 
+# ------------------------------------------------------ CONSTANTS -----------------------------------------------------
 
-project_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# -------------------------------------------------------- SETUP -------------------------------------------------------
-
-st.set_page_config(__name__, page_icon=ICON_PATH, layout="wide")
-st.sidebar.html(render_image(LOGO_PATH, 35))  # sidebar logo
+PROJECT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 BACKGROUND_LABEL = "Background Subtraction"
@@ -46,10 +42,17 @@ FITTING_LABEL = "Fitting"
 EXTRACTION_LABEL = "Data Extraction"
 
 
+# -------------------------------------------------------- SETUP -------------------------------------------------------
+
+st.set_page_config(__name__, page_icon=ICON_PATH, layout="wide")
+st.sidebar.html(render_image(LOGO_PATH, 35))  # sidebar logo
+
+
 # Change the default style
 @st.cache_resource
 def set_style() -> None:
     """Set the default style"""
+
     with open(CSS_STYLE_PATH) as ofile:
         st.html(f"<style>{ofile.read()}</style>")
 
@@ -58,10 +61,10 @@ set_style()
 
 # ---------------------------------------------------- SESSION STATE ---------------------------------------------------
 
-
+# Create a shortened name for the session state
 ss = st.session_state
 
-
+# Dictionary storing the default values of session state values (including widgets and interaction status)
 ss.settings_defaults = {
     "bckg_interacted": False,
     "bckg_range_input1": "",
@@ -89,160 +92,162 @@ ss.settings_defaults = {
 }
 
 
-def set_default_setting(
-    key: str,
-    reset: bool = False,
-) -> None:
-    """Store the specific setting in the session state using their default value
-    :param key: setting key
-    :param reset: if True, reset the stored value"""
-
-    if key not in ss or reset:
-        ss[key] = ss.settings_defaults[key]
-
-
 # Add the settings to the session state using their default value
 def set_default_settings(reset: bool = False) -> None:
     """Store the settings in the session state using their default value
     :param reset: if True, reset the stored value"""
 
     for key in ss.settings_defaults:
-        set_default_setting(key, reset)
-
-
-def refresh_session_state() -> None:
-    """Refresh the session state. To be called when new widgets are displayed"""
-
-    for key in ss.settings_defaults:
-        ss[key] = ss[key]
-
-
-def set_interact_value(
-    key: str,
-) -> callable:
-    """Return a function that sets an interaction session state value to True and refresh the session state
-    :param key: session state key"""
-
-    def function() -> None:
-        """Set the session state key value"""
-        ss[key] = True
-        refresh_session_state()
-
-    return function
+        if key not in ss or reset:
+            ss[key] = ss.settings_defaults[key]
 
 
 set_default_settings()
 
 
-if "data" not in st.session_state:
-    st.session_state.data = None
-if "file_uploader" not in st.session_state:
-    st.session_state.file_uploader = "file_uploader_key0"
+def refresh_session_state_settings() -> None:
+    """Refresh the session state settings. To be called when new widgets are displayed"""
 
-# ----------------------------------------------------- DATA INPUT -----------------------------------------------------
+    for key in ss.settings_defaults:
+        ss[key] = ss[key]
+
+
+def set_session_state_value_function(
+    key: str,
+    value: any,
+) -> callable:
+    """Return a function that changes the value of a key in the session state
+    :param key: session state key
+    :param value: new value"""
+
+    def function() -> None:
+        """Set the session state key value"""
+
+        ss[key] = value
+
+    return function
+
+
+# Add data and the file_uploader key to the session state
+if "data" not in ss:
+    ss.data = None
+if "file_uploader" not in ss:
+    ss.file_uploader = "file_uploader_key0"
 
 
 def reset_data() -> None:
     """Reset the settings and remove the stored data"""
 
-    set_default_settings(True)
-    st.session_state.data = None
+    set_default_settings(True)  # reset the default settings
+    ss.data = None  # remove the stored data
 
 
-# File uploader
-FILE_MODES = ["Single File", "Multiple Files"]
+# ---------------------------------------------------- FILE UPLOADER ---------------------------------------------------
+
+
+FILE_UPLOADER_MODES = ["Single File", "Multiple Files"]
+UPLOADER_KWARGS = dict(
+    label="File uploader",
+    label_visibility="hidden",
+    on_change=reset_data,
+)
 with st.sidebar:
-    tab = tab_bar(FILE_MODES)
+    tab = tab_bar(FILE_UPLOADER_MODES)
 
-if tab == FILE_MODES[0]:
+# Single file mode
+if tab == FILE_UPLOADER_MODES[0]:
     file = st.sidebar.file_uploader(
-        label="File uploader",
-        label_visibility="hidden",
-        on_change=reset_data,
+        **UPLOADER_KWARGS,
     )
 else:
-
     file = st.sidebar.file_uploader(
-        label="File uploader",
-        label_visibility="hidden",
-        on_change=reset_data,
         accept_multiple_files=True,
-        key=st.session_state.file_uploader,
+        key=ss.file_uploader,
+        **UPLOADER_KWARGS,
     )
 
-    def set_new_key() -> None:
+    def set_new_uploader_key() -> None:
         """Change the key of the file uploader"""
 
         string = "file_uploader_key"
-        i_old = int(st.session_state.file_uploader.replace(string, ""))
-        st.session_state.file_uploader = string + str(i_old + 1)
+        i_old = int(ss.file_uploader.replace(string, ""))
+        ss.file_uploader = string + str(i_old + 1)
 
-    st.sidebar.html(
+    # If files have been uploaded, show the button to remove them
+    if file:
+        st.sidebar.html(
+            """
+            <style>
+                .block-container {
+                    padding-top: 1rem;
+                    padding-bottom: 1rem;
+                }
+                 .stFileUploader, .stTextInput {
+                    margin-bottom: -30px;
+                }
+            </style>
         """
-        <style>
-            .block-container {
-                padding-top: 1rem;
-                padding-bottom: 1rem;
-            }
-             .stFileUploader, .stTextInput {
-                margin-bottom: -10px;
-            }
-        </style>
-    """
-    )
-    st.sidebar.button(
-        "Clear",
-        on_click=set_new_key,
-        use_container_width=True,
-    )
+        )
+        st.sidebar.button(
+            "Clear",
+            on_click=set_new_uploader_key,
+            use_container_width=True,
+        )
 
 
-# File type
+# ------------------------------------------------------ FILE TYPE -----------------------------------------------------
+
+
 filetype_help = "Select the file type. If 'Detect' is selected, the file type will be automatically detected."
 filetype = st.sidebar.selectbox(
-    label="Data file type",
+    label="Data File Type",
     options=FILETYPES,
     on_change=reset_data,
     help=filetype_help,
     key="filetype_select",
 )
-filetype_message = st.sidebar.empty()
 
-signal = None
+
+# -------------------------------------------------------- LOGO --------------------------------------------------------
+
 
 # If no file is provided or no signal is stored
 if not file:
     st.html(render_image(LOGO_TEXT_PATH, 30))  # main logo
 
+# If file is an uploaded file or a list of uploaded file
 else:
 
     # -------------------------------------------------- DATA LOADING --------------------------------------------------
 
+    # Determine if the current filetype is "Detect"
     display_condition = filetype == FILETYPES[0]
 
-    if st.session_state.data is None:
-        print("Reading data")
+    # If not data have been stored previously, try loading the files and store them
+    if ss.data is None:
+        print("Reading data files")
         signal, filetype = read_data_file(file, filetype)
-        st.session_state.data = [signal, filetype]
+        signal = normalise_list(signal)
+        ss.data = [signal, filetype]
 
+    # Otherwise load the data from the session state
     else:
-        signal, filetype = st.session_state.data
+        signal, filetype = ss.data
 
     if display_condition:
-        filetype_message.markdown(f"Detected: {filetype}")
+        st.sidebar.markdown(f"Detected: {filetype}")
 
-    # If the signal could be loaded, display a warning message
+    # ------------------------------------------------- DATA SELECTION -------------------------------------------------
+
+    # If the signal could not be loaded, display a warning message
     if signal is None:
-        if tab == FILE_MODES[0]:
+        if tab == FILE_UPLOADER_MODES[0]:
             st.warning("Unable to read that file.")
         else:
             st.warning("Unable to read the files.")
 
+    # Show the options for selecting a specific signal
     else:
-
-        signal = normalise_list(signal)
-
-        # ----------------------------------------------- DATA SELECTION -----------------------------------------------
 
         # Select the data type to plot if signal is a dictionary
         if isinstance(signal, dict):
@@ -255,7 +260,7 @@ else:
                 signal = signal[selection]
 
         # Select the signal in a list if multiple signals
-        if isinstance(signal, (list, tuple)) and len(signal) > 1:
+        if isinstance(signal, list) and len(signal) > 1:
             names = [s.get_name(False) for s in signal]
             signal_dict = dict(zip(names, signal))
             col_selection = st.sidebar.selectbox(
@@ -271,7 +276,7 @@ else:
         # If only 1 signal is selected
         if isinstance(signal, SignalData):
 
-            refresh_session_state()
+            refresh_session_state_settings()
 
             # ----------------------------------------------- BACKGROUND -----------------------------------------------
 
@@ -292,7 +297,7 @@ else:
                     label=label1,
                     key="bckg_range_input1",
                     help=help_str,
-                    on_change=set_interact_value("bckg_interacted"),
+                    on_change=set_session_state_value_function("bckg_interacted", True),
                 )
 
                 label2 = Dimension(0, "Upper Range", signal.x.unit).get_label_raw()
@@ -301,7 +306,7 @@ else:
                     label=label2,
                     key="bckg_range_input2",
                     help=help_str,
-                    on_change=set_interact_value("bckg_interacted"),
+                    on_change=set_session_state_value_function("bckg_interacted", True),
                 )
 
             # ----------------------------------------------- DATA RANGE -----------------------------------------------
@@ -323,7 +328,7 @@ else:
                     label=label1,
                     key="range_input1",
                     help=help_str,
-                    on_change=set_interact_value("range_interacted"),
+                    on_change=set_session_state_value_function("range_interacted", True),
                 )
 
                 label2 = Dimension(0, "Upper Range", signal.x.unit).get_label_raw()
@@ -332,12 +337,13 @@ else:
                     label=label2,
                     key="range_input2",
                     help=help_str,
-                    on_change=set_interact_value("range_interacted"),
+                    on_change=set_session_state_value_function("range_interacted", True),
                 )
 
             # ---------------------------------------------- INTERPOLATION ---------------------------------------------
 
             expander_label = INTERP_LABEL
+            INTERP_OPTIONS = ["None", "Fixed Step", "Point Count"]
             dx = None
             try:
                 if ss.interp_type == "Fixed Step":
@@ -361,10 +367,10 @@ else:
 
                 st.radio(
                     label="Interpolation Type",
-                    options=["None", "Fixed Step", "Point Count"],
+                    options=INTERP_OPTIONS,
                     key="interp_type",
                     horizontal=True,
-                    on_change=set_interact_value("interp_interacted"),
+                    on_change=set_session_state_value_function("interp_interacted", True),
                     help=help_str,
                 )
 
@@ -373,7 +379,7 @@ else:
                         label="f",
                         key={"Fixed Step": "interp_dx", "Point Count": "interp_n"}[ss.interp_type],
                         label_visibility="collapsed",
-                        on_change=set_interact_value("interp_interacted"),
+                        on_change=set_session_state_value_function("interp_interacted", True),
                     )
 
             # ----------------------------------------------- DERIVATION -----------------------------------------------
@@ -393,7 +399,7 @@ else:
                     min_value=0,
                     key="derive_order",
                     help="Calculate the n-th order derivative.",
-                    on_change=set_interact_value("derive_interacted"),
+                    on_change=set_session_state_value_function("derive_interacted", True),
                 )
 
             # ------------------------------------------------ SMOOTHING -----------------------------------------------
@@ -416,7 +422,7 @@ else:
                     min_value=0,
                     help="Length of the Savitzky-Golay filter window",
                     key="sg_fw",
-                    on_change=set_interact_value("smoothing_interacted"),
+                    on_change=set_session_state_value_function("smoothing_interacted", True),
                 )
 
                 smoothing_cols[1].number_input(
@@ -424,18 +430,19 @@ else:
                     min_value=0,
                     help="Order of the polynomial used to fit the samples",
                     key="sg_po",
-                    on_change=set_interact_value("smoothing_interacted"),
+                    on_change=set_session_state_value_function("smoothing_interacted", True),
                 )
 
                 st.toggle(
                     label="Display Raw Data",
                     key="display_raw",
                     help="If toggled, display the raw data as well as the smoothed data.",
-                    on_change=set_interact_value("smoothing_interacted"),
+                    on_change=set_session_state_value_function("smoothing_interacted", True),
                 )
 
             # ---------------------------------------------- NORMALISATION ---------------------------------------------
 
+            NORM_OPTIONS = ["None", "Max. Normalisation", "Feature Scaling"]
             expander_label = NORM_LABEL
             try:
                 if ss["norm_type"] == "Max. Normalisation":
@@ -464,10 +471,10 @@ else:
 
                 st.radio(
                     label="Normalisation Type",
-                    options=["None", "Max. Normalisation", "Feature Scaling"],
+                    options=NORM_OPTIONS,
                     key="norm_type",
                     horizontal=True,
-                    on_change=set_interact_value("norm_interacted"),
+                    on_change=set_session_state_value_function("norm_interacted", True),
                     help=help_str,
                 )
 
@@ -478,13 +485,13 @@ else:
                     columns[0].text_input(
                         label="Maximum Value",
                         key="norm_a",
-                        on_change=set_interact_value("norm_interacted"),
+                        on_change=set_session_state_value_function("norm_interacted", True),
                     )
 
                     columns[1].text_input(
                         label="Minimum Value",
                         key="norm_b",
-                        on_change=set_interact_value("norm_interacted"),
+                        on_change=set_session_state_value_function("norm_interacted", True),
                     )
 
             # Plot the signal and store it as the raw signal
@@ -500,7 +507,6 @@ else:
 
             # ------------------------------------------------- FITTING ------------------------------------------------
 
-            fit_signal, fit_params, param_errors, r_squared, equation, parameters = None, None, None, None, "", []
             expander_label = FITTING_LABEL
             try:
 
@@ -519,20 +525,20 @@ else:
                 fit_signal, fit_params, param_errors, r_squared = signal.fit(fit_function, ss.guess_values)
                 expander_label = f"__✔ {FITTING_LABEL} ({ss.fitting_model})__"
             except:
-                pass
+                fit_signal, fit_params, param_errors, r_squared, equation, parameters = None, None, None, None, "", []
 
             with st.sidebar.expander(expander_label, ss["fitting_interacted"]):
 
                 def on_change() -> None:
                     """Set fitting_interacted to True and reset guess_values"""
 
-                    set_interact_value("fitting_interacted")
+                    set_session_state_value_function("fitting_interacted", True)()
                     ss.guess_values = None
 
                 st.selectbox(
                     label="Model",
                     options=["None"] + list(MODELS.keys()),
-                    on_change=set_interact_value("fitting_interacted"),
+                    on_change=on_change,
                     key="fitting_model",
                     help="Use the selected model to fit the data.",
                 )
@@ -549,7 +555,7 @@ else:
                         label="Parameter",
                         options=parameters,
                         key="parameter_model_key",
-                        on_change=set_interact_value("fitting_interacted"),
+                        on_change=set_session_state_value_function("fitting_interacted", True),
                     )
 
                     guess_value_key = ss.fitting_model + parameter + "guess_value"
@@ -560,7 +566,7 @@ else:
                     def store_guess_value() -> None:
                         """Store the guess value as a float in the guess_values dictionary"""
 
-                        set_interact_value("fitting_interacted")
+                        set_session_state_value_function("fitting_interacted", True)
                         try:
                             ss.guess_values[parameter] = float(ss[guess_value_key])
                         except:
@@ -806,9 +812,9 @@ Similar to the max/min points, the precision of the FWHM measurement can be furt
 # ------------------------------------------------------ CHANGELOG -----------------------------------------------------
 
 with st.expander("Changelog"):
-    st.markdown(read_file(os.path.join(project_path, "CHANGELOG.md")))
+    st.markdown(read_file(os.path.join(PROJECT_PATH, "CHANGELOG.md")))
 
 # ----------------------------------------------------- DISCLAIMER -----------------------------------------------------
 
 with st.expander("License & Disclaimer"):
-    st.markdown(read_file(os.path.join(project_path, "LICENSE.txt")))
+    st.markdown(read_file(os.path.join(PROJECT_PATH, "LICENSE.txt")))
