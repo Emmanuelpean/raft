@@ -955,6 +955,7 @@ def read_data_file(
                 signal = read_data_file(file, filetype)[0]
                 if signal is not None:
                     signals.append(signal)
+
             # noinspection PyTypeChecker
             return [signal0] + signals, filetype
         else:

@@ -230,7 +230,7 @@ class SignalData(object):
         if figure is None:
             figure = go.Figure()
 
-        trace = go.Scatter(
+        trace = go.Scattergl(
             x=self.x.data,
             y=self.y.data,
             name=self.get_name(condition),

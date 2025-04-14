@@ -19,7 +19,7 @@
 * [ ] Add precision to Dimension class for display purpose
   * [ ] When loading data files, input the number of decimals (e.g. Repeat 1, 0 decimals)
   * [ ] When displaying results, determine the precision from the calculation?
-* [ ] Delete temporary files Wire
+* [X] Delete temporary files Wire
 
 ## Tests
 * [X] Add tests
@@ -46,4 +46,4 @@
 * [ ] Add support for 3D data
   * [ ] Allow user to select a z_dict quantity to the z-axis or by default use step of 1
   * [ ] Plot the data extracted vs the z-axis
-  * [ ] Priority: Add caching for data loading
+  * [X] Priority: Add caching for data loading

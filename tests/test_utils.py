@@ -610,9 +610,6 @@ class TestFeatureScale:
         are_close(result, expected)
 
 
-# --------------------------------------------------- DATA EXTRACTION --------------------------------------------------
-
-
 class TestInterpolateData:
 
     @pytest.fixture
@@ -662,6 +659,9 @@ class TestDerivative:
         output = get_derivative(*sample_data, n=2)
         assert are_close(output[0], [2.0, 2.875])
         assert are_close(output[1], [12.0, 17.0])
+
+
+# --------------------------------------------------- DATA EXTRACTION --------------------------------------------------
 
 
 class TestGetDataIndex:
@@ -780,6 +780,17 @@ class TestGrep:
         assert result == "value"  # Should strip whitespace
 
 
+class TestGetPrecision:
+
+    def test_int(self) -> None:
+
+        assert are_identical(get_precision("5"), (5.0, 0))
+
+    def test_float(self) -> None:
+
+        assert are_identical(get_precision("3.14"), (3.14, 2))
+
+
 # -------------------------------------------------- DATA MANIPULATION -------------------------------------------------
 
 
@@ -888,6 +899,29 @@ class TestInterpolatePoint:
         x_int, y_int = interpolate_point(x, y, 6, kind="linear")
         assert len(x_int) == 1000
         assert len(y_int) == 1000
+
+
+class TestNormaliseInput:
+
+    def test_list_objects(self) -> None:
+
+        output = normalise_list([1, 3, 5, 76])
+        assert output == [1, 3, 5, 76]
+
+    def test_list_lists_objects(self) -> None:
+
+        output = normalise_list([[1, 3, 5, 76], [1, 3, 5, 76]])
+        assert output == [1, 3, 5, 76, 1, 3, 5, 76]
+
+    def test_list_dicts_objects(self) -> None:
+
+        output = normalise_list([dict(a=1, b=2), dict(a=4, b=6)])
+        assert output == {"b": [2, 6], "a": [1, 4]}
+
+    def test_list_dicts_lists_objects(self) -> None:
+
+        output = normalise_list([dict(a=[1, 2, 3], b=[2, 3, 4]), dict(a=[4, 5, 6], b=[5, 6, 7])])
+        assert output == {"b": [2, 3, 4, 5, 6, 7], "a": [1, 2, 3, 4, 5, 6]}
 
 
 # ---------------------------------------------------- DATA CHECKING ---------------------------------------------------

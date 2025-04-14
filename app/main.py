@@ -11,7 +11,15 @@ from fitting import MODELS, get_model_parameters
 from plot import plot, scatter_plot, subplots
 from resources import LOGO_PATH, LOGO_TEXT_PATH, CSS_STYLE_PATH, ICON_PATH, DATA_PROCESSING_PATH
 from signaldata import SignalData, Dimension
-from utils import render_image, matrix_to_string, read_file, number_to_str, generate_html_table
+from utils import (
+    render_image,
+    matrix_to_string,
+    read_file,
+    number_to_str,
+    generate_html_table,
+    normalise_list,
+    tab_bar,
+)
 
 __version__ = "2.0.0"
 __name__ = "Raft"
@@ -128,7 +136,8 @@ set_default_settings()
 
 if "data" not in st.session_state:
     st.session_state.data = None
-
+if "file_uploader" not in st.session_state:
+    st.session_state.file_uploader = "file_uploader_key0"
 
 # ----------------------------------------------------- DATA INPUT -----------------------------------------------------
 
@@ -141,15 +150,55 @@ def reset_data() -> None:
 
 
 # File uploader
-file = st.sidebar.file_uploader(
-    label="File uploader",
-    label_visibility="hidden",
-    on_change=reset_data,
-    accept_multiple_files=False,
-)
+FILE_MODES = ["Single File", "Multiple Files"]
+with st.sidebar:
+    tab = tab_bar(FILE_MODES)
+
+if tab == FILE_MODES[0]:
+    file = st.sidebar.file_uploader(
+        label="File uploader",
+        label_visibility="hidden",
+        on_change=reset_data,
+    )
+else:
+
+    file = st.sidebar.file_uploader(
+        label="File uploader",
+        label_visibility="hidden",
+        on_change=reset_data,
+        accept_multiple_files=True,
+        key=st.session_state.file_uploader,
+    )
+
+    def set_new_key() -> None:
+        """Change the key of the file uploader"""
+
+        string = "file_uploader_key"
+        i_old = int(st.session_state.file_uploader.replace(string, ""))
+        st.session_state.file_uploader = string + str(i_old + 1)
+
+    st.sidebar.html(
+        """
+        <style>
+            .block-container {
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+             .stFileUploader, .stTextInput {
+                margin-bottom: -10px;
+            }
+        </style>
+    """
+    )
+    st.sidebar.button(
+        "Clear",
+        on_click=set_new_key,
+        use_container_width=True,
+    )
+
 
 # File type
-filetype_help = "Select the file type. If 'Detect' is selected, the file type will be automatically detected"
+filetype_help = "Select the file type. If 'Detect' is selected, the file type will be automatically detected."
 filetype = st.sidebar.selectbox(
     label="Data file type",
     options=FILETYPES,
@@ -184,9 +233,14 @@ else:
 
     # If the signal could be loaded, display a warning message
     if signal is None:
-        st.warning("Unable to read that file")
+        if tab == FILE_MODES[0]:
+            st.warning("Unable to read that file.")
+        else:
+            st.warning("Unable to read the files.")
 
     else:
+
+        signal = normalise_list(signal)
 
         # ----------------------------------------------- DATA SELECTION -----------------------------------------------
 

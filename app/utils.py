@@ -312,6 +312,18 @@ def grep(
             return value.strip()
 
 
+def get_precision(string) -> tuple[float, int]:
+    """Get a number string precision.
+    :param string: float or int string"""
+
+    if "." in string:
+        value, decimals = string.split(".")
+        precision = len(decimals)
+        return float(string), precision
+    else:
+        return float(string), 0
+
+
 # -------------------------------------------------- DATA MANIPULATION -------------------------------------------------
 
 
@@ -395,6 +407,35 @@ def interpolate_data(
     return new_x, new_y
 
 
+def normalise_list(data: list) -> list | dict:
+    """Normalises various list inputs into a consistent format:
+    - If input is a list of objects: return as-is.
+    - If input is a list of lists of objects, return a list of objects
+    - If input is a list of dicts of objects: return dict of lists of objects.
+    - If input is a list of dicts of lists of objects: return dict of lists of objects."""
+
+    first = data[0]
+
+    # List of dictionaries
+    if isinstance(first, dict):
+        result = {}
+        keys = {key for d in data for key in d}
+
+        for key in keys:
+            result[key] = normalise_list([d[key] for d in data if key in d])
+        return result
+
+    # List of lists
+    elif isinstance(first, list):
+        result = []
+        for d in data:
+            result += d
+        return result
+
+    else:
+        return data
+
+
 def get_derivative(
     x: np.ndarray,
     y: np.ndarray,
@@ -454,3 +495,53 @@ def are_close(*args, rtol=1e-3) -> bool:
     """Check if two objects are similar"""
 
     return are_identical(*args, rtol=rtol)
+
+
+# ------------------------------------------------------ INTERFACE -----------------------------------------------------
+
+
+def tab_bar(values: list, **kwargs) -> str:
+    """Custom tabs
+    :param list values: list of tab names
+    :param kwargs: keyword arguments passed to st.radio"""
+
+    active_tab = st.radio("Label", values, label_visibility="collapsed", **kwargs)
+    child = values.index(active_tab) + 1
+    primary_color = st.get_option("theme.primaryColor")
+    st.html(
+        f"""  
+            <style type="text/css">
+            div[role=radiogroup] {{
+                border-bottom: 2px solid rgba(49, 51, 63, 0.1);
+                margin-bottom: -2rem !important;  /* Reduce space below tab bar */
+            }}
+            div[role=radiogroup] > label > div:first-of-type {{
+               display: none
+            }}
+            div[role=radiogroup] {{
+                flex-direction: unset
+            }}
+            div[role=radiogroup] label {{
+                padding-bottom: 0.5em;
+                border-radius: 0;
+                position: relative;
+                top: 4px;
+            }}
+            div[role=radiogroup] label .st-fc {{
+                padding-left: 0;
+            }}
+            div[role=radiogroup] label:hover p {{
+                color: {primary_color};
+            }}
+            div[role=radiogroup] label:nth-child({child}) {{    
+                border-bottom: 2px solid {primary_color};
+            }}
+            div[role=radiogroup] label:nth-child({child}) p {{    
+                color: {primary_color};
+                padding-right: 0;
+            }}
+            </style>
+        """
+    )
+
+    return active_tab
