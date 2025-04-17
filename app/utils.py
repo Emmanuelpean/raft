@@ -105,13 +105,13 @@ def render_image(
 ) -> str:
     """Render a svg file.
     :param str svg_file: file path
-    :param int width: width in percent
+    :param int width: width in px
     :param str itype: image type"""
 
     with open(svg_file, "rb") as ofile:
         svg = base64.b64encode(ofile.read()).decode()
         return (
-            f'<center><img src="data:image/{itype}+xml;base64,{svg}" id="responsive-image" width="{width}%"/></center>'
+            f'<center><img src="data:image/{itype}+xml;base64,{svg}" id="responsive-image" width="{width}px"/></center>'
         )
 
 
@@ -407,7 +407,7 @@ def interpolate_data(
     return new_x, new_y
 
 
-def normalise_list(data: list) -> list | dict:
+def normalise_list(data: any) -> any:
     """Normalises various list inputs into a consistent format:
     - If input is a list of objects: return as-is.
     - If input is a list of lists of objects, return a list of objects
@@ -505,38 +505,39 @@ def tab_bar(values: list, **kwargs) -> str:
     :param list values: list of tab names
     :param kwargs: keyword arguments passed to st.radio"""
 
-    active_tab = st.radio("Label", values, label_visibility="collapsed", **kwargs)
+    label = "tab_bar_label"
+    active_tab = st.radio(label, values, label_visibility="collapsed", **kwargs)
     child = values.index(active_tab) + 1
     primary_color = st.get_option("theme.primaryColor")
     st.html(
         f"""  
             <style type="text/css">
-            div[role=radiogroup] {{
+            div[aria-label="{label}"] {{
                 border-bottom: 2px solid rgba(49, 51, 63, 0.1);
-                margin-bottom: -2rem !important;  /* Reduce space below tab bar */
+                margin-bottom: -2rem !important;
             }}
-            div[role=radiogroup] > label > div:first-of-type {{
+            div[aria-label="{label}"] > label > div:first-of-type {{
                display: none
             }}
-            div[role=radiogroup] {{
+            div[aria-label="{label}"] {{
                 flex-direction: unset
             }}
-            div[role=radiogroup] label {{
+            div[aria-label="{label}"] label {{
                 padding-bottom: 0.5em;
                 border-radius: 0;
                 position: relative;
                 top: 4px;
             }}
-            div[role=radiogroup] label .st-fc {{
+            div[aria-label="{label}"] label .st-fc {{
                 padding-left: 0;
             }}
-            div[role=radiogroup] label:hover p {{
+            div[aria-label="{label}"] label:hover p {{
                 color: {primary_color};
             }}
-            div[role=radiogroup] label:nth-child({child}) {{    
+            div[aria-label="{label}"] label:nth-child({child}) {{    
                 border-bottom: 2px solid {primary_color};
             }}
-            div[role=radiogroup] label:nth-child({child}) p {{    
+            div[aria-label="{label}"] label:nth-child({child}) p {{    
                 color: {primary_color};
                 padding-right: 0;
             }}
@@ -545,3 +546,31 @@ def tab_bar(values: list, **kwargs) -> str:
     )
 
     return active_tab
+
+
+def dedent(string: str) -> str:
+    """Dedent a string
+    :param string: string to be dedented"""
+
+    return "\n".join([m.lstrip() for m in string.split("\n")])
+
+
+def make_unique(alist: list[str]) -> list[str]:
+    """Make the element of a list of strings unique
+    :param alist: list of strings"""
+
+    new_list = []
+    for string in alist:
+        if string not in new_list:
+            new_list.append(string)
+        else:
+            i = 1
+            while True:
+                new_string = string + f" ({i})"
+                if new_string in new_list:
+                    i += 1
+                else:
+                    new_list.append(new_string)
+                    break
+
+    return new_list

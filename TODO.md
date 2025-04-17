@@ -20,6 +20,8 @@
   * [ ] When loading data files, input the number of decimals (e.g. Repeat 1, 0 decimals)
   * [ ] When displaying results, determine the precision from the calculation?
 * [X] Delete temporary files Wire
+* [X] Added new logo on sidebar
+* [X] Updated the logo
 
 ## Tests
 * [X] Add tests
@@ -43,7 +45,10 @@
 
 
 ## V 3.0
-* [ ] Add support for 3D data
-  * [ ] Allow user to select a z_dict quantity to the z-axis or by default use step of 1
-  * [ ] Plot the data extracted vs the z-axis
+* [X] Add support for 3D data
+  * [X] Allow user to select a z_dict quantity to the z-axis or by default use step of 1
+  * [X] Plot the data extracted vs the z-axis
   * [X] Priority: Add caching for data loading
+  * [ ] Add color map to data
+  * [ ] Add hover template to curves with "filename" and "curve name"
+  * [ ] fOR EACH PLOT ADD A TAB THAT ALLOWS TO DISPLAY AND DOWNLOAD THE DATA

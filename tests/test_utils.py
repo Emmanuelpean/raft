@@ -1113,3 +1113,34 @@ class TestReadTxtFile:
         # Check that the function raises FileNotFoundError
         with pytest.raises(FileNotFoundError):
             read_file(self.TEMP_FILE)
+
+
+class TestMakeUnique:
+
+    def test_no_duplicates(self) -> None:
+        input_list = ["a", "b", "c"]
+        expected = ["a", "b", "c"]
+        assert make_unique(input_list) == expected
+
+    def test_single_duplicate(self) -> None:
+        input_list = ["a", "b", "a"]
+        expected = ["a", "b", "a (1)"]
+        assert make_unique(input_list) == expected
+
+    def test_multiple_duplicates(self) -> None:
+        input_list = ["x", "x", "x", "x"]
+        expected = ["x", "x (1)", "x (2)", "x (3)"]
+        assert make_unique(input_list) == expected
+
+    def test_interleaved_duplicates(self) -> None:
+        input_list = ["a", "b", "a", "b", "a"]
+        expected = ["a", "b", "a (1)", "b (1)", "a (2)"]
+        assert make_unique(input_list) == expected
+
+    def test_empty_list(self) -> None:
+        assert make_unique([]) == []
+
+    def test_existing_suffixes(self) -> None:
+        input_list = ["val", "val (1)", "val"]
+        expected = ["val", "val (1)", "val (2)"]
+        assert make_unique(input_list) == expected

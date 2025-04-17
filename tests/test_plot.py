@@ -7,6 +7,7 @@ returned.
 Tests should cover various edge cases, valid inputs, and any other conditions that are necessary to confirm the
 robustness of the functions."""
 
+import numpy as np
 import pytest
 
 from app.plot import *
@@ -44,14 +45,14 @@ class TestPlot:
     def test_plot_single_signal(self, signal_data) -> None:
         """Test plotting a single SignalData object."""
 
-        figure = plot(signal_data)
+        figure = plot_signals(signal_data)
         assert isinstance(figure, go.Figure)
         assert len(figure.data) == 1  # Should contain exactly one trace
 
     def test_plot_multiple_signals(self, signal_data) -> None:
         """Test plotting multiple SignalData objects."""
 
-        figure = plot([signal_data, signal_data])
+        figure = plot_signals([signal_data, signal_data])
         assert isinstance(figure, go.Figure)
         assert len(figure.data) == 2  # Should contain exactly two traces
 
@@ -59,7 +60,7 @@ class TestPlot:
         """Test plotting a dictionary of SignalData objects."""
 
         signals = {"Signal1": signal_data, "Signal2": signal_data}
-        figure = plot(signals)
+        figure = plot_signals(signals)
         assert isinstance(figure, go.Figure)
         assert len(figure.data) == 2  # Should contain two traces
 
@@ -67,7 +68,7 @@ class TestPlot:
         """Test plotting onto an existing figure."""
 
         existing_figure = go.Figure()
-        figure = plot(signal_data, figure=existing_figure)
+        figure = plot_signals(signal_data, figure=existing_figure)
         assert isinstance(figure, go.Figure)
         assert len(figure.data) == 1  # Should contain exactly one trace, as we added one signal
 
@@ -75,6 +76,6 @@ class TestPlot:
         """Test plotting a dictionary of SignalData objects."""
 
         signals = {"Signal1": [signal_data, signal_data], "Signal2": signal_data}
-        figure = plot(signals)
+        figure = plot_signals(signals)
         assert isinstance(figure, go.Figure)
         assert len(figure.data) == 3  # Should contain two traces

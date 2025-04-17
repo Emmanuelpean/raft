@@ -79,12 +79,6 @@ def exponential(x: np.ndarray, a: float, b: float, c: float) -> np.ndarray:
     return a * np.exp(b * x) + c
 
 
-def exponential_decay(x: np.ndarray, a: float, b: float, c: float) -> np.ndarray:
-    """Exponential decay function: f(x) = a * exp(-b * x) + c"""
-
-    return a * np.exp(-b * x) + c
-
-
 def logarithmic(x: np.ndarray, a: float, b: float, c: float) -> np.ndarray:
     """Logarithmic function: f(x) = a * log(b * x) + c"""
 
@@ -190,40 +184,6 @@ def guess_exponential(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float
 
     a_guess = np.exp(intercept)
     b_guess = slope
-
-    return a_guess, b_guess, c_guess
-
-
-def guess_exponential_decay(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float]:
-    """Generate initial parameter guesses for exponential decay function: f(x) = a * exp(-b * x) + c"""
-
-    # Assuming c is close to min(y)
-    c_guess = min(y)
-
-    # Subtract baseline
-    y_adjusted = y - c_guess
-
-    # Protect against negative or zero values
-    positive_indices = y_adjusted > 0
-    if not np.any(positive_indices):
-        # If no positive values, adjust our approach
-        c_guess = min(y) - 0.1 * (max(y) - min(y))
-        y_adjusted = y - c_guess
-        positive_indices = y_adjusted > 0
-
-    x_pos = x[positive_indices]
-    y_pos = y_adjusted[positive_indices]
-
-    if len(x_pos) < 2:
-        # Not enough points for good estimate, use defaults
-        return max(y) - min(y), 0.1, c_guess
-
-    # Linear regression on log(y) vs x
-    log_y = np.log(y_pos)
-    slope, intercept = np.polyfit(x_pos, log_y, 1)
-
-    a_guess = np.exp(intercept)
-    b_guess = -slope  # Note the negative sign for decay
 
     return a_guess, b_guess, c_guess
 
@@ -581,8 +541,7 @@ MODELS = {
     "Linear": (linear, "y = m·x + b", guess_linear),
     "Quadratic": (quadratic, "y = a·x² + b·x + c", guess_quadratic),
     "Cubic": (cubic, "y = a·x³ + b·x² + c·x + d", guess_cubic),
-    "Exponential Growth": (exponential, "y = a·e<sup>b·x</sup> + c", guess_exponential),
-    "Exponential Decay": (exponential_decay, "y = a·e<sup>−b·x</sup> + c", guess_exponential_decay),
+    "Exponential": (exponential, "y = a·e<sup>b·x</sup> + c", guess_exponential),
     "Logarithmic": (logarithmic, "y = a·ln(b·x) + c", guess_logarithmic),
     "Power Law": (power_law, "y = a·x<sup>b</sup> + c", guess_power_law),
     "Sine": (sine, "y = a·sin(b·x + c) + d", guess_sine),

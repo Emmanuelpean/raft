@@ -3,15 +3,104 @@
 		background-image: linear-gradient(90deg, rgb(190, 110, 65), rgb(247, 222, 208));
 	}
 
-.custom-line-spacing {
-  line-height: 2.5; /* Adjust this value as needed */
-}
-
 /* Remove padding on top of the page */
 .block-container {
     padding-top: 4rem;
     padding-bottom: 2rem;
-}
+    }
 
 /* Increase the expander test size */
-div[data-testid="stExpander"] details summary p{font-size: 16px;}
+div[data-testid="stExpander"] details summary p{
+    font-size: 16px;
+    }
+
+
+/* Increase logo size */
+img[data-testid="stLogo"] {
+    height: 4rem;
+    }
+
+
+/* File Uploader */
+/* Move the button to the right */
+.stFileUploader [data-testid="stFileUploaderDropzone"] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;
+    padding: 0.75rem;
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+    }
+
+/* Reduce bottom margin of the file uploader instruction text */
+div[data-testid="stFileUploaderDropzoneInstructions"] {
+    margin-bottom: 0rem !important;
+    }
+
+/* Remove file size text */
+.stFileUploaderFile small {
+    display: none !important;
+    }
+
+/* Center file entry contents vertically & horizontally */
+.stFileUploaderFile {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+}
+
+/* Center filename text */
+.stFileUploaderFileName {
+    font-size: 0.95rem !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Make sure top margin/padding is removed from the file list container */
+div[data-testid="stFileUploader"] > div:nth-child(3) {
+    padding-top: 0 !important;
+    margin-top: 4px !important; /* Negative margin to pull the list closer */
+}
+
+/* Target the file icon container */
+.e1blfcsg12,
+[class*="e1blfcsg12"],
+.stFileUploaderFile > div:first-child,
+div[data-testid="stFileUploaderFile"] > div:first-child {
+    padding: 0 !important;
+    margin: 0rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Make the SVG icon slightly smaller if needed */
+.e1blfcsg12 svg,
+[class*="e1blfcsg12"] svg,
+.stFileUploaderFile > div:first-child svg,
+div[data-testid="stFileUploaderFile"] > div:first-child svg {
+    width: 25px !important;
+    height: 25px !important;
+}
+
+/* Reduce padding and size of the remove "X" button in the file uploader */
+button[data-testid="stBaseButton-minimal"] {
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+    min-height: unset !important;
+}
+
+/* Target the pagination container */
+div[data-testid="stFileUploaderPagination"],
+.egc9vxm0 {
+    padding: 0px 0 !important;
+    margin: 0 !important;
+}
+
+/* Target the pagination buttons */
+div[data-testid="stFileUploaderPagination"] button {
+    padding: 0 !important;
+    margin: 0 2px !important;
+}

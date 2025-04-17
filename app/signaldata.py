@@ -16,13 +16,16 @@ methods for data manipulation (e.g., smoothing, range reduction), calculating ex
 
 from __future__ import annotations
 
+import datetime as dt
 import re
 
 import numpy as np
 import plotly.graph_objects as go
+import plotly.subplots as ps
 import scipy.signal as ss
 
 import constants
+from fitting import fit_data
 from utils import (
     merge_dicts,
     interpolate_point,
@@ -32,7 +35,6 @@ from utils import (
     interpolate_data,
     get_derivative,
 )
-from fitting import fit_data
 
 
 def get_label(
@@ -174,8 +176,8 @@ class SignalData(object):
 
     def __init__(
         self,
-        x: Dimension,
-        y: Dimension,
+        x: Dimension | list[Dimension],
+        y: Dimension | list[Dimension],
         name: str = "",
         shortname: str = "",
         z_dict: dict | None = None,
@@ -186,6 +188,12 @@ class SignalData(object):
         :param name: name
         :param shortname: secondary optional name
         :param z_dict: additional optional information about the signal"""
+
+        # If the input is a list of Dimensions, convert them to a single Dimension
+        if isinstance(x, (list, tuple)):
+            x = Dimension(np.array([d.data for d in x]), x[0].quantity, x[0].unit)
+        if isinstance(y, (list, tuple)):
+            y = Dimension(np.array([d.data for d in y]), y[0].quantity, y[0].unit)
 
         self.x = x
         self.y = y
@@ -217,58 +225,77 @@ class SignalData(object):
     def plot(
         self,
         figure: go.Figure | None = None,
-        position: None | list | tuple = None,
         condition: bool = False,
+        secondary_y: bool = False,
         **kwargs,
     ) -> go.Figure:
         """Plot the signal data in a plotly figure
         :param figure: plotly figure object
         :param position: subplot position
         :param condition: argument passed to get_name
+        :param secondary_y: if True, use the secondary y-axis
         :param kwargs: keyword arguments passed to Scatter"""
 
+        # Generate a new figure if not provided
         if figure is None:
-            figure = go.Figure()
+            figure = ps.make_subplots(1, 1, specs=[[{"secondary_y": secondary_y}]])
 
+        font = dict(size=16, color="black")
+
+        # Generate the trace and add it to the figure
         trace = go.Scattergl(
             x=self.x.data,
             y=self.y.data,
             name=self.get_name(condition),
-            showlegend=True,
+            legendgrouptitle_font=dict(size=17),
             **kwargs,
         )
+        figure.add_trace(trace, secondary_y=secondary_y)
 
-        if position:
-            kwargs = dict(row=position[0], col=position[1])
-        else:
-            kwargs = dict()
-
-        figure.add_trace(trace, **kwargs)
-
-        font = dict(size=16, color="black")
+        # Set the x-axis settings
         figure.update_xaxes(
+            automargin="left+top+bottom+right",
             title_text=self.x.get_label_html(),
-            tickformat=",",
             title_font=font,
             tickfont=font,
             showgrid=True,
             gridcolor="lightgray",
-            **kwargs,
         )
-        figure.update_yaxes(
+
+        # If not datetimes are displayed, update the tickformat of the xaxes
+        if not isinstance(self.x.data[0], dt.datetime):
+            figure.update_xaxes(tickformat=",")
+
+        # Set the y-axis settings
+        yaxis_kwargs = dict(
+            automargin="left+top+bottom+right",
             title_text=self.y.get_label_html(),
             tickformat=",",
             title_font=font,
             tickfont=font,
-            showgrid=True,
             gridcolor="lightgray",
-            **kwargs,
+            exponentformat="power",
         )
 
+        if secondary_y:
+            figure.update_yaxes(
+                showgrid=False,
+                zeroline=False,
+                color="black",
+                secondary_y=secondary_y,
+                **yaxis_kwargs,
+            )
+        else:
+            figure.update_yaxes(
+                **yaxis_kwargs,
+            )
+
+        # Update the figure layout
         figure.update_layout(
             {"uirevision": "foo"},
             margin=dict(l=0, r=0, t=40, b=0, pad=0),
             legend=dict(font=font),
+            height=800,
         )
 
         return figure
@@ -301,7 +328,7 @@ class SignalData(object):
             self.x,
             self.y(data=y),
             self.name,
-            "Smoothed",
+            self.shortname + " - Smoothed",
             self.z_dict,
         )
 
@@ -373,7 +400,16 @@ class SignalData(object):
         :param kwargs: keyword arguments passed to fit_data"""
 
         params, param_errors, y_fit, r_squared = fit_data(self.x.data, self.y.data, *args, **kwargs)
-        return SignalData(self.x, self.y(y_fit), "Fit"), params, param_errors, r_squared
+        inf_indexes = np.isinf(y_fit)
+        x_data, y_data = self.x.data[~inf_indexes], y_fit[~inf_indexes]
+        fit_signal = SignalData(
+            self.x(x_data),
+            self.y(y_data),
+            self.name,
+            self.shortname + " - Fit",
+            self.z_dict,
+        )
+        return fit_signal, params, param_errors, r_squared
 
     # ------------------------------------------------- DATA EXTRACTION ------------------------------------------------
 
