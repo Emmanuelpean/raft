@@ -9,8 +9,8 @@ robustness of the functions."""
 
 import pytest
 
-from app.fitting import *
-from app.utils import are_close
+from data_processing.fitting import *
+from utils.checks import are_close
 
 
 def generate_expected_code(fit_output: list):  # pragma: no cover
@@ -109,19 +109,6 @@ class TestFitData:
             "params": [1.97780830, 0.30098598, 1.02877415],
             "param_errors": [0.02339381, 0.00115386, 0.04800676],
             "r_squared": 0.9999267015059259,
-        }
-        self.assert_fit_quality(fit_output, expected)
-
-    def test_exponential_decay_fit(self) -> None:
-        """Test fit with exponential decay function"""
-
-        true_params = dict(a=5.0, b=0.4, c=1.0)  # a, b, c for y = a*exp(-b*x) + c
-        x_data, y_data = self.generate_noisy_data(exponential_decay, true_params)
-        fit_output = fit_data(x_data, y_data, exponential_decay, true_params)
-        expected = {
-            "params": [5.10309909, 0.41001656, 0.97951783],
-            "param_errors": [0.04980599, 0.01007091, 0.03054609],
-            "r_squared": 0.9957287333194214,
         }
         self.assert_fit_quality(fit_output, expected)
 
@@ -232,12 +219,12 @@ class TestFitData:
     def test_bounded_fit(self) -> None:
         """Test fit with exponential decay function and bounds"""
 
-        true_params = dict(a=5.0, b=0.4, c=1.0)
-        bounds = dict(a=[0, 100], b=[0, 1], c=[0, 100000])
-        x_data, y_data = self.generate_noisy_data(exponential_decay, true_params)
-        fit_output = fit_data(x_data, y_data, exponential_decay, true_params, bounds)
+        true_params = dict(a=5.0, b=-0.4, c=1.0)
+        bounds = dict(a=[0, 100], b=[-1, 0], c=[0, 100000])
+        x_data, y_data = self.generate_noisy_data(exponential, true_params)
+        fit_output = fit_data(x_data, y_data, exponential, true_params, bounds)
         expected = {
-            "params": [5.10309909, 0.41001656, 0.97951782],
+            "params": [5.10309909, -0.41001656, 0.97951782],
             "param_errors": [0.04980600, 0.01007092, 0.03054605],
             "r_squared": 0.9957287333194214,
         }
@@ -246,11 +233,11 @@ class TestFitData:
     def test_error_fit(self) -> None:
         """Test fit with exponential decay function and bounds"""
 
-        true_params = dict(a=-5.0, b=0.4, c=1.0)
-        bounds = dict(a=[0, 100], b=[0, 1], c=[0, 100000])
-        x_data, y_data = self.generate_noisy_data(exponential_decay, true_params)
+        true_params = dict(a=-5.0, b=-0.4, c=1.0)
+        bounds = dict(a=[0, 100], b=[-1, 0], c=[0, 100000])
+        x_data, y_data = self.generate_noisy_data(exponential, true_params)
         with pytest.raises(ValueError):
-            fit_data(x_data, y_data, exponential_decay, true_params, bounds)
+            fit_data(x_data, y_data, exponential, true_params, bounds)
 
 
 def print_expected_from_tuple(values: tuple | list) -> None:  # pragma: no cover
@@ -331,13 +318,13 @@ class TestParameterGuessFunctions:
 
         # Use positive x data for exponential decay
         x = np.linspace(0, 5, 100)
-        true_params = (5.0, 0.5, 1.0)  # a, b, c
-        y_true = exponential_decay(x, *true_params)
+        true_params = (5.0, -0.5, 1.0)  # a, b, c
+        y_true = exponential(x, *true_params)
         y_noisy = self.add_noise(y_true)
 
         # Get parameter guesses
-        guessed_params = guess_exponential_decay(x, y_noisy)
-        expected = [5.288981263447335, 0.5944592864805658, 1.1361727071534533]
+        guessed_params = guess_exponential(x, y_noisy)
+        expected = [5.288981263447335, -0.5944592864805658, 1.1361727071534533]
         assert are_close(guessed_params, expected)
 
     def test_guess_logarithmic(self) -> None:

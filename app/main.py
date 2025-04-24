@@ -6,29 +6,23 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from data_files import FILETYPES, read_data_file
-from fitting import MODELS, get_model_parameters
-from plot import plot_signals, scatter_plot, ps, go
-from resources import LOGO_PATH, CSS_STYLE_PATH, ICON_PATH, DATA_PROCESSING_PATH, LOGO_TEXT_PATH
-from signaldata import Dimension, SignalData
-from utils import (
-    render_image,
-    matrix_to_string,
-    read_file,
-    number_to_str,
-    generate_html_table,
-    normalise_list,
-    tab_bar,
-    dedent,
-    make_unique,
-)
+from config.resources import LOGO_PATH, CSS_STYLE_PATH, ICON_PATH, DATA_PROCESSING_PATH, LOGO_TEXT_PATH, FILE_TYPE_DICT
+from data_files.data_files import FILETYPES, read_data_file
+from data_files.signal_data import Dimension, SignalData
+from data_processing.fitting import MODELS, get_model_parameters
+from interface.plot import plot_signals, scatter_plot, make_figure
+from interface.streamlit import tab_bar, display_data
+from utils.checks import are_identical
+from utils.file_io import read_file, render_image
+from utils.miscellaneous import normalise_list, make_unique
+from utils.session_state import refresh_session_state_widgets, set_session_state_value_function, set_default_widgets
+from utils.string import matrix_to_string, number_to_str, generate_html_table, dedent
 
 __version__ = "2.0.0"
 __name__ = "Raft"
 __date__ = "March 2025"
 __author__ = "Emmanuel V. Péan"
 __github__ = "https://github.com/Emmanuelpean/raft"
-
 
 # ------------------------------------------------------ CONSTANTS -----------------------------------------------------
 
@@ -57,11 +51,11 @@ st.html(f"<style>{css_content}</style>")
 
 # ---------------------------------------------------- SESSION STATE ---------------------------------------------------
 
-# Create a shortened name for the session state
+# Create a shortened filename for the session state
 sss = st.session_state
 
 # Dictionary storing the default values of session state values (including widgets and interaction status)
-settings_defaults = {
+widgets_defaults = {
     "bckg_interacted": False,
     "bckg_range_input1": "",
     "bckg_range_input2": "",
@@ -85,94 +79,34 @@ settings_defaults = {
     "derive_interacted": False,
     "derive_order": 0,
     "guess_values": None,
+    "reset_settings": True,
 }
 
-
-# Add the settings to the session state using their default value
-def set_default_settings(reset: bool = False) -> None:
-    """Store the settings in the session state using their default value
-    :param reset: if True, reset the stored value"""
-
-    for key in settings_defaults:
-        if key not in sss or reset:
-            sss[key] = settings_defaults[key]
-
-
-set_default_settings()
-
-
-def refresh_session_state_settings() -> None:
-    """Refresh the session state settings. To be called when new widgets are displayed"""
-
-    for key in settings_defaults:
-        sss[key] = sss[key]
-
-
-def set_session_state_value_function(
-    key: str,
-    value: any,
-) -> callable:
-    """Return a function that changes the value of a key in the session state
-    :param key: session state key
-    :param value: new value"""
-
-    def function() -> None:
-        """Set the session state key value"""
-
-        sss[key] = value
-
-    return function
-
+set_default_widgets(widgets_defaults)
 
 # Add data and the file_uploader key to the session state
 if "data" not in sss:
     sss.data = None
 if "file_uploader" not in sss:
     sss.file_uploader = "file_uploader_key0"
-if "reset_settings" not in sss:
-    sss.reset_settings = True
 
 
 def reset_data() -> None:
     """Reset the settings and remove the stored data"""
 
-    reset_interacted()
+    close_expanders()  # close all expanders
     sss.data = None  # remove the stored data
     if sss.reset_settings:
-        set_default_settings(True)  # reset the default settings
+        set_default_widgets(widgets_defaults, True)  # reset the default settings
+    refresh_session_state_widgets(widgets_defaults)
 
 
-def reset_interacted() -> None:
+def close_expanders() -> None:
     """Reset the interacted session state keys"""
 
-    for key in settings_defaults:
+    for key in widgets_defaults:
         if "interacted" in key:
             sss[key] = False
-
-
-def display_data(
-    fig: go.Figure,
-    dataset: list[SignalData],
-    key: int,
-) -> None:
-    """Display a figure and the associated data in different tabs
-    :param fig: figure object
-    :param dataset: data to display in the dataframe
-    :param key: figure key int"""
-
-    tabs = st.tabs(["Graph", "Data"])
-
-    # Show the figure
-    tabs[0].plotly_chart(fig, use_container_width=True, key=f"figure_{key}")
-
-    # Get the data amd columns
-    x_data = dataset[0].x.data
-    ys_data = [d.y.data for d in dataset]
-    df_columns = make_unique([dataset[0].x.get_label_html()] + [d.get_name(True) for d in dataset])
-
-    # Dataframe
-    dataframe = pd.DataFrame({name: array for name, array in zip(df_columns, [x_data] + ys_data)})
-    tabs[1].dataframe(dataframe.style.format("{:5g}"), use_container_width=True, hide_index=True)
 
 
 # ---------------------------------------------------- FILE UPLOADER ---------------------------------------------------
@@ -205,6 +139,7 @@ else:
         string = "file_uploader_key"
         i_old = int(sss.file_uploader.replace(string, ""))
         sss.file_uploader = string + str(i_old + 1)
+        reset_data()
 
     # If files have been uploaded, show the button to remove them
     if file:
@@ -230,8 +165,6 @@ detect_placeholder = st.sidebar.empty()
 
 # -------------------------------------------------------- LOGO --------------------------------------------------------
 
-refresh_session_state_settings()  # refresh the session state
-
 # If no file is provided or no signal is stored
 if not file:  # covers None and empty list
     st.html(render_image(LOGO_PATH, 200))  # main logo
@@ -252,9 +185,18 @@ else:
         print("Reading data files")
         signals, filetype = read_data_file(file, filetype_select)
 
-        # If signals have been loaded, normalise them
+        # If signals have been loaded...
         if signals:
+
+            # Normalise them
             signals = normalise_list(signals)
+
+            # Check data consistency
+            if isinstance(signals, list):
+                for signal in signals[1:]:
+                    if not are_identical(signals[0].x.data, signal.x.data):
+                        signals, filetype = [], None
+                        break
 
         # Store them in the session state
         sss.data = [signals, filetype]
@@ -263,17 +205,17 @@ else:
     else:
         signals, filetype = sss.data
 
-    if filetype_select == FILETYPES[0]:
+    if filetype_select == FILETYPES[0] and filetype:
         detect_placeholder.markdown(f"Detected: {filetype}")
 
     # If the signal could not be loaded, display a warning message
     if filetype is None:
         st.markdown("###")  # some space on top for the st.logo
         text = "Unable to read the file"
-        if tab == FILE_UPLOADER_MODES[0]:
-            st.warning(text + ".")
-        else:
+        if isinstance(file, list):
             st.warning(text + "s.")
+        else:
+            st.warning(text + ".")
 
     # Show the options for selecting a specific signal
     else:
@@ -285,7 +227,7 @@ else:
             selection = st.sidebar.selectbox(
                 label="Data Type",
                 options=["All"] + list(signals.keys()),
-                on_change=reset_interacted,
+                on_change=close_expanders,
                 key="type_select",
             )
             if selection in signals:
@@ -293,12 +235,12 @@ else:
 
         # Select the signal in a list if multiple signals
         if isinstance(signals, list) and len(signals) > 1:
-            names = [signal.get_name(False) for signal in signals]
+            names = [signal.get_name(len(signals) > 1) for signal in signals]
             signal_dict = dict(zip(names, signals))
             col_selection = st.sidebar.selectbox(
                 label="Data Selection",
                 options=["All"] + sorted(signal_dict.keys()),
-                on_change=reset_interacted,
+                on_change=close_expanders,
                 key="data_select",
             )
             if col_selection in signal_dict:
@@ -307,7 +249,7 @@ else:
         # ----------------------------------------------- SIGNAL SORTING -----------------------------------------------
 
         # Default list of z dimensions
-        z_dims = [Dimension(i + 1) for i in range(len(signals))]
+        z_dims = [Dimension(i + 1, "Z-axis") for i in range(len(signals))]
 
         if isinstance(signals, list) and len(signals) > 1:
 
@@ -315,25 +257,31 @@ else:
             z_keys = list(set([key for signal in signals for key in signal.z_dict]))
 
             # Select the key used to sort the data
-            help_str = dedent(
-                """Select the quantity by which to sort the data files. For example:
-                * Filename – sorts the files alphabetically by their filenames.
-                * Timestamp – sorts the files according to the timestamps extracted from their contents.
-                * Emission Wavelength - sort the files according to the emission wavelength extracted from their contents
-                * ..."""
-            )
+            help_str = """Select the quantity by which to sort the data files. For example:
+            * Filename – sorts the files alphabetically by their filenames.
+            * Timestamp – sorts the files according to the timestamps extracted from their contents.
+            * Emission Wavelength - sort the files according to the emission wavelength extracted from their contents
+            * ..."""
             sorting_key = st.sidebar.selectbox(
                 label="Data Sorting",
                 options=["Filename"] + z_keys,
-                help=help_str,
+                help=dedent(help_str),
             )
 
             if sorting_key == "Filename":
-                signals = sorted(signals, key=lambda signal: signal.name)  # TODO decide which name to use
+                signals = sorted(signals, key=lambda s: s.get_name(len(signals) > 1))
             else:
                 try:
-                    signals = sorted(signals, key=lambda v: v.z_dict[sorting_key].data)
+                    # Z dimensions list
                     z_dims = [signal.z_dict[sorting_key] for signal in signals]
+
+                    # Try to convert them to float if str
+                    if isinstance(z_dims[0].data, str):
+                        for z in z_dims:
+                            z.data = float(z.data)
+
+                    # Sort the signals
+                    signals, z_dims = [list(f) for f in zip(*sorted(zip(signals, z_dims), key=lambda v: v[1].data))]
                 except Exception as e:
                     print("An error occurred while trying to sort the signals")
                     print(e)
@@ -435,18 +383,16 @@ else:
 
             with st.sidebar.expander(expander_label, sss["interp_interacted"]):
 
-                help_str = dedent(
-                    """Interpolate the data using different methods:
-                    * __Fixed Step__ interpolation – Data are interpolated using a specified step size.
-                    * __Point Count__ interpolation – Data are interpolated to fit a specified number of points."""
-                )
+                help_str = """Interpolate the data using different methods:
+                * __Fixed Step__ interpolation – Data are interpolated using a specified step size.
+                * __Point Count__ interpolation – Data are interpolated to fit a specified number of points."""
 
                 st.segmented_control(
                     label="Interpolation Type",
                     options=INTERP_OPTIONS,
                     key="interp_type",
                     on_change=set_session_state_value_function("interp_interacted", True),
-                    help=help_str,
+                    help=dedent(help_str),
                 )
 
                 if sss["interp_type"] != "None":
@@ -547,22 +493,19 @@ else:
 
             with st.sidebar.expander(expander_label, sss["norm_interacted"]):
 
-                help_str = dedent(
-                    """Data can be normalised using different methods:
-                    * __Max. normalisation__ – the y-values are normalised with respect to their maximum value.
-                    * __Feature scaling__ – the y-values are normalised based on specified minimum and maximum values."""
-                )
+                help_str = """Data can be normalised using different methods:
+                * __Max. normalisation__ – the y-values are normalised with respect to their maximum value.
+                * __Feature scaling__ – the y-values are normalised based on specified minimum and maximum values."""
 
                 st.segmented_control(
                     label="Normalisation Type",
                     options=NORM_OPTIONS,
                     key="norm_type",
                     on_change=set_session_state_value_function("norm_interacted", True),
-                    help=help_str,
+                    help=dedent(help_str),
                 )
 
                 if sss["norm_type"] == "Feature Scaling":
-
                     columns = st.columns(2)
 
                     columns[0].text_input(
@@ -588,38 +531,30 @@ else:
             fit_signals, fit_params, param_errors, r_squared = [], [], [], []
             equation, parameters = "", []
             rel_error = []
-            try:
-                if sss.fitting_model in MODELS:
-                    # Get the fit function, equation and guess function, and the function parameters
-                    fit_function, equation, guess_function = MODELS[sss.fitting_model]
-                    parameters = get_model_parameters(fit_function)
 
-                    # Reset the guess value default dict is set to None
-                    if sss.guess_values is None:
-                        try:
-                            index = int(len(signals) / 2)
-                            guess_values = guess_function(signals[index].x.data, signals[index].y.data)
-                        except:
-                            guess_values = np.ones(len(parameters))
-                        sss.guess_values = dict(zip(parameters, guess_values))
+            # Get the fit function, equation and guess function, and the function parameters
+            if sss.fitting_model in MODELS:
 
-                    fit_signals, fit_params, param_errors, r_squared = [], [], [], []
-                    for signal in signals:
-                        output = signal.fit(fit_function, sss.guess_values)
-                        fit_signals.append(output[0])
-                        fit_params.append(output[1])
-                        param_errors.append(output[2])
-                        r_squared.append(output[3])
+                fit_function, equation, guess_function = MODELS[sss.fitting_model]
+                parameters = get_model_parameters(fit_function)
+
+                # Reset the guess value default dict is set to None
+                if sss.guess_values is None:
+                    try:
+                        index = int(len(signals) / 2)
+                        guess_values = guess_function(signals[index].x.data, signals[index].y.data)
+                    except:
+                        guess_values = np.ones(len(parameters))
+                    sss.guess_values = dict(zip(parameters, guess_values))
+
+                try:
+                    fits = [signal.fit(fit_function, sss.guess_values) for signal in signals]
+                    fit_signals, fit_params, param_errors, r_squared = [list(e) for e in zip(*fits)]
                     rel_error = np.array(param_errors) / np.array(fit_params)
-
                     expander_label = f"__✔ {FITTING_LABEL} ({sss.fitting_model})__"
-            except Exception as e:
-                print("Fit failed")
-                print(e)
-                expander_label = FITTING_LABEL
-                fit_signals, fit_params, param_errors, r_squared = [], [], [], []
-                equation, parameters = "", []
-                rel_error = []
+                except Exception as e:
+                    print("Fit failed")
+                    print(e)
 
             with st.sidebar.expander(expander_label, sss["fitting_interacted"]):
 
@@ -711,6 +646,26 @@ else:
                     key="download_button",
                 )
 
+            else:
+
+                # Header
+                z_label = z_dims[0].get_label_raw()
+                header = [z_label] + parameters
+
+                # Data
+                z_values = [z_dim.data for z_dim in z_dims]
+                data = [z_values] + [list(f) for f in np.transpose(fit_params)]
+
+                # Generate the export data and download button
+                export_data = matrix_to_string(data, header)
+                st.sidebar.download_button(
+                    label="Download Fitting Parameters",
+                    data=export_data,
+                    file_name="fit_parameters.csv",
+                    use_container_width=True,
+                    key="fit_download_button",
+                )
+
             # ----------------------------------------------------------------------------------------------------------
             # --------------------------------------------- DATA EXTRACTION --------------------------------------------
             # ----------------------------------------------------------------------------------------------------------
@@ -786,10 +741,12 @@ else:
             # -------------------------------------------- FITTED PARAMETERS -------------------------------------------
 
             fit_extract_signals = {}
+            fit_errors = {}
             if fit_params:
                 for i, key in enumerate(parameters):
                     y = Dimension(np.array([fit_param[i] for fit_param in fit_params]), quantity=key)
                     fit_extract_signals[key] = SignalData(z_dims, y)
+                    fit_errors[key] = np.array([param_error[i] for param_error in param_errors])
 
             # ----------------------------------------------------------------------------------------------------------
             # ------------------------------------------------- DISPLAY ------------------------------------------------
@@ -806,7 +763,6 @@ else:
 
                 # Fit results
                 if fit_params:
-
                     info_spot.markdown("#### Fitting Results")
                     fit_params = fit_params[0]
                     r_squared = r_squared[0]
@@ -829,7 +785,7 @@ else:
                         index=["Value", "Relative Error (%)"],
                     )
                     df = df.transpose()
-                    df.columns.name = "Parameter"
+                    df.columns.filename = "Parameter"
                     info_spot.html("Equation: " + equation)
                     info_spot.html(generate_html_table(df))
 
@@ -860,7 +816,7 @@ else:
                 nb_figures = 1 + n_extracted
             else:
                 nb_figures = 1
-            figures = [ps.make_subplots(1, 1, specs=[[{"secondary_y": True}]]) for i in range(nb_figures)]
+            figures = [make_figure() for i in range(nb_figures)]
 
             # ------------------------------------------------ MAIN DATA -----------------------------------------------
 
@@ -871,6 +827,7 @@ else:
                     figure=figures[0],
                     legendgroup="Raw Data",
                     legendgrouptitle_text="Raw Data",
+                    filename=len(signals) > 1,
                 )
 
             # Plot the smoothed signals if they exist
@@ -880,6 +837,7 @@ else:
                     figure=figures[0],
                     legendgroup="Smoothed Data",
                     legendgrouptitle_text="Smoothed Data",
+                    filename=len(signals) > 1,
                 )
 
             # Plot the fit signals if they exist
@@ -889,6 +847,8 @@ else:
                     figure=figures[0],
                     legendgroup="Fitted Data",
                     legendgrouptitle_text="Fitted Data",
+                    filename=len(signals) > 1,
+                    line=dict(dash="dot"),
                 )
 
             # Display the maximum point(s)
@@ -942,7 +902,6 @@ else:
                     xmax_signal.plot(figure=figures[figure_index], secondary_y=True)
                     figure_index += 1
                     datasets.append([xmax_signal, ymax_signal])
-                    print(datasets)
 
                 # Min point
                 if xmin_signal and ymin_signal:
@@ -959,7 +918,14 @@ else:
 
                 # Fit parameters
                 for key in fit_extract_signals:
-                    fit_extract_signals[key].plot(figure=figures[figure_index])
+                    fit_extract_signals[key].plot(
+                        figure=figures[figure_index],
+                        error_y=dict(
+                            type="data",
+                            array=fit_errors[key],
+                            visible=True,
+                        ),
+                    )
                     figure_index += 1
                     datasets.append([fit_extract_signals[key]])
 
@@ -967,14 +933,13 @@ else:
 
             if len(figures) == 1:
                 with plot_spot:
-                    display_data(figures[0], datasets[0], 1)
+                    display_data(figures[0], datasets[0], 1, len(signals) > 1)
             else:
                 columns = plot_spot.columns(2)
                 for i, figure in enumerate(figures):
                     figure.update_layout(height=400)
-                    print(datasets)
                     with columns[i % 2]:
-                        display_data(figure, datasets[i], i)
+                        display_data(figure, datasets[i], i, len(signals) > 1)
 
         # Signal dictionary case
         else:
@@ -982,22 +947,25 @@ else:
             plot_spot = st.container()
             figures = []
             for i, key in enumerate(signals):
-                figure = ps.make_subplots(1, 1, specs=[[{"secondary_y": True}]])
+                figure = make_figure()
                 figure.update_layout(title=key)
-                plot_signals(signals[key], figure)
+                plot_signals(
+                    signals=signals[key],
+                    figure=figure,
+                    filename=len(file) > 1,
+                )
                 figures.append(figure)
 
             if len(figures) == 1:
                 with plot_spot:
-                    display_data(figures[0], list(signals.values())[0], 1)
+                    display_data(figures[0], list(signals.values())[0], 1, len(signals) > 1)
             else:
                 columns = plot_spot.columns(2)
                 for i, figure in enumerate(figures):
                     figure.update_layout(height=400)
                     with columns[i % 2]:
                         key = list(signals.keys())[i]
-                        display_data(figures[i], signals[key], i)
-
+                        display_data(figures[i], signals[key], i, len(signals) > 1)
 
 # ----------------------------------------------------- INFORMATION ----------------------------------------------------
 
@@ -1008,7 +976,6 @@ with st.expander("About", expanded=not file):
     App created and maintained by [{__author__}](https://emmanuelpean.streamlit.app/).  
     [Version {__version__}]({__github__}) (last updated: {__date__})."""
     st.info(text)
-
 
 with st.expander("Data Processing"):
     text = """*Raft* also offers basic data processing capabilities, allowing you to quickly and easily process and 
@@ -1066,6 +1033,25 @@ with st.expander("Data Processing"):
     Similar to the max/min points, the precision of the FWHM measurement can be further refined using linear __interpolation__. """
     st.markdown(dedent(text))
     st.html(render_image(DATA_PROCESSING_PATH, 1000))
+
+with st.expander("Data File Formats"):
+    print(FILE_TYPE_DICT.values())
+    softwares = set([filetype for filetype in FILE_TYPE_DICT.values() if "(" in filetype])
+    softwares = set([filetype[: filetype.index("(") - 1] for filetype in softwares])
+    for software in sorted(softwares):
+        st.markdown(f"#### {software}")
+        filetypes = [filetype for filetype in FILE_TYPE_DICT.values() if software in filetype]
+        paths = [path for path in FILE_TYPE_DICT if FILE_TYPE_DICT[path] in filetypes]
+        paths, filetypes = zip(*sorted(zip(paths, filetypes), key=lambda v: os.path.basename(v[0])))
+        filetypes = make_unique(filetypes)
+
+        for path, filetype in zip(paths, filetypes):
+            with open(path, "rb") as ofile:
+                st.download_button(
+                    label=f"Download {filetype}",
+                    data=ofile,
+                    file_name=os.path.basename(path),
+                )
 
 # ------------------------------------------------------ CHANGELOG -----------------------------------------------------
 

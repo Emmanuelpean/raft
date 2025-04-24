@@ -2,7 +2,7 @@
 
 from os import path
 
-RESOURCES_PATH = path.join(path.dirname(path.dirname(__file__)), "resources")
+RESOURCES_PATH = path.join(path.dirname(path.dirname(path.dirname(__file__))), "resources")
 CSS_STYLE_PATH = path.join(RESOURCES_PATH, "style.css")
 
 # ------------------------------------------------------- IMAGES -------------------------------------------------------

@@ -14,7 +14,7 @@ from unittest.mock import MagicMock, patch
 from streamlit.testing.v1 import AppTest
 
 import main
-import resources
+from config import resources
 
 
 class TestApp:

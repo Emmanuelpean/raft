@@ -12,9 +12,9 @@ import tempfile
 
 import pytest
 
-from app import resources
+from config import resources
 from app.data_files import *
-from app.utils import are_close
+from utils.checks import are_close
 
 
 @pytest.mark.parametrize(
@@ -97,7 +97,7 @@ class TestReadDatafile:
         """Test handling filenames with multiple dots"""
 
         mock_file = BytesIO(b"Some content")
-        mock_file.name = "file.name.with.dots.txt"
+        mock_file.name = "file.filename.with.dots.txt"
 
         content, name = read_datafile(mock_file)
         assert name == "file"  # Should take only the part before the first dot
@@ -135,8 +135,8 @@ def print_signal_info(signal: SignalData) -> None:  # pragma: no cover
         "y_quantity": signal.y.quantity,
         "x_unit": signal.x.unit,
         "y_unit": signal.y.unit,
-        "name": signal.name,
-        "shortname": signal.shortname,
+        "filename": signal.filename,
+        "signalname": signal.signalname[0],
         "z_dict": signal.z_dict,
     }
 
@@ -184,8 +184,8 @@ class TestDataFiles:
         assert signal.y.quantity == expected["y_quantity"]
         assert signal.x.unit == expected["x_unit"]
         assert signal.y.unit == expected["y_unit"]
-        assert signal.name == expected["name"]
-        assert signal.shortname == expected["shortname"]
+        assert signal.filename == expected["filename"]
+        assert signal.signalname[0] == expected["signalname"]
         for key in expected["z_dict"]:
             assert are_close(signal.z_dict[key].data, expected["z_dict"][key].data)
             assert are_close(signal.z_dict[key].quantity, expected["z_dict"][key].quantity)
@@ -200,8 +200,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "um",
             "y_unit": "a.u.",
-            "name": "BeamPro",
-            "shortname": "X",
+            "filename": "BeamPro",
+            "signalname": "X",
             "z_dict": {},
         }
         self.assert_signal(data["x"], expected)
@@ -212,8 +212,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "um",
             "y_unit": "a.u.",
-            "name": "BeamPro",
-            "shortname": "Y",
+            "filename": "BeamPro",
+            "signalname": "Y",
             "z_dict": {},
         }
         self.assert_signal(data["y"], expected)
@@ -228,8 +228,8 @@ class TestDataFiles:
             "y_quantity": "vertical distance",
             "x_unit": "um",
             "y_unit": "um",
-            "name": "Dektak",
-            "shortname": "",
+            "filename": "Dektak",
+            "signalname": "",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2017, 5, 23, 11, 35, 19), "time", ""),
             },
@@ -249,8 +249,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "deg",
             "y_unit": "counts",
-            "name": "diffrac",
-            "shortname": "RawData0",
+            "filename": "diffrac",
+            "signalname": "RawData0",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2017, 8, 4, 16, 43, 2, 345953), "time", ""),
                 "IntegrationTime": Dimension(0.15, "time", "s"),
@@ -275,8 +275,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "deg",
             "y_unit": "counts",
-            "name": "diffrac",
-            "shortname": "RawData0",
+            "filename": "diffrac",
+            "signalname": "RawData0",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2017, 8, 4, 16, 43, 2, 345953), "time", ""),
                 "IntegrationTime": Dimension(0.15, "time", "s"),
@@ -299,8 +299,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "deg",
             "y_unit": "counts",
-            "name": "Diffrac_multiple",
-            "shortname": "RawData79",
+            "filename": "Diffrac_multiple",
+            "signalname": "RawData79",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2017, 10, 11, 9, 29, 34, 753172), "time", ""),
                 "IntegrationTime": Dimension(0.5, "time", "s"),
@@ -324,8 +324,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "deg",
             "y_unit": "counts",
-            "name": "Diffrac_PSD",
-            "shortname": "RawData0",
+            "filename": "Diffrac_PSD",
+            "signalname": "RawData0",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2018, 3, 5, 12, 11, 11, 816786), "time", ""),
                 "IntegrationTime": Dimension(5.0, "time", "s"),
@@ -351,8 +351,8 @@ class TestDataFiles:
             "y_quantity": "temperature",
             "x_unit": "s",
             "y_unit": "deg C",
-            "name": "Easylog",
-            "shortname": "Temperature",
+            "filename": "Easylog",
+            "signalname": "Temperature",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2017, 2, 19, 11, 29, 22), "time", ""),
             },
@@ -365,8 +365,8 @@ class TestDataFiles:
             "y_quantity": "humidity",
             "x_unit": "s",
             "y_unit": "%",
-            "name": "Easylog",
-            "shortname": "Humidity",
+            "filename": "Easylog",
+            "signalname": "Humidity",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2017, 2, 19, 11, 29, 22), "time", ""),
             },
@@ -383,8 +383,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "ns",
             "y_unit": "counts",
-            "name": "F980_IRF",
-            "shortname": np.str_("T5"),
+            "filename": "F980_IRF",
+            "signalname": np.str_("T5"),
             "z_dict": {
                 "Labels": Dimension("T5", "", ""),
                 "Type": Dimension("Instrument Response Time Scan", "", ""),
@@ -407,8 +407,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "nm",
             "y_unit": "counts",
-            "name": "F980_EmScan",
-            "shortname": np.str_("EmScan9"),
+            "filename": "F980_EmScan",
+            "signalname": np.str_("EmScan9"),
             "z_dict": {
                 "Labels": Dimension("EmScan9", "", ""),
                 "Type": Dimension("Emission Scan", "", ""),
@@ -443,8 +443,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "ns",
             "y_unit": "counts",
-            "name": "F980_IRF_multiple",
-            "shortname": np.str_("Decay1"),
+            "filename": "F980_IRF_multiple",
+            "signalname": np.str_("Decay1"),
             "z_dict": {
                 "Labels": Dimension("Decay1", "", ""),
                 "Type": Dimension("Time Scan", "", ""),
@@ -467,8 +467,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "ns",
             "y_unit": "counts",
-            "name": "F980_IRF_comma",
-            "shortname": np.str_("Z10"),
+            "filename": "F980_IRF_comma",
+            "signalname": np.str_("Z10"),
             "z_dict": {
                 "Labels": Dimension("Z10", "", ""),
                 "Type": Dimension("Time Scan", "", ""),
@@ -491,8 +491,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "nm",
             "y_unit": "counts",
-            "name": "Fluoracle_emission",
-            "shortname": np.str_("noSample_emission"),
+            "filename": "Fluoracle_emission",
+            "signalname": np.str_("noSample_emission"),
             "z_dict": {
                 "Labels": Dimension("noSample_emission", "", ""),
                 "Type": Dimension("Emission Scan", "", ""),
@@ -527,8 +527,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "nm",
             "y_unit": "counts",
-            "name": "Fluoracle_emission_multiple",
-            "shortname": np.str_("Em 1"),
+            "filename": "Fluoracle_emission_multiple",
+            "signalname": np.str_("Em 1"),
             "z_dict": {
                 "Labels": Dimension("Em 1", "", ""),
                 "Type": Dimension("Emission Scan", "", ""),
@@ -567,8 +567,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": np.str_("nm"),
             "y_unit": np.str_("CPS / MicroAmps"),
-            "name": "FluorEssence",
-            "shortname": "(S1c / R1c)",
+            "filename": "FluorEssence",
+            "signalname": "(S1c / R1c)",
             "z_dict": {},
         }
         self.assert_signal(data["S1c / R1c"], expected)
@@ -581,8 +581,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": np.str_("nm"),
             "y_unit": np.str_("CPS / MicroAmps"),
-            "name": "FluorEssence_allcol",
-            "shortname": "(S1c / R1c)",
+            "filename": "FluorEssence_allcol",
+            "signalname": "(S1c / R1c)",
             "z_dict": {},
         }
         self.assert_signal(data["S1c / R1c"], expected)
@@ -594,8 +594,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": np.str_("nm"),
             "y_unit": np.str_("CPS"),
-            "name": "FluorEssence_allcol",
-            "shortname": "(S1)",
+            "filename": "FluorEssence_allcol",
+            "signalname": "(S1)",
             "z_dict": {},
         }
         self.assert_signal(data["S1"], expected)
@@ -608,8 +608,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": np.str_("nm"),
             "y_unit": np.str_("CPS / MicroAmps"),
-            "name": "FluorEssence_multiple",
-            "shortname": "05/12/2017 17:24:47",
+            "filename": "FluorEssence_multiple",
+            "signalname": "05/12/2017 17:24:47",
             "z_dict": {
                 "Short Name": Dimension(np.str_("B"), "", ""),
                 "Long Name": Dimension(np.str_("05/12/2017 17:24:47"), "", ""),
@@ -632,8 +632,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "nm",
             "y_unit": "a.u.",
-            "name": "FLWinlab",
-            "shortname": "",
+            "filename": "FLWinlab",
+            "signalname": "",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2015, 3, 18, 16, 1, 4), "time", ""),
             },
@@ -650,8 +650,8 @@ class TestDataFiles:
             "y_quantity": "absorbance",
             "x_unit": "nm",
             "y_unit": "",
-            "name": "LambdaSPX_absorbance",
-            "shortname": "",
+            "filename": "LambdaSPX_absorbance",
+            "signalname": "",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2017, 2, 14, 11, 25, 23), "time", ""),
                 "scan_speed": Dimension(480.0, "speed", "nm/min"),
@@ -667,8 +667,8 @@ class TestDataFiles:
             "y_quantity": "reflectance",
             "x_unit": "nm",
             "y_unit": "%",
-            "name": "LambdaSPX_reflectance",
-            "shortname": "",
+            "filename": "LambdaSPX_reflectance",
+            "signalname": "",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2017, 2, 14, 11, 33, 45), "time", ""),
                 "scan_speed": Dimension(480.0, "speed", "nm/min"),
@@ -684,8 +684,8 @@ class TestDataFiles:
             "y_quantity": "transmittance",
             "x_unit": "nm",
             "y_unit": "%",
-            "name": "LambdaSPX_transmittance",
-            "shortname": "",
+            "filename": "LambdaSPX_transmittance",
+            "signalname": "",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2017, 2, 14, 11, 27, 32), "time", ""),
                 "scan_speed": Dimension(480.0, "speed", "nm/min"),
@@ -701,8 +701,8 @@ class TestDataFiles:
             "y_quantity": "absorbance",
             "x_unit": "nm",
             "y_unit": "",
-            "name": "LambdaSPX_absorbance_other-date-format",
-            "shortname": "",
+            "filename": "LambdaSPX_absorbance_other-date-format",
+            "signalname": "",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2017, 6, 7, 11, 3), "time", ""),
                 "scan_speed": Dimension(960.0, "speed", "nm/min"),
@@ -720,8 +720,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "s",
             "y_unit": "counts",
-            "name": "prodata-pll_12wl_1prop",
-            "shortname": "Emission wavelength: 820 nm",
+            "filename": "prodata-pll_12wl_1prop",
+            "signalname": "Emission wavelength: 820 nm",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2017, 4, 3, 15, 11, 20), "time", ""),
                 "z": Dimension(815.0, "emission wavelength", "nm"),
@@ -737,8 +737,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "s",
             "y_unit": "V",
-            "name": "prodata-tas_3prop",
-            "shortname": "Repeats: 1",
+            "filename": "prodata-tas_3prop",
+            "signalname": "Repeats: 1",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2017, 7, 27, 17, 39, 4, 0), "time", ""),
                 "z": Dimension(np.float64(3.0), "repeats", ""),
@@ -755,8 +755,8 @@ class TestDataFiles:
             "y_quantity": "current density",
             "x_unit": "V",
             "y_unit": "mA/cm^2",
-            "name": "SBTPS_SEQ1",
-            "shortname": "Forward (Sweep 000 (mA/cm≤))",
+            "filename": "SBTPS_SEQ1",
+            "signalname": "Forward (Sweep 000 (mA/cm≤))",
             "z_dict": {},
         }
         self.assert_signal(data["Forward"][0], expected)
@@ -767,8 +767,8 @@ class TestDataFiles:
             "y_quantity": "current density",
             "x_unit": "V",
             "y_unit": "mA/cm^2",
-            "name": "SBTPS_SEQ1",
-            "shortname": "Backward (Sweep 001 (mA/cm≤))",
+            "filename": "SBTPS_SEQ1",
+            "signalname": "Backward (Sweep 001 (mA/cm≤))",
             "z_dict": {},
         }
         self.assert_signal(data["Reverse"][-1], expected)
@@ -781,8 +781,8 @@ class TestDataFiles:
             "y_quantity": "current density",
             "x_unit": "V",
             "y_unit": "mA/cm^2",
-            "name": "SBTPS_SEQ2",
-            "shortname": "Forward (Sweep 000 (mA/cm≤))",
+            "filename": "SBTPS_SEQ2",
+            "signalname": "Forward (Sweep 000 (mA/cm≤))",
             "z_dict": {},
         }
         self.assert_signal(data["Forward"][0], expected)
@@ -793,8 +793,8 @@ class TestDataFiles:
             "y_quantity": "current density",
             "x_unit": "V",
             "y_unit": "mA/cm^2",
-            "name": "SBTPS_SEQ2",
-            "shortname": "Backward (Sweep 002 (mA/cm≤))",
+            "filename": "SBTPS_SEQ2",
+            "signalname": "Backward (Sweep 002 (mA/cm≤))",
             "z_dict": {},
         }
         self.assert_signal(data["Reverse"][0], expected)
@@ -807,8 +807,8 @@ class TestDataFiles:
             "y_quantity": "current density",
             "x_unit": "V",
             "y_unit": "mA/cm^2",
-            "name": "SBTPS_SEQ3",
-            "shortname": "Forward (Sweep 000 (mA/cm))",
+            "filename": "SBTPS_SEQ3",
+            "signalname": "Forward (Sweep 000 (mA/cm))",
             "z_dict": {},
         }
         self.assert_signal(data["Forward"][0], expected)
@@ -819,8 +819,8 @@ class TestDataFiles:
             "y_quantity": "current density",
             "x_unit": "V",
             "y_unit": "mA/cm^2",
-            "name": "SBTPS_SEQ3",
-            "shortname": "Backward (Sweep 002 (mA/cm))",
+            "filename": "SBTPS_SEQ3",
+            "signalname": "Backward (Sweep 002 (mA/cm))",
             "z_dict": {},
         }
         self.assert_signal(data["Reverse"][0], expected)
@@ -834,8 +834,8 @@ class TestDataFiles:
             "y_quantity": "current density",
             "x_unit": "V",
             "y_unit": "mA/cm^2",
-            "name": "SBTPS_IV1",
-            "shortname": "Current density",
+            "filename": "SBTPS_IV1",
+            "signalname": "Current density",
             "z_dict": {},
         }
         self.assert_signal(data["Current density"], expected)
@@ -846,8 +846,8 @@ class TestDataFiles:
             "y_quantity": "time",
             "x_unit": "V",
             "y_unit": "s",
-            "name": "SBTPS_IV1",
-            "shortname": "Time",
+            "filename": "SBTPS_IV1",
+            "signalname": "Time",
             "z_dict": {},
         }
         self.assert_signal(data["Time"], expected)
@@ -860,8 +860,8 @@ class TestDataFiles:
             "y_quantity": "current density",
             "x_unit": "V",
             "y_unit": "mA/cm^2",
-            "name": "SBTPS_IV2",
-            "shortname": "Current density",
+            "filename": "SBTPS_IV2",
+            "signalname": "Current density",
             "z_dict": {},
         }
         self.assert_signal(data["Current density"], expected)
@@ -874,8 +874,8 @@ class TestDataFiles:
             "y_quantity": "current density",
             "x_unit": "V",
             "y_unit": "mA/cm^2",
-            "name": "SBTPS_IV3",
-            "shortname": "Current density",
+            "filename": "SBTPS_IV3",
+            "signalname": "Current density",
             "z_dict": {},
         }
         self.assert_signal(data["Current density"], expected)
@@ -889,8 +889,8 @@ class TestDataFiles:
             "y_quantity": "Y-quantity",
             "x_unit": "X-unit",
             "y_unit": "Y-unit",
-            "name": "Simple_tab",
-            "shortname": "",
+            "filename": "Simple_tab",
+            "signalname": "",
             "z_dict": {},
         }
         self.assert_signal(data[0], expected)
@@ -903,8 +903,8 @@ class TestDataFiles:
             "y_quantity": "Y-quantity",
             "x_unit": "X-unit",
             "y_unit": "Y-unit",
-            "name": "Simple_semicolon",
-            "shortname": "",
+            "filename": "Simple_semicolon",
+            "signalname": "",
             "z_dict": {},
         }
         self.assert_signal(data[0], expected)
@@ -918,8 +918,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "nm",
             "y_unit": "counts",
-            "name": "SpectraSuite_Header",
-            "shortname": "",
+            "filename": "SpectraSuite_Header",
+            "signalname": "",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2016, 11, 16, 18, 7, 25), "time", ""),
                 "IntegrationTime": Dimension(0.1, "time", "s"),
@@ -935,8 +935,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "nm",
             "y_unit": "counts",
-            "name": "SpectraSuite_Header_BST",
-            "shortname": "",
+            "filename": "SpectraSuite_Header_BST",
+            "signalname": "",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2016, 10, 21, 10, 57, 53), "time", ""),
                 "IntegrationTime": Dimension(2.5, "time", "s"),
@@ -954,8 +954,8 @@ class TestDataFiles:
             "y_quantity": "transmittance",
             "x_unit": "cm^-1",
             "y_unit": "%",
-            "name": "spectrum",
-            "shortname": "",
+            "filename": "spectrum",
+            "signalname": "",
             "z_dict": {},
         }
         self.assert_signal(data, expected)
@@ -968,8 +968,8 @@ class TestDataFiles:
             "y_quantity": "Y-quantity",
             "x_unit": "cm^-1",
             "y_unit": "Y-unit",
-            "name": "spectrum_multiple",
-            "shortname": "0",
+            "filename": "spectrum_multiple",
+            "signalname": "0",
             "z_dict": {},
         }
         self.assert_signal(data[0], expected)
@@ -982,8 +982,8 @@ class TestDataFiles:
             "y_quantity": "absorbance",
             "x_unit": "nm",
             "y_unit": "",
-            "name": "UVWinlab",
-            "shortname": "",
+            "filename": "UVWinlab",
+            "signalname": "",
             "z_dict": {},
         }
         self.assert_signal(data, expected)
@@ -997,8 +997,8 @@ class TestDataFiles:
             "y_quantity": "reflectance",
             "x_unit": "nm",
             "y_unit": "%",
-            "name": "UVWinlab_ASCII",
-            "shortname": "",
+            "filename": "UVWinlab_ASCII",
+            "signalname": "",
             "z_dict": {
                 "TimeStamp": Dimension(dt.datetime(2027, 5, 22, 11, 57, 32), "time", ""),
             },
@@ -1014,8 +1014,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "deg",
             "y_unit": "a.u.",
-            "name": "Vesta",
-            "shortname": "",
+            "filename": "Vesta",
+            "signalname": "",
             "z_dict": {},
         }
         self.assert_signal(data, expected)
@@ -1032,8 +1032,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "cm^-1",
             "y_unit": "",
-            "name": "Single scan measurement 4",
-            "shortname": "",
+            "filename": "Single scan measurement 4",
+            "signalname": "",
             "z_dict": {},
         }
         self.assert_signal(data, expected)
@@ -1046,8 +1046,8 @@ class TestDataFiles:
             "y_quantity": "intensity",
             "x_unit": "cm^-1",
             "y_unit": "",
-            "name": "Single scan measurement 3",
-            "shortname": "",
+            "filename": "Single scan measurement 3",
+            "signalname": "",
             "z_dict": {},
         }
         self.assert_signal(data, expected)
@@ -1061,8 +1061,8 @@ class TestDataFiles:
             "y_quantity": "Resistivity(Ohm m)",
             "x_unit": "",
             "y_unit": "",
-            "name": "Zem3",
-            "shortname": "",
+            "filename": "Zem3",
+            "signalname": "",
             "z_dict": {},
         }
         self.assert_signal(data["Resistivity(Ohm m)"], expected)
@@ -1075,8 +1075,8 @@ class TestDataFiles:
             "y_quantity": "Delta Temp(C)",
             "x_unit": "",
             "y_unit": "",
-            "name": "Zem3",
-            "shortname": "",
+            "filename": "Zem3",
+            "signalname": "",
             "z_dict": {},
         }
         self.assert_signal(data["Delta Temp(C)"], expected)

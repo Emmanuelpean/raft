@@ -1,18 +1,20 @@
-"""Test module for the functions in the `signal.py` module.
+"""Test module for the functions in the `data_files/signal.py` module.
 
-This module contains unit tests for the functions implemented in the `signal.py` module. The purpose of these tests is to
-ensure the correct functionality of each function in different scenarios and to validate that the expected outputs are
-returned.
+This module contains unit tests for the functions implemented in the `data_files/signal.py` module. The purpose of
+these tests is to ensure the correct functionality of each function in different scenarios and to validate that the
+expected outputs are returned.
 
 Tests should cover various edge cases, valid inputs, and any other conditions that are necessary to confirm the
 robustness of the functions."""
 
+import numpy as np
+import plotly.graph_objects as go
 import plotly.subplots as ps
 import pytest
 
-from app.signaldata import *
-from app.utils import are_close, are_identical
-from app.fitting import gaussian
+from data_files.signal_data import Dimension, SignalData, get_label
+from data_processing.fitting import gaussian
+from utils.checks import are_identical, are_close
 
 
 class TestGetLabel:
@@ -262,29 +264,29 @@ class TestSignalData:
         signal = SignalData(x_dim, y_dim, "Test Signal", "TS", {"param1": "value1"})
         assert signal.x == x_dim
         assert signal.y == y_dim
-        assert signal.name == "Test Signal"
-        assert signal.shortname == "TS"
+        assert signal.filename == "Test Signal"
+        assert signal.signalname == "TS"
         assert signal.z_dict == {"param1": "value1"}
 
         # Test with default parameters
         signal = SignalData(x_dim, y_dim)
         assert signal.x == x_dim
         assert signal.y == y_dim
-        assert signal.name == ""
-        assert signal.shortname == ""
+        assert signal.filename == ""
+        assert signal.signalname == ""
         assert signal.z_dict == {}
 
     def test_get_name(self, sample_signal) -> None:
         """Test get_name method"""
 
-        # With condition=True
+        # With filename=True
         assert sample_signal.get_name(True) == "Test Signal: TS"
 
-        # With condition=False
+        # With filename=False
         assert sample_signal.get_name(False) == "TS"
 
-        # When shortname is empty
-        sample_signal.shortname = ""
+        # When signalname is empty
+        sample_signal.signalname = ""
         assert sample_signal.get_name(True) == "Test Signal"
         assert sample_signal.get_name(False) == "Test Signal"
 
@@ -302,7 +304,7 @@ class TestSignalData:
 
         # Test with position
         figure = ps.make_subplots(1, 2)
-        sample_signal.plot(figure, [1, 2], True)
+        sample_signal.plot(figure, True)
         trace = figure.data[0]
         # noinspection PyUnresolvedReferences
         assert trace.name == sample_signal.get_name(True)
@@ -338,8 +340,8 @@ class TestSignalData:
         assert isinstance(reduced, SignalData)
         assert np.array_equal(reduced.x.data, sample_signal.x.data[index1:index2])
         assert np.array_equal(reduced.y.data, sample_signal.y.data[index1:index2])
-        assert reduced.name == sample_signal.name
-        assert reduced.shortname == sample_signal.shortname
+        assert reduced.filename == sample_signal.filename
+        assert reduced.signalname == sample_signal.signalname
         assert reduced.z_dict == sample_signal.z_dict
 
     def test_smooth(self, sample_signal) -> None:
@@ -349,8 +351,8 @@ class TestSignalData:
         assert isinstance(smoothed, SignalData)
         assert are_identical(smoothed.x.data, sample_signal.x.data)
         assert are_close(smoothed.y.data[:3], np.array([0.01174766, 0.04138229, 0.13916725]))
-        assert smoothed.name == sample_signal.name
-        assert smoothed.shortname == "Smoothed"
+        assert smoothed.filename == sample_signal.filename
+        assert smoothed.signalname == "Smoothed"
         assert smoothed.z_dict == sample_signal.z_dict
 
     def test_interpolate(self, sample_signal) -> None:

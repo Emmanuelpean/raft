@@ -24,14 +24,14 @@ import plotly.graph_objects as go
 import plotly.subplots as ps
 import scipy.signal as ss
 
-import constants
-from fitting import fit_data
-from utils import (
-    merge_dicts,
-    interpolate_point,
+from config import constants
+from data_processing.fitting import fit_data
+from utils.miscellaneous import merge_dicts
+from utils.string import number_to_str
+from data_processing.processing import (
     normalise,
     feature_scale,
-    number_to_str,
+    interpolate_point,
     interpolate_data,
     get_derivative,
 )
@@ -161,7 +161,7 @@ class Dimension(object):
         # Data
         string = f"Dimension({self.data}"
 
-        # Quantity, unit, name and z_dict
+        # Quantity, unit
         if self.quantity:
             string += f", {self.quantity}"
         if self.unit:
@@ -171,22 +171,22 @@ class Dimension(object):
 
 
 class SignalData(object):
-    """A SignalData object corresponds to 2 Dimension objects (X and Y), a name, a shortname, and a
+    """A SignalData object corresponds to 2 Dimension objects (X and Y), a filename, a signalname, and a
     dictionary for storing additional information"""
 
     def __init__(
         self,
         x: Dimension | list[Dimension],
         y: Dimension | list[Dimension],
-        name: str = "",
-        shortname: str = "",
+        filename: str = "",
+        signalname: str | list[str] = "",
         z_dict: dict | None = None,
     ) -> None:
         """Initialise the object by storing the input arguments
         :param x: x dimension
         :param y: y dimension
-        :param name: name
-        :param shortname: secondary optional name
+        :param filename: file filename
+        :param signalname: signal filename
         :param z_dict: additional optional information about the signal"""
 
         # If the input is a list of Dimensions, convert them to a single Dimension
@@ -205,34 +205,50 @@ class SignalData(object):
             self.y.quantity = "Y-quantity"
             if not self.y.unit:
                 self.y.unit = "Y-unit"
-        self.name = name
-        self.shortname = shortname
+
+        # Names
+        self.filename = filename
+        if isinstance(signalname, str):
+            self.signalname = [signalname]
+        else:
+            self.signalname = signalname
+
+        # Z dict
         if z_dict is None:
             self.z_dict = {}
         else:
             self.z_dict = z_dict
 
-    def get_name(self, condition: bool) -> str:
-        """Get the name of the signal for display purpose"""
+    def get_name(self, filename: bool) -> str:
+        """Get the filename of the signal for display purpose
+        :param filename: if True, use the filename"""
 
-        if not self.shortname:
-            return self.name
-        if condition:
-            return self.name + ": " + self.shortname
+        signalname = [e for e in self.signalname if e]
+
+        # If no signal name, just return the filename
+        if not signalname:
+            return self.filename
+
+        # If the signal has a filename
         else:
-            return self.shortname
+            # If filename arg, return the long name
+            if filename and self.filename:
+                return self.filename + ": " + " - ".join(signalname)
+
+            # Else, just return the signalname
+            else:
+                return " - ".join(signalname)
 
     def plot(
         self,
         figure: go.Figure | None = None,
-        condition: bool = False,
+        filename: bool = False,
         secondary_y: bool = False,
         **kwargs,
     ) -> go.Figure:
         """Plot the signal data in a plotly figure
         :param figure: plotly figure object
-        :param position: subplot position
-        :param condition: argument passed to get_name
+        :param filename: argument passed to get_name
         :param secondary_y: if True, use the secondary y-axis
         :param kwargs: keyword arguments passed to Scatter"""
 
@@ -241,13 +257,19 @@ class SignalData(object):
             figure = ps.make_subplots(1, 1, specs=[[{"secondary_y": secondary_y}]])
 
         font = dict(size=16, color="black")
+        hovertemplate = "X: %{x}<br>Y: %{y}<br>" + f"File {self.filename}<br>"
+        signalname = [f for f in self.signalname if f]
+        if signalname:
+            hovertemplate += f"Curve: {' - '.join(signalname)}<br>"
+        hovertemplate += "<extra></extra>"
 
         # Generate the trace and add it to the figure
         trace = go.Scattergl(
             x=self.x.data,
             y=self.y.data,
-            name=self.get_name(condition),
+            name=self.get_name(filename),
             legendgrouptitle_font=dict(size=17),
+            hovertemplate=hovertemplate,
             **kwargs,
         )
         figure.add_trace(trace, secondary_y=secondary_y)
@@ -314,8 +336,8 @@ class SignalData(object):
         return SignalData(
             self.x(data=self.x.data),
             self.y(data=self.y.data - mean_val),
-            self.name,
-            self.shortname,
+            self.filename,
+            self.signalname,
             self.z_dict,
         )
 
@@ -327,8 +349,8 @@ class SignalData(object):
         return SignalData(
             self.x,
             self.y(data=y),
-            self.name,
-            self.shortname + " - Smoothed",
+            self.filename,
+            self.signalname + ["Smoothed"],
             self.z_dict,
         )
 
@@ -341,8 +363,8 @@ class SignalData(object):
         return SignalData(
             self.x(data=self.x.data[index1:index2]),
             self.y(data=self.y.data[index1:index2]),
-            self.name,
-            self.shortname,
+            self.filename,
+            self.signalname,
             self.z_dict,
         )
 
@@ -353,8 +375,8 @@ class SignalData(object):
         return SignalData(
             self.x,
             y,
-            self.name,
-            self.shortname,
+            self.filename,
+            self.signalname,
             self.z_dict,
         )
 
@@ -365,8 +387,8 @@ class SignalData(object):
         return SignalData(
             self.x,
             y,
-            self.name,
-            self.shortname,
+            self.filename,
+            self.signalname,
             self.z_dict,
         )
 
@@ -377,8 +399,8 @@ class SignalData(object):
         return SignalData(
             self.x(x_data),
             self.y(y_data),
-            self.name,
-            self.shortname,
+            self.filename,
+            self.signalname,
             self.z_dict,
         )
 
@@ -389,8 +411,8 @@ class SignalData(object):
         return SignalData(
             self.x(x_data),
             self.y(y_data),
-            self.name,
-            self.shortname,
+            self.filename,
+            self.signalname,
             self.z_dict,
         )
 
@@ -405,8 +427,8 @@ class SignalData(object):
         fit_signal = SignalData(
             self.x(x_data),
             self.y(y_data),
-            self.name,
-            self.shortname + " - Fit",
+            self.filename,
+            self.signalname + ["Fit"],
             self.z_dict,
         )
         return fit_signal, params, param_errors, r_squared

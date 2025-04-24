@@ -1,54 +1,74 @@
 # To-Do List
 
-## Feature Enhancements
-* [X] Increase the size of the plot text.
-* [X] Add fitting options.
-* [X] Add interpolation to max/min point calculation
-* [X] Added background removal
-* [X] Add normalisation options
-* [X] Reset settings for different data types
-* [X] Display visual graphs explaining the use of interpolation
-* [X] Disable the feature scaling options instead of hiding them
-* [X] Improve the number_to_string function and split between display and input
-* [X] Normalise the smoothed signal
-* [X] Move "Download Data" to the bottom and include the smoothed data and fitted
-* [X] Add interpolation
-* [X] Add derivative
-* [X] Update description
-* [X] Add default guess values if guess value function fails
-* [ ] Add precision to Dimension class for display purpose
-  * [ ] When loading data files, input the number of decimals (e.g. Repeat 1, 0 decimals)
-  * [ ] When displaying results, determine the precision from the calculation?
-* [X] Delete temporary files Wire
-* [X] Added new logo on sidebar
-* [X] Updated the logo
+## ✅ Completed
 
-## Tests
-* [X] Add tests
-* [X] Add type hints
-* [X] Add test for to_scientific new n parameter
-* [ ] Check tests
+### Core Features
+* Add the following data processing options:
+  * [X] Fitting
+  * [X] Derivative  
+  * [X] Background substraction  
+  * [X] Normalisation (with respect to the smoothed data if present)
+  * [X] Interpolation
+* Added a toggle to reset the data processing settings when new files are loaded
+* [X] Add interpolation for max/min point calculation  
+* [X] Add an option to display or hide the raw data when smoothing is used.
+* [X] Move "Download Processed Data" button at the end of the processing settings and add the smoothed and fitted data.
+* [X] Add data processing and data extraction of 3D datasets:
+  * [X] Add an option to select the z-axis data.
+  * [X] Plot the extracted data vs the z-axis
+  * [X] Add a file uploader allowing multiple files
+* [X] Add a second tab to graphs to show the raw data
 
-## Bug Fixes
-* [X] Fix bug preventing the loading of diffrac and wire files
+### UI & Branding
+* [X] Added plot to explain how interpolation is used to improve the max/min point and FWHM calculations
+* [X] Reduced the size of the file uploader
+* [X] Increase plot text size
+* [X] Add new logo to sidebar  
+* [X] Update logo  
+
+### Testing & Typing
+* [X] Add type hints  
+
+### Performance
+* [X] Add caching for data loading  
+
+### Bug Fixes  
+* [X] Fix loading bug for diffrac and wire files  
 * [X] Fix name error in License
-* [X] Fix Max. wavenumber (cm<sup>-1</sup>) in range label
-* [X] FWHM should not be displayed if could not be calculated
-* [X] When changing the model, the value of the selected parameter does not change
-* [ ] Review plot module and functions
-* [X] Bug when changing fitting model
-* [ ] Handle nan values in number to string.
+* [X] Do not show FWHM if calculation fails  
+* [X] Fix bug when switching fitting models  
+* [X] Fix parameter value not updating when model changes
+* [X] Delete temporary Wire files 
+---
 
-## Future Features 
-* [ ] Add draggable processing expanders.
-* [ ] Prevent graph from changing by storing figure in session state.
+## 🔧 In Progress
 
+### Display  
+* [ ] Add precision setting to `Dimension` class for display  
+  * [ ] When loading data, allow input of decimal places (e.g. Repeat 1 → 0 decimals)  
+  * [ ] When displaying results, auto-determine precision from calculation
+* [X] Add colour map to 3D data  
+* [X] Add hover templates with "filename" and "curve name"  
+* [ ] Add a list of example data to download.
 
-## V 3.0
-* [X] Add support for 3D data
-  * [X] Allow user to select a z_dict quantity to the z-axis or by default use step of 1
-  * [X] Plot the data extracted vs the z-axis
-  * [X] Priority: Add caching for data loading
-  * [ ] Add color map to data
-  * [ ] Add hover template to curves with "filename" and "curve name"
-  * [ ] fOR EACH PLOT ADD A TAB THAT ALLOWS TO DISPLAY AND DOWNLOAD THE DATA
+### Processing
+* [X] Automatically convert z_dict values
+* [ ] Add test for z_dict value converting
+* [X] Deal with uneven data
+
+### Testing  
+* [ ] Review and verify all tests  
+* [ ] Ensure 100% test coverage 
+
+### Bug Fixes
+* [ ] Handle `NaN` values in `number_to_string`  
+* [X] Fix the Reset Data Processing button
+* [X] Split the utils module and add the session state submodule
+
+---
+
+## 🧩 Planned Features
+
+### Interactive UI  
+* [ ] Add draggable processing expanders
+* [ ] Add tab to each plot for data display and download  

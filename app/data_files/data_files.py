@@ -1,4 +1,4 @@
-"""data_files"""
+"""Module containing functions to read different types of data files"""
 
 import datetime as dt
 import os
@@ -9,9 +9,10 @@ import lxml.etree as etree
 import numpy as np
 from renishawWiRE import WDFReader
 
-import constants
-from signaldata import SignalData, Dimension
-from utils import grep, get_data_index, stringlist_to_matrix, sort_lists, get_header_as_dicts
+from config import constants
+from data_files.data_extraction import stringlist_to_matrix, get_header_as_dicts, grep, get_data_index, get_precision
+from data_files.signal_data import SignalData, Dimension
+from utils.miscellaneous import sort_lists
 
 
 def get_uvvis_dimension(
@@ -33,7 +34,7 @@ def get_uvvis_dimension(
 
 
 def read_datafile(filename: str | BytesIO) -> tuple[list[str], str]:
-    """Read the content of a data file and return its name and its z_dict containing its location
+    """Read the content of a data file and return its filename and its z_dict containing its location
     :param filename: file path or BytesIO"""
 
     if isinstance(filename, str):
@@ -68,7 +69,7 @@ def BeamproFile(filename: str) -> dict[str, SignalData]:
         raise AssertionError()  # pragma: no cover
     x_quantity, x_unit = constants.distance_qt, constants.micrometer_unit
     y_quantity, y_unit = constants.intensity_qt, constants.au_unit
-    data_index = get_data_index(content)
+    data_index = get_data_index(content, delimiter="\t")
     if data_index != 5:
         raise AssertionError()  # pragma: no cover
     data = stringlist_to_matrix(content[data_index:])
@@ -836,6 +837,7 @@ def WireFile(filename: str | BytesIO) -> SignalData:
 
     try:
         reader = WDFReader(filename)
+        # noinspection PyUnresolvedReferences
         x_data, y_data = np.array(reader.xdata[::-1], dtype=float), np.array(reader.spectra[::-1], dtype=float)
         if reader.xlist_unit.name == "RamanShift":
             x = Dimension(x_data, constants.wavenumber_qt, constants.cm_1_unit)
@@ -941,7 +943,7 @@ def read_data_file(
     """Read the file(s) content.
     If filetype is "Detect" and filename is a list of files, detect the first file type and then reuse that type for
     the other files. If a file cannot be loaded in the list, it is not returned.
-    :param filename: file name
+    :param filename: file filename
     :param filetype: file type
     :return: a list of SignalData and the file type loaded (None if not loaded)"""
 
@@ -954,7 +956,7 @@ def read_data_file(
             signals = []
             for file in filename[1:]:
                 signal = read_data_file(file, filetype)[0]
-                if signal is not None:
+                if signal:
                     signals.append(signal[0])
 
             # noinspection PyTypeChecker
