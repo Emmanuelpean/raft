@@ -80,7 +80,11 @@ def merge_dicts(*dictionaries: dict) -> dict:
         for key in dictionary.keys():
 
             # If they key already exist but the two are both dictionaries, merge them
-            if key in merged_dictionary and isinstance(merged_dictionary[key], dict) and isinstance(dictionary[key], dict):
+            if (
+                key in merged_dictionary
+                and isinstance(merged_dictionary[key], dict)
+                and isinstance(dictionary[key], dict)
+            ):
                 merged_dictionary[key] = merge_dicts(merged_dictionary[key], dictionary[key])
 
             # If the key is not already present, add it
