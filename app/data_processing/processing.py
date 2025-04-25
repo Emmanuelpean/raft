@@ -5,8 +5,8 @@ from scipy import interpolate as sci
 
 
 def normalise(
-        ndarray: np.ndarray,
-        other: None | np.ndarray = None,
+    ndarray: np.ndarray,
+    other: None | np.ndarray = None,
 ) -> np.ndarray:
     """Normalise a numpy array
     :param ndarray: ndarray of floats or ints
@@ -18,10 +18,10 @@ def normalise(
 
 
 def feature_scale(
-        ndarray: np.ndarray,
-        a: float = 1.0,
-        b: float = 0.0,
-        other: None | np.ndarray = None,
+    ndarray: np.ndarray,
+    a: float = 1.0,
+    b: float = 0.0,
+    other: None | np.ndarray = None,
 ) -> np.ndarray:
     """Feature scale a numpy array ndarray
     :param ndarray: ndarray of floats or ints
@@ -35,11 +35,11 @@ def feature_scale(
 
 
 def interpolate_point(
-        x: np.ndarray,
-        y: np.ndarray,
-        index: int,
-        nb_point: int = 2,
-        **kwargs,
+    x: np.ndarray,
+    y: np.ndarray,
+    index: int,
+    nb_point: int = 2,
+    **kwargs,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Interpolate data around a given index
     :param x: ndarray corresponding to the x-axis
@@ -59,10 +59,10 @@ def interpolate_point(
 
 
 def interpolate_data(
-        x: np.ndarray,
-        y: np.ndarray,
-        dx: int | float,
-        **kwargs,
+    x: np.ndarray,
+    y: np.ndarray,
+    dx: int | float,
+    **kwargs,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Interpolate the y data of a signal
     :param x: x data
@@ -86,9 +86,9 @@ def interpolate_data(
 
 
 def get_derivative(
-        x: np.ndarray,
-        y: np.ndarray,
-        n: int = 1,
+    x: np.ndarray,
+    y: np.ndarray,
+    n: int = 1,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Get the nth derivative of a ndarray
     :param np.ndarray x: x values
