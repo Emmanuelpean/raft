@@ -7,23 +7,23 @@ import pandas as pd
 import streamlit as st
 from wfork_streamlit_profiler import Profiler
 
+from config.constants import TIMESTAMP_ID
 from config.resources import LOGO_PATH, CSS_STYLE_PATH, ICON_PATH, DATA_PROCESSING_PATH, LOGO_TEXT_PATH, FILE_TYPE_DICT
 from data_files.data_files import FILETYPES, read_data_file
-from config.constants import TIMESTAMP_ID
 from data_files.signal_data import Dimension, SignalData, average_signals, get_z_dim
 from data_processing.fitting import MODELS, get_model_parameters
 from interface.plot import plot_signals, scatter_plot, make_figure
 from interface.streamlit import tab_bar, display_data
 from utils.file_io import read_file, render_image
-from utils.miscellaneous import normalise_list, make_unique
+from utils.miscellaneous import normalise_list, make_unique, get_pyproject_info
 from utils.session_state import refresh_session_state_widgets, set_session_state_value_function, set_default_widgets
 from utils.strings import matrix_to_string, number_to_str, generate_html_table, dedent
 
-__version__ = "2.0.0"
-__name__ = "Raft"
-__date__ = "March 2025"
-__author__ = "Emmanuel V. Péan"
-__github__ = "https://github.com/Emmanuelpean/raft"
+__version__ = get_pyproject_info("project", "version")
+__name__ = get_pyproject_info("project", "name")
+__date__ = get_pyproject_info("project", "last_modified")
+__author__ = get_pyproject_info("project", "authors")[0]["name"]
+__github__ = get_pyproject_info("project", "urls", "repository")
 __development__ = True
 
 # Profiler

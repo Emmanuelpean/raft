@@ -227,6 +227,7 @@ class SignalData(object):
         :param figure: plotly figure object
         :param filename: argument passed to get_name
         :param secondary_y: if True, use the secondary y-axis
+        :param plot_method: "Scatter" or "Scattergl"
         :param kwargs: keyword arguments passed to Scatter"""
 
         # Generate a new figure if not provided

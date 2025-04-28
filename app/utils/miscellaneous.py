@@ -1,6 +1,8 @@
 """Module containing general utility functions"""
 
+import tomllib
 from operator import itemgetter
+from pathlib import Path
 
 import numpy as np
 
@@ -92,3 +94,15 @@ def merge_dicts(*dictionaries: dict) -> dict:
                 merged_dictionary[key] = dictionary[key]
 
     return merged_dictionary
+
+
+def get_pyproject_info(*keys: str) -> any:
+    """Get information from the pyproject file"""
+
+    pyproject = Path(__file__).resolve().parent.parent.parent / "pyproject.toml"
+    with pyproject.open("rb") as f:
+        data = tomllib.load(f)
+    d = data[keys[0]]
+    for key in keys[1:]:
+        d = d[key]
+    return d

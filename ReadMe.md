@@ -8,16 +8,19 @@
 </div>
 <p align="center">
    <a href="https://opensource.org/licenses/MIT">
-   <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="Licence">
+      <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
    </a>
-   <a href="https://github.com/Emmanuelpean/raft/actions?query=branch%3Amain+event%3Apush">
-   <img src="https://github.com/emmanuelpean/raft/actions/workflows/test.yml/badge.svg?event=push&branch=type-hints" alt="Testing">
+   <a href="https://github.com/Emmanuelpean/raft/actions?query=branch%3Atype-hints+event%3Apush">
+      <img src="https://github.com/emmanuelpean/raft/actions/workflows/test.yml/badge.svg?event=push&branch=type-hints" alt="Testing">
    </a>
-   <a>
-   <img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/emmanuelpean/f16aa96ae648cb1668b4d57a531b5e9b/raw/raft-pytest-coverage-comment__main.json" alt="Coverage">
+   <a href="#">
+      <img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/emmanuelpean/f16aa96ae648cb1668b4d57a531b5e9b/raw/raft-pytest-coverage-comment__main.json" alt="Coverage">
    </a>
    <a href="https://github.com/psf/black">
-   <img src="https://img.shields.io/badge/code%20style-black-000000.svg" alt="Black">
+      <img src="https://img.shields.io/badge/code%20style-black-000000.svg" alt="Black">
+   </a>
+   <a href="https://github.com/emmanuelpean/raft/commits/type-hints">
+      <img src="https://img.shields.io/github/last-commit/emmanuelpean/raft/type-hints" alt="Last Commit">
    </a>
 </p>
 

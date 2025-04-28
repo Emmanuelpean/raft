@@ -1,7 +1,5 @@
 """Module containing functions for plotting data"""
 
-from __future__ import annotations
-
 import plotly.colors as pc
 import plotly.graph_objects as go
 import plotly.subplots as ps

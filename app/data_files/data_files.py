@@ -5,7 +5,7 @@ import os
 import zipfile
 from io import BytesIO
 
-import lxml.etree as etree
+from lxml import etree
 import numpy as np
 from renishawWiRE import WDFReader
 

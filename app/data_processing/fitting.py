@@ -5,7 +5,7 @@ import inspect
 
 import numpy as np
 import scipy.optimize as sco
-from scipy.special import wofz
+import scipy.special as ss
 
 
 def get_model_parameters(function: callable) -> list[str]:
@@ -129,7 +129,7 @@ def voigt(x: np.ndarray, a: float, mu: float, sigma: float, gamma: float, c: flo
     # This is an approximation of the Voigt profile
 
     z = (x - mu + 1j * gamma) / (sigma * np.sqrt(2))
-    return a * np.real(wofz(z)) / (sigma * np.sqrt(2 * np.pi)) + c
+    return a * np.real(ss.wofz(z)) / (sigma * np.sqrt(2 * np.pi)) + c
 
 
 def guess_linear(x: np.ndarray, y: np.ndarray) -> tuple[float, float]:
