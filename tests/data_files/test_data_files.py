@@ -231,7 +231,7 @@ class TestDataFiles:
             "filename": "Dektak",
             "signalname": "",
             "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2017, 5, 23, 11, 35, 19), "time", ""),
+                "Date & Time": Dimension(dt.datetime(2017, 5, 23, 11, 35, 19), "time", ""),
             },
         }
         self.assert_signal(data, expected)
@@ -252,10 +252,10 @@ class TestDataFiles:
             "filename": "diffrac",
             "signalname": "RawData0",
             "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2017, 8, 4, 16, 43, 2, 345953), "time", ""),
-                "IntegrationTime": Dimension(0.15, "time", "s"),
-                "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
-                "measure_time": Dimension(412.58348, "time", "s"),
+                "Date & Time": Dimension(dt.datetime(2017, 8, 4, 16, 43, 2, 345953), "time", ""),
+                "Integration Time": Dimension(0.15, "time", "s"),
+                "Wavelength": Dimension(1.5418, "wavelength", "angstrom"),
+                "Measurement Time": Dimension(412.58348, "time", "s"),
                 "Chi": Dimension(-0.0, "Chi", "°"),
                 "Phi": Dimension(0.0, "Phi", "°"),
                 "X": Dimension(-0.0, "X", "mm"),
@@ -278,10 +278,10 @@ class TestDataFiles:
             "filename": "diffrac",
             "signalname": "RawData0",
             "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2017, 8, 4, 16, 43, 2, 345953), "time", ""),
-                "IntegrationTime": Dimension(0.15, "time", "s"),
-                "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
-                "measure_time": Dimension(412.58348, "time", "s"),
+                "Date & Time": Dimension(dt.datetime(2017, 8, 4, 16, 43, 2, 345953), "time", ""),
+                "Integration Time": Dimension(0.15, "time", "s"),
+                "Wavelength": Dimension(1.5418, "wavelength", "angstrom"),
+                "Measurement Time": Dimension(412.58348, "time", "s"),
                 "Chi": Dimension(-0.0, "Chi", "°"),
                 "Phi": Dimension(0.0, "Phi", "°"),
                 "X": Dimension(-0.0, "X", "mm"),
@@ -302,10 +302,10 @@ class TestDataFiles:
             "filename": "Diffrac_multiple",
             "signalname": "RawData79",
             "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2017, 10, 11, 9, 29, 34, 753172), "time", ""),
-                "IntegrationTime": Dimension(0.5, "time", "s"),
-                "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
-                "measure_time": Dimension(676.947589, "time", "s"),
+                "Date & Time": Dimension(dt.datetime(2017, 10, 11, 9, 29, 34, 753172), "time", ""),
+                "Integration Time": Dimension(0.5, "time", "s"),
+                "Wavelength": Dimension(1.5418, "wavelength", "angstrom"),
+                "Measurement Time": Dimension(676.947589, "time", "s"),
                 "Theta": Dimension(2.0186, "Theta", "°"),
                 "Chi": Dimension(-0.0, "Chi", "°"),
                 "Phi": Dimension(0.0, "Phi", "°"),
@@ -327,10 +327,10 @@ class TestDataFiles:
             "filename": "Diffrac_PSD",
             "signalname": "RawData0",
             "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2018, 3, 5, 12, 11, 11, 816786), "time", ""),
-                "IntegrationTime": Dimension(5.0, "time", "s"),
-                "wavelength": Dimension(1.5418, "wavelength", "angstrom"),
-                "measure_time": Dimension(23.337641, "time", "s"),
+                "Date & Time": Dimension(dt.datetime(2018, 3, 5, 12, 11, 11, 816786), "time", ""),
+                "Integration Time": Dimension(5.0, "time", "s"),
+                "Wavelength": Dimension(1.5418, "wavelength", "angstrom"),
+                "Measurement Time": Dimension(23.337641, "time", "s"),
                 "Theta": Dimension(4.8153, "Theta", "°"),
                 "Chi": Dimension(-0.0, "Chi", "°"),
                 "Phi": Dimension(0.0, "Phi", "°"),
@@ -354,7 +354,7 @@ class TestDataFiles:
             "filename": "Easylog",
             "signalname": "Temperature",
             "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2017, 2, 19, 11, 29, 22), "time", ""),
+                "Date & Time": Dimension(dt.datetime(2017, 2, 19, 11, 29, 22), "time", ""),
             },
         }
         self.assert_signal(data["Temperature"], expected)
@@ -368,7 +368,7 @@ class TestDataFiles:
             "filename": "Easylog",
             "signalname": "Humidity",
             "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2017, 2, 19, 11, 29, 22), "time", ""),
+                "Date & Time": Dimension(dt.datetime(2017, 2, 19, 11, 29, 22), "time", ""),
             },
         }
         self.assert_signal(data["Humidity"], expected)
@@ -609,15 +609,14 @@ class TestDataFiles:
             "x_unit": np.str_("nm"),
             "y_unit": np.str_("CPS / MicroAmps"),
             "filename": "FluorEssence_multiple",
-            "signalname": "05/12/2017 17:24:47",
+            "signalname": "2017-05-12 17:24:47",
             "z_dict": {
                 "Short Name": Dimension(np.str_("B"), "", ""),
                 "Long Name": Dimension(np.str_("05/12/2017 17:24:47"), "", ""),
                 "Units": Dimension(np.str_("CPS / MicroAmps"), "", ""),
                 "SourceName": Dimension(np.str_("S1c / R1c"), "", ""),
                 "CycleNumber": Dimension(np.str_("1"), "", ""),
-                "TimeStamp": Dimension(np.str_("05/12/2017 17:24:47"), "", ""),
-                "pyda:TimeStamp": Dimension(dt.datetime(2017, 5, 12, 17, 24, 47, 0), "time", ""),
+                "Date & Time": Dimension(dt.datetime(2017, 5, 12, 17, 24, 47, 0), "time"),
             },
         }
         self.assert_signal(data[0], expected)
@@ -635,7 +634,7 @@ class TestDataFiles:
             "filename": "FLWinlab",
             "signalname": "",
             "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2015, 3, 18, 16, 1, 4), "time", ""),
+                "Date & Time": Dimension(dt.datetime(2015, 3, 18, 16, 1, 4), "time", ""),
             },
         }
         self.assert_signal(data, expected)
@@ -653,8 +652,8 @@ class TestDataFiles:
             "filename": "LambdaSPX_absorbance",
             "signalname": "",
             "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2017, 2, 14, 11, 25, 23), "time", ""),
-                "scan_speed": Dimension(480.0, "speed", "nm/min"),
+                "Date & Time": Dimension(dt.datetime(2017, 2, 14, 11, 25, 23), "time", ""),
+                "Scan Speed": Dimension(480.0, "speed", "nm/min"),
             },
         }
         self.assert_signal(data, expected)
@@ -670,8 +669,8 @@ class TestDataFiles:
             "filename": "LambdaSPX_reflectance",
             "signalname": "",
             "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2017, 2, 14, 11, 33, 45), "time", ""),
-                "scan_speed": Dimension(480.0, "speed", "nm/min"),
+                "Date & Time": Dimension(dt.datetime(2017, 2, 14, 11, 33, 45), "time", ""),
+                "Scan Speed": Dimension(480.0, "speed", "nm/min"),
             },
         }
         self.assert_signal(data, expected)
@@ -687,8 +686,8 @@ class TestDataFiles:
             "filename": "LambdaSPX_transmittance",
             "signalname": "",
             "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2017, 2, 14, 11, 27, 32), "time", ""),
-                "scan_speed": Dimension(480.0, "speed", "nm/min"),
+                "Date & Time": Dimension(dt.datetime(2017, 2, 14, 11, 27, 32), "time", ""),
+                "Scan Speed": Dimension(480.0, "speed", "nm/min"),
             },
         }
         self.assert_signal(data, expected)
@@ -704,8 +703,8 @@ class TestDataFiles:
             "filename": "LambdaSPX_absorbance_other-date-format",
             "signalname": "",
             "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2017, 6, 7, 11, 3), "time", ""),
-                "scan_speed": Dimension(960.0, "speed", "nm/min"),
+                "Date & Time": Dimension(dt.datetime(2017, 6, 7, 11, 3), "time", ""),
+                "Scan Speed": Dimension(960.0, "speed", "nm/min"),
             },
         }
         self.assert_signal(data, expected)
@@ -723,7 +722,7 @@ class TestDataFiles:
             "filename": "prodata-pll_12wl_1prop",
             "signalname": "Emission wavelength: 820 nm",
             "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2017, 4, 3, 15, 11, 20), "time", ""),
+                "Date & Time": Dimension(dt.datetime(2017, 4, 3, 15, 11, 20), "time", ""),
                 "z": Dimension(815.0, "emission wavelength", "nm"),
             },
         }
@@ -740,7 +739,7 @@ class TestDataFiles:
             "filename": "prodata-tas_3prop",
             "signalname": "Repeats: 1",
             "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2017, 7, 27, 17, 39, 4, 0), "time", ""),
+                "Date & Time": Dimension(dt.datetime(2017, 7, 27, 17, 39, 4, 0), "time", ""),
                 "z": Dimension(np.float64(3.0), "repeats", ""),
             },
         }
@@ -921,8 +920,8 @@ class TestDataFiles:
             "filename": "SpectraSuite_Header",
             "signalname": "",
             "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2016, 11, 16, 18, 7, 25), "time", ""),
-                "IntegrationTime": Dimension(0.1, "time", "s"),
+                "Date & Time": Dimension(dt.datetime(2016, 11, 16, 18, 7, 25), "time", ""),
+                "Integration Time": Dimension(0.1, "time", "s"),
             },
         }
         self.assert_signal(data, expected)
@@ -938,8 +937,8 @@ class TestDataFiles:
             "filename": "SpectraSuite_Header_BST",
             "signalname": "",
             "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2016, 10, 21, 10, 57, 53), "time", ""),
-                "IntegrationTime": Dimension(2.5, "time", "s"),
+                "Date & Time": Dimension(dt.datetime(2016, 10, 21, 10, 57, 53), "time", ""),
+                "Integration Time": Dimension(2.5, "time", "s"),
             },
         }
         self.assert_signal(data, expected)
@@ -1000,7 +999,7 @@ class TestDataFiles:
             "filename": "UVWinlab_ASCII",
             "signalname": "",
             "z_dict": {
-                "TimeStamp": Dimension(dt.datetime(2027, 5, 22, 11, 57, 32), "time", ""),
+                "Date & Time": Dimension(dt.datetime(2027, 5, 22, 11, 57, 32), "time", ""),
             },
         }
         self.assert_signal(data, expected)

@@ -78,6 +78,13 @@ class TestDimension:
         assert new_dim.quantity == "mass"
         assert new_dim.unit == "kg"
 
+    def test_getitem(self) -> None:
+        """Test the __getitem__ special method"""
+
+        base_dim = Dimension(np.array([1, 2, 4, 5]), "length", "m")
+        assert base_dim[1].data == 2
+        assert base_dim[-1].data == 5
+
     def test_get_quantity_label_html(self) -> None:
         """Test get_quantity_label_html method"""
 
@@ -149,6 +156,10 @@ class TestDimension:
         assert dim.get_value_label_html(10, "f") == "Length: 1.4232350000E5 m"
         assert dim.get_value_label_html(10, "f", True) == "Length: 1.4232350000 &#10005; 10<sup>5</sup> m"
 
+        # Test incorrect
+        with pytest.raises(AssertionError):
+            Dimension(np.array([1, 2, 4, 5]), "length", "m").get_value_label_html()
+
     def test_repr(self) -> None:
         """Test __repr__ method"""
 
@@ -168,7 +179,8 @@ class TestDimension:
 class TestSignalData:
     """Test class for the SignalData class"""
 
-    def sample_dimensions(self) -> tuple[Dimension, Dimension]:
+    @staticmethod
+    def sample_dimensions() -> tuple[Dimension, Dimension]:
         """Fixture that returns sample x and y dimensions for testing"""
 
         x_data = np.linspace(0, 10, 21)
@@ -206,6 +218,12 @@ class TestSignalData:
         assert signal.signalnames == [""]
         assert signal.z_dict == {}
 
+        # Test with list of dims
+        dims = [Dimension(5), Dimension(5), Dimension(7)]
+        signal = SignalData(dims, dims)
+        assert are_identical(signal.x.data, np.array([5, 5, 7]))
+        assert are_identical(signal.y.data, np.array([5, 5, 7]))
+
     def test_get_name(self) -> None:
         """Test get_name method"""
 
@@ -225,6 +243,7 @@ class TestSignalData:
     def test_plot(self) -> None:
         """Test plot method"""
 
+        # Regular plot
         sample_signal = self.sample_signal()
         figure = sample_signal.plot()
         trace = figure.data[0]
@@ -233,6 +252,17 @@ class TestSignalData:
         assert are_identical(trace.y, sample_signal.y.data)
         assert trace.name == sample_signal.get_name(False)
         assert trace.showlegend is None
+
+        # With datetime
+        x_dims = np.array([dt.datetime(2025, 5, 5), dt.datetime(2025, 5, 7)])
+        y_dims = np.array([1, 2])
+        signal = SignalData(Dimension(x_dims), Dimension(y_dims))
+        figure = signal.plot()
+        assert figure.layout.xaxis.tickformat is None
+
+        # Secondary axis
+        figure = sample_signal.plot(secondary_y=True)
+        assert "yaxis2" in figure.layout
 
     # ---------------------------------------------- SIGNAL TRANSFORMATION ---------------------------------------------
 
@@ -503,6 +533,7 @@ class TestSignalData:
     def test_get_half_int(self) -> None:
 
         sample_signal = self.sample_signal()
+
         # Test the function with a peak pointing up and no interpolation.
         x_half, y_half = sample_signal.get_halfint_point(sample_signal.x.data, sample_signal.y.data, False)
         assert are_close(x_half, 2.0)

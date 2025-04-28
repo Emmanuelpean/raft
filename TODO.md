@@ -62,15 +62,15 @@
 ### Testing  
 * [ ] Review and verify all tests  
 * [ ] Ensure 100% test coverage 
-* [ ] Add test for z_dict value converting
+* [X] Add test for z_dict value converting
 
 ### Bug Fixes
 * [X] Handle `NaN` values in `number_to_string`  
 * [X] Fix the Reset Data Processing button
 * [X] Split the utils module and add the session state submodule
 * [X] Fix bug leading to missing curves when changing the data sorting key
-* [ ] Add pyproject file
-* [ ] Check if get_max is sensitive to nan and inf. functions return nan if failed to compute
+* [X] Add pyproject file
+* [X] Check if get_max is sensitive to nan and inf. functions return nan if failed to compute
 
 ---
 

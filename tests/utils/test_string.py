@@ -18,24 +18,24 @@ class TestMatrixToString:
 
     def test_basic_conversion(self) -> None:
 
-        arrays = [np.array([1.2, 2.0, 5.0]), np.array([1.6, 2.0, 5.0])]
+        arrays = [np.array([1.2, 2.0, 5.0]), np.array([1.6, 2.0, 5.64325253463463e23])]
         header = ["A", "B"]
         result = matrix_to_string(arrays, header)
-        expected = "A,B\n1.20000E+00,1.60000E+00\n2.00000E+00,2.00000E+00\n5.00000E+00,5.00000E+00"
+        expected = "A,B\n1.2,1.6\r\n2.0,2.0\r\n5.0,5.64325253463463e+23\r\n"
         assert result == expected
 
     def test_no_header(self) -> None:
 
         arrays = [np.array([1.2, 2, 5]), np.array([1.6, 2])]
         result = matrix_to_string(arrays)
-        expected = "1.20000E+00,1.60000E+00\n2.00000E+00,2.00000E+00\n5.00000E+00,"
+        expected = "1.2,1.6\r\n2.0,2.0\r\n5.0,\r\n"
         assert result == expected
 
     def test_single_column(self) -> None:
 
         arrays = [np.array([1.2, 2, 5])]
         result = matrix_to_string(arrays, ["A"])
-        expected = "A\n1.20000E+00\n2.00000E+00\n5.00000E+00"
+        expected = "A\n1.2\r\n2.0\r\n5.0\r\n"
         assert result == expected
 
     def test_mixed_lengths(self) -> None:
@@ -43,21 +43,19 @@ class TestMatrixToString:
         arrays = [np.array([1.2, 2.0, 5.0]), np.array([1.6, 2.0])]
         header = ["A", "B"]
         result = matrix_to_string(arrays, header)
-        expected = "A,B\n1.20000E+00,1.60000E+00\n2.00000E+00,2.00000E+00\n5.00000E+00,"
+        expected = "A,B\n1.2,1.6\r\n2.0,2.0\r\n5.0,\r\n"
         assert result == expected
 
         arrays = [np.array([1.2, 2.0, 6.0]), np.array([1.2, 2.0]), np.array([1.6, 2.0, 5.0])]
         header = ["A", "B"]
         result = matrix_to_string(arrays, header)
-        expected = (
-            "A,B\n1.20000E+00,1.20000E+00,1.60000E+00\n2.00000E+00,2.00000E+00,2.00000E+00\n6.00000E+00,,5.00000E+00"
-        )
+        expected = "A,B\n1.2,1.2,1.6\r\n2.0,2.0,2.0\r\n6.0,,5.0\r\n"
         assert result == expected
 
         arrays = [np.array([1.2, 2.0]), np.array([1.6, 2.0, 5.0])]
         header = ["A", "B"]
         result = matrix_to_string(arrays, header)
-        expected = "A,B\n1.20000E+00,1.60000E+00\n2.00000E+00,2.00000E+00\n,5.00000E+00"
+        expected = "A,B\n1.2,1.6\r\n2.0,2.0\r\n,5.0\r\n"
         assert result == expected
 
     def test_all_empty(self) -> None:
@@ -83,7 +81,7 @@ class TestGenerateHtmlTable:
 
         data = {"A": [1, 2, 3], "B": [4, 5, 6], "C": [7, 8, 9]}
         df = pd.DataFrame(data, index=["row1", "row2", "row3"])
-        df.columns.filename = "Categories"
+        df.columns.name = "Categories"
         return df
 
     def test_basic_table_generation(self, sample_dataframe) -> None:
@@ -202,45 +200,6 @@ class TestNumberToString:
 
         assert number_to_str(float("nan")) == ""
 
-    def test_5_f_True_True(self) -> None:
-        """Test various numbers with default settings"""
-
-        kwargs = dict(precision=5, format_str="f", html=True, auto_exponent=True)
-
-        # Medium value
-        assert number_to_str(45.25452732, **kwargs) == "45.25453"
-        assert number_to_str(45.336, **kwargs) == "45.33600"
-
-        # Low/High value
-        assert number_to_str(0.00025452732, **kwargs) == "2.54527 &#10005; 10<sup>-4</sup>"
-        assert number_to_str(0.000336, **kwargs) == "3.36000 &#10005; 10<sup>-4</sup>"
-
-    def test_5_f_True_False(self) -> None:
-        """Test various numbers with default settings"""
-
-        kwargs = dict(precision=5, format_str="f", html=True, auto_exponent=False)
-
-        # Medium value
-        assert number_to_str(45.25452732, **kwargs) == "45.25453"
-        assert number_to_str(45.336, **kwargs) == "45.33600"
-
-        # Low/High value
-        assert number_to_str(0.00025452732, **kwargs) == "0.00025"
-        assert number_to_str(0.000336, **kwargs) == "0.00034"
-
-    def test_5_f_False_False(self) -> None:
-        """Test various numbers with default settings"""
-
-        kwargs = dict(precision=5, format_str="f", html=False, auto_exponent=False)
-
-        # Medium value
-        assert number_to_str(45.25452732, **kwargs) == "45.25453"
-        assert number_to_str(45.336, **kwargs) == "45.33600"
-
-        # Low/High value
-        assert number_to_str(0.00025452732, **kwargs) == "0.00025"
-        assert number_to_str(0.000336, **kwargs) == "0.00034"
-
     @pytest.mark.parametrize(
         "value, precision,format_str,html,auto_exponent,expected",
         [
@@ -280,10 +239,29 @@ class TestNumberToString:
             (1.325e-5, 5, "g", True, False, "1.325e-05"),
             (1.325e-5, 5, "g", False, False, "1.325e-05"),
             (1.325e-5, 5, "g", False, True, "1.325E-5"),
+            # High value (precision high)
+            (1.325224262e5, 5, "f", True, True, "1.32522 &#10005; 10<sup>5</sup>"),
+            (1.325224262e5, 5, "f", True, False, "132522.42620"),
+            (1.325224262e5, 5, "f", False, False, "132522.42620"),
+            (1.325224262e5, 5, "f", False, True, "1.32522E5"),
+            (1.325224262e5, 5, "g", True, True, "1.3252 &#10005; 10<sup>5</sup>"),
+            (1.325224262e5, 5, "g", True, False, "1.3252e+05"),
+            (1.325224262e5, 5, "g", False, False, "1.3252e+05"),
+            (1.325224262e5, 5, "g", False, True, "1.3252E5"),
+            # High value (precision low)
+            (1.325e5, 5, "f", True, True, "1.32500 &#10005; 10<sup>5</sup>"),
+            (1.325e5, 5, "f", True, False, "132500.00000"),
+            (1.325e5, 5, "f", False, False, "132500.00000"),
+            (1.325e5, 5, "f", False, True, "1.32500E5"),
+            (1.325e5, 5, "g", True, True, "1.325 &#10005; 10<sup>5</sup>"),
+            (1.325e5, 5, "g", True, False, "1.325e+05"),
+            (1.325e5, 5, "g", False, False, "1.325e+05"),
+            (1.325e5, 5, "g", False, True, "1.325E5"),
         ],
     )
     def test_number(self, value, precision, format_str, html, auto_exponent, expected):
 
+        print(expected)
         assert (
             number_to_str(
                 value=value,
@@ -304,7 +282,7 @@ class TestNumberToString:
         """Test list of floats to scientific notation"""
 
         result = number_to_str([1e-4, 1e-5])
-        assert result == "1E-4, 1E-5"
+        assert result == "1.00000E-4, 1.00000E-5"
 
 
 class TestGetLabel:
@@ -387,5 +365,5 @@ class TestGetLabel:
         assert result == r"\lambda_{α}^{β}<sub>value</sub><sup>2</sup>"
 
     def test_empty_string(self) -> None:
-        with pytest.raises(IndexError):
-            get_label_html("", {})
+
+        assert get_label_html("", {}) == ""

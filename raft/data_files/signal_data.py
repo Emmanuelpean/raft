@@ -496,7 +496,6 @@ class SignalData(object):
             )
 
         except:
-
             return tuple((Dimension(float("nan")),) * 5)
 
     def get_halfint_point(

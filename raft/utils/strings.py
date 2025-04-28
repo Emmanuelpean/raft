@@ -1,6 +1,6 @@
 """Module containing functions for generating or modifying strings"""
 
-import datetime as dt
+import io
 import math
 import re
 
@@ -16,42 +16,26 @@ def matrix_to_string(
     :param arrays: list of ndarrays
     :param header: header"""
 
-    # # Faster version
-    # buffer = io.StringIO()
-    # if isinstance(header, list) and isinstance(header[0], str):
-    #     header = [header]
-    # if isinstance(header, list):
-    #     buffer.write("\n".join([",".join(head) for head in header]) + "\n")
-    # pd.DataFrame(np.transpose(arrays)).to_csv(buffer, index=False)
-    # return buffer.getvalue()
+    buffer = io.StringIO()
 
-    max_rows = np.max([len(array) for array in arrays])
-    rows = []
-    delimiter = ","
-
-    for i in range(max_rows):
-        row_values = []
-        for array in arrays:
-            if i < len(array):
-                if isinstance(array[i], dt.datetime):
-                    row_values.append(str(array[i]))
-                else:
-                    row_values.append(f"{array[i]:.5E}")
-            else:
-                row_values.append("")
-        rows.append(delimiter.join(row_values))
-
-    string = "\n".join(rows)
-
-    # Add the header
+    # Header
     if isinstance(header, list) and isinstance(header[0], str):
         header = [header]
     if isinstance(header, list):
-        header_string = "\n".join([delimiter.join(head) for head in header]) + "\n"
-    else:
-        header_string = ""
+        buffer.write("\n".join([",".join(head) for head in header]) + "\n")
 
-    return header_string + string
+    # Find maximum column length
+    max_len = max(len(array) for array in arrays)
+
+    # Pad shorter columns with None
+    for i, array in enumerate(arrays):
+        if len(array) < max_len:
+            arrays[i] = np.concatenate([arrays[i], [float("nan")] * (max_len - len(array))])
+
+    # Dataframe
+    pd.DataFrame(np.transpose(arrays)).to_csv(buffer, index=False, header=False)
+
+    return buffer.getvalue()
 
 
 def number_to_str(
@@ -113,7 +97,7 @@ def generate_html_table(df: pd.DataFrame) -> str:
     html = ['<table border="1" style="border-collapse: collapse; text-align: center;">']
 
     # Add header row with columns name in the corner cell
-    corner_cell_content = df.columns.filename if df.columns.filename else ""
+    corner_cell_content = df.columns.name if df.columns.name else ""
     header = f'<tr><th style="padding: 8px; text-align: center;">{corner_cell_content}</th>'
     for col in df.columns:
         header += f'<th style="padding: 8px; text-align: center;">{col}</th>'

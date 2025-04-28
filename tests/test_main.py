@@ -65,7 +65,7 @@ class TestApp:
     def set_filetype_select(self, value) -> None:
         """Set the file type select selectbox"""
 
-        self._get_widget_by_key("selectbox", "filetype_select").set_value(value).run()
+        self._get_widget_by_key("selectbox", "filetype_select_input").set_value(value).run()
 
     def get_type_select(self) -> any:
         """Get the type select selectbox"""
@@ -188,7 +188,7 @@ class TestApp:
             self.at = AppTest(self.main_path, default_timeout=100).run()
 
             # Assert filetype
-            assert self.at.sidebar.markdown[0].value == f"Detected: {resources.FILE_TYPE_DICT[path]}"
+            assert self.at.sidebar.markdown[1].value == f"Detected: {resources.FILE_TYPE_DICT[path]}"
 
     @patch("streamlit.sidebar.file_uploader")
     def test_fixed_read(self, mock_file_uploader: MagicMock) -> None:
@@ -198,6 +198,8 @@ class TestApp:
         self.create_mock_file(mock_file_uploader, path)
         self.at = AppTest(self.main_path, default_timeout=100).run()
 
+        self._get_widget_by_key("selectbox", "filetype_select_input").set_value(resources.FILE_TYPE_DICT[path])
+        self._get_widget_by_key("selectbox", "filetype_select_input").run()
         self.set_filetype_select(resources.FILE_TYPE_DICT[path])
         assert len(self.at.warning) == 0
 

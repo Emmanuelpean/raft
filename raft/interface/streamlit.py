@@ -63,14 +63,12 @@ def display_data(
     dataset: list[SignalData],
     key: int,
     filename: bool,
-    height: float | int,
 ) -> None:
     """Display a figure and the associated data in different tabs
     :param figure: figure object
     :param dataset: data to display in the dataframe
     :param key: figure key int
-    :param filename: argument passed to get_name of the signals
-    :param height: table height"""
+    :param filename: argument passed to get_name of the signals"""
 
     tabs = st.tabs(["Graph", "Data"])
 
@@ -84,4 +82,4 @@ def display_data(
 
     # Dataframe
     dataframe = pd.DataFrame({name: array for name, array in zip(df_columns, [x_data] + ys_data)})
-    tabs[1].dataframe(dataframe, use_container_width=True, hide_index=True, height=height)
+    tabs[1].dataframe(dataframe, use_container_width=True, hide_index=True, height=figure.layout.height - 10)

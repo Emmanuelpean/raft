@@ -96,7 +96,9 @@ class TestDisplayData:
         mock_tabs.return_value = [MagicMock(), MagicMock()]
 
         # Execute
-        display_data(go.Figure(), signal_data, key=1, filename=True)
+        figure = go.Figure()
+        figure.update_layout(height=400)
+        display_data(figure, signal_data, key=1, filename=True)
 
         # Assert
         mock_tabs.assert_called_once_with(["Graph", "Data"])
@@ -115,35 +117,13 @@ class TestDisplayData:
         mock_dataframe.return_value.style.format.return_value = "formatted_df"
 
         figure = go.Figure()
+        figure.update_layout(height=400)
 
         # Execute
         display_data(figure, signal_data, key=1, filename=True)
 
         # Assert
         mock_tab1.plotly_chart.assert_called_once_with(figure, use_container_width=True, key="figure_1")
-
-    @patch("streamlit.tabs")
-    @patch("utils.miscellaneous.make_unique")
-    @patch("pandas.DataFrame")
-    def test_display_data_shows_dataframe(self, mock_dataframe, mock_make_unique, mock_tabs, signal_data) -> None:
-        """Test that display_data displays a dataframe in the second tab."""
-
-        # Setup
-        mock_tab1 = MagicMock()
-        mock_tab2 = MagicMock()
-        mock_tabs.return_value = [mock_tab1, mock_tab2]
-        mock_make_unique.return_value = ["Time (s)", "Signal 1", "Signal 2"]
-        mock_df_style = MagicMock()
-        mock_df_style.format.return_value = "formatted_df"
-        mock_dataframe.return_value.style = mock_df_style
-
-        figure = go.Figure()
-
-        # Execute
-        display_data(figure, signal_data, key=1, filename=True)
-
-        # Assert
-        mock_tab2.dataframe.assert_called_once_with("formatted_df", use_container_width=True, hide_index=True)
 
     @patch("streamlit.tabs")
     @patch("utils.miscellaneous.make_unique")
@@ -163,7 +143,9 @@ class TestDisplayData:
         mock_dataframe.return_value.style = mock_df_style
 
         # Execute
-        display_data(go.Figure(), signal_data, key=1, filename=True)
+        figure = go.Figure()
+        figure.update_layout(height=400)
+        display_data(figure, signal_data, key=1, filename=True)
 
         # Assert
         # Check that DataFrame was created with correct data

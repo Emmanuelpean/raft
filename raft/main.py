@@ -15,7 +15,8 @@ from data_processing.fitting import MODELS, get_model_parameters
 from interface.plot import plot_signals, scatter_plot, make_figure
 from interface.streamlit import tab_bar, display_data
 from utils.file_io import read_file, render_image
-from utils.miscellaneous import normalise_list, make_unique, get_pyproject_info, get_last_commit_date_from_github
+from utils.miscellaneous import normalise_list, make_unique
+from utils.project import get_pyproject_info, get_last_commit_date_from_github
 from utils.session_state import refresh_session_state_widgets, set_session_state_value_function, set_default_widgets
 from utils.strings import matrix_to_string, number_to_str, generate_html_table, dedent
 
@@ -174,7 +175,7 @@ filetype_select = st.sidebar.selectbox(
     options=FILETYPES,
     on_change=reset_data,
     help=filetype_help,
-    key="filetype_select",
+    key="filetype_select_input",
 )
 
 # Detect message
@@ -1031,13 +1032,13 @@ else:
 
             if len(figures) == 1:
                 with plot_spot:
-                    display_data(figures[0], datasets[0], 1, multifile_cond, 790)
+                    display_data(figures[0], datasets[0], 1, multifile_cond)
             else:
                 columns = plot_spot.columns(2)
                 for i, figure in enumerate(figures):
                     figure.update_layout(height=400)
                     with columns[i % 2]:
-                        display_data(figure, datasets[i], i, multifile_cond, 390)
+                        display_data(figure, datasets[i], i, multifile_cond)
 
         # Signal dictionary case
         else:
@@ -1056,14 +1057,14 @@ else:
 
             if len(figures) == 1:
                 with plot_spot:
-                    display_data(figures[0], list(signals.values())[0], 1, multifile_cond, 790)
+                    display_data(figures[0], list(signals.values())[0], 1, multifile_cond)
             else:
                 columns = plot_spot.columns(2)
                 for i, figure in enumerate(figures):
                     figure.update_layout(height=400)
                     with columns[i % 2]:
                         key = list(signals.keys())[i]
-                        display_data(figures[i], signals[key], i, multifile_cond, 390)
+                        display_data(figures[i], signals[key], i, multifile_cond)
 
 # ----------------------------------------------------- INFORMATION ----------------------------------------------------
 

@@ -341,20 +341,21 @@ def FluorEssenceFile(filename: str) -> list[SignalData] | dict[str, SignalData]:
 
         # Data type
         try:  # Excitation Emission map
-            float(headers[1]["Long Name"])  # check if the Long Name is a float or int
             for header in ys_headers:
                 wl = float(header["Long Name"])
                 dim = Dimension(wl, constants.EXC_WAVELENGTH_QT, constants.NM_UNIT)
-                header[constants.PYDA_ID + constants.EXCITATION_WAVELENGTH_ID] = dim
+                header[constants.EXCITATION_WAVELENGTH_ID] = dim
             names = [header["Long Name"] + " " + constants.NM_UNIT for header in ys_headers]
 
         except ValueError:  # Timelapse
             date_format = "%m/%d/%Y %H:%M:%S"
             for header in ys_headers:
                 date = dt.datetime.strptime(header["TimeStamp"], date_format)
-                header[constants.PYDA_ID + constants.TIMESTAMP_ID] = Dimension(date, constants.TIME_QT)
-            names = [str(header[constants.TIMESTAMP_ID]) for header in ys_headers]
+                header[constants.TIMESTAMP_ID] = Dimension(date, constants.TIME_QT)
+                del header["TimeStamp"]
+            names = [str(header[constants.TIMESTAMP_ID].data) for header in ys_headers]
 
+        # Converts the remaining values to dimensions
         for header in ys_headers:
             for key in header:
                 if not isinstance(header[key], Dimension):
