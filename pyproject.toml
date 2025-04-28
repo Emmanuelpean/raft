@@ -3,19 +3,19 @@ name = "raft"
 version = "2.0.0"
 description = "Universal Data File Plotter"
 authors = [
-    {name = "Emmanuel V. Péan",email = "emmanuel.pean@gmail.com"}
+    { name = "Emmanuel V. Péan", email = "emmanuel.pean@gmail.com" }
 ]
-license = {text = "MIT"}
+license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "numpy (==2.2.5)",
-    "lxml (==5.3.1)",
-    "renishawwire (==0.1.16)",
-    "plotly (==6.0.1)",
-    "scipy (==1.15.2)",
-    "pandas (==2.2.3)",
-    "streamlit (==1.42.2)",
+    "numpy==2.2.5",
+    "lxml==5.3.1",
+    "renishawwire==0.1.16",
+    "plotly==6.0.1",
+    "scipy==1.15.2",
+    "pandas==2.2.3",
+    "streamlit==1.42.2",
 ]
 
 [tool.poetry]
@@ -26,6 +26,7 @@ pytest = "8.3.5"
 pytest-cov = "6.1.1"
 beautifulsoup4 = "4.13.3"
 wfork-streamlit-profiler = "1.3.0"
+black = '25.1.0'
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
