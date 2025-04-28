@@ -1,12 +1,8 @@
 <p align="center">
    <img src="https://github.com/Emmanuelpean/raft/blob/main/resources/medias/logo.svg" alt="Raft">
 </p>
-<p align="center" style="font-family: sans-serif; font-size: 85px; line-height: 1.3; color: rgb(108, 65, 39); margin: 0;">
-  <strong>RAFT</strong>
-</p>
-<p align="center" style="font-family: sans-serif; font-size: 70px; line-height: 1.3; color: rgb(108, 65, 39); margin-top: 10px;">
-  Unive<strong>r</strong>sal D<strong>a</strong>ta <strong>F</strong>ile Plo<strong>t</strong>ter
-</p>
+<h1 align="center">RAFT</h1>
+<h2 align="center">Universal Data File Plotter</h2>
 <p align="center">
    <a href="https://opensource.org/licenses/MIT">
       <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
