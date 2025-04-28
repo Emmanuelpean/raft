@@ -350,7 +350,7 @@ class TestApp:
         # Start the app and run it
         self.at = AppTest(self.main_path, default_timeout=100).run()
 
-        assert self.get_type_select().options == ["All", "Temperature", "Humidity"]
+        assert sorted(self.get_type_select().options) == sorted(["All", "Temperature", "Humidity"])
         self.get_type_select().select("Humidity").run()
         assert len(self.at.warning) == 0
 

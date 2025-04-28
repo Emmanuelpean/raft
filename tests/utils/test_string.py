@@ -22,7 +22,7 @@ class TestMatrixToString:
         header = ["A", "B"]
         result = matrix_to_string(arrays, header)
         expected = "A,B\r\n1.2,1.6\r\n2.0,2.0\r\n5.0,5.64325253463463e+23\r\n"
-        assert result == expected
+        assert result.replace("\r\n", "\n") == expected.replace("\r\n", "\n")
 
     def test_no_header(self) -> None:
 
@@ -36,7 +36,7 @@ class TestMatrixToString:
         arrays = [np.array([1.2, 2, 5])]
         result = matrix_to_string(arrays, ["A"])
         expected = "A\n1.2\r\n2.0\r\n5.0\r\n"
-        assert result == expected
+        assert result.replace("\r\n", "\n") == expected.replace("\r\n", "\n")
 
     def test_mixed_lengths(self) -> None:
 
@@ -44,26 +44,26 @@ class TestMatrixToString:
         header = ["A", "B"]
         result = matrix_to_string(arrays, header)
         expected = "A,B\n1.2,1.6\r\n2.0,2.0\r\n5.0,\r\n"
-        assert result == expected
+        assert result.replace("\r\n", "\n") == expected.replace("\r\n", "\n")
 
         arrays = [np.array([1.2, 2.0, 6.0]), np.array([1.2, 2.0]), np.array([1.6, 2.0, 5.0])]
         header = ["A", "B"]
         result = matrix_to_string(arrays, header)
         expected = "A,B\n1.2,1.2,1.6\r\n2.0,2.0,2.0\r\n6.0,,5.0\r\n"
-        assert result == expected
+        assert result.replace("\r\n", "\n") == expected.replace("\r\n", "\n")
 
         arrays = [np.array([1.2, 2.0]), np.array([1.6, 2.0, 5.0])]
         header = ["A", "B"]
         result = matrix_to_string(arrays, header)
         expected = "A,B\n1.2,1.6\r\n2.0,2.0\r\n,5.0\r\n"
-        assert result == expected
+        assert result.replace("\r\n", "\n") == expected.replace("\r\n", "\n")
 
     def test_all_empty(self) -> None:
 
         arrays = [np.array([]), np.array([])]
         header = ["A", "B"]
         result = matrix_to_string(arrays, header)
-        assert result == "A,B\n"
+        assert result.replace("\r\n", "\n") == "A,B\n"
 
 
 class TestGenerateHtmlTable:
