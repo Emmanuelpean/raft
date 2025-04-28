@@ -207,13 +207,13 @@ class TestFitData:
     def test_voigt_fit(self) -> None:
         """Test fit with voigt function"""
 
-        true_params = dict(a=5.0, mu=2.0, sigma=0.5, gamma=1.6, c=0.6)
+        true_params = dict(a=5.0, mu=2.0, sigma=-2, gamma=1.6, c=0.6)
         x_data, y_data = self.generate_noisy_data(voigt, true_params)
         fit_output = fit_data(x_data, y_data, voigt, true_params)
         expected = {
-            "params": [5.65851920, 1.78835872, 0.00011284, 1.89123188, 0.55631642],
-            "param_errors": [0.53803494, 0.07415275, 206.22004309, 0.17031415, 0.02868130],
-            "r_squared": 0.9324065583778361,
+            "params": [4.69787944, 2.06348480, -2.00670321, 1.70750787, 0.56065692],
+            "param_errors": [0.53382277, 0.02293932, 0.11939521, 0.35389672, 0.03274651],
+            "r_squared": 0.9904314478807457,
         }
         self.assert_fit_quality(fit_output, expected)
 
