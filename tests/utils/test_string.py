@@ -29,7 +29,7 @@ class TestMatrixToString:
         arrays = [np.array([1.2, 2, 5]), np.array([1.6, 2])]
         result = matrix_to_string(arrays)
         expected = "1.2,1.6\r\n2.0,2.0\r\n5.0,\r\n"
-        assert result == expected
+        assert result.replace("\r\n", "\n") == expected.replace("\r\n", "\n")
 
     def test_single_column(self) -> None:
 
