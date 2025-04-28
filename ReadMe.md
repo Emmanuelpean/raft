@@ -1,11 +1,12 @@
 <p align="center">
    <img src="https://github.com/Emmanuelpean/raft/blob/main/resources/medias/logo.svg" alt="Raft">
 </p>
-<div style="text-align: center; font-family: sans-serif; font-size: 45px; line-height: 1.3; 
-    color: rgb(108, 65, 39)">RAFT</div>
-    <div style="text-align: center; font-family: sans-serif; font-size: 45px; line-height: 1.3;color: rgb(108, 65, 39)">
-    Unive<strong>r</strong>sal D<strong>a</strong>ta <strong>F</strong>ile Plo<strong>t</strong>ter
-</div>
+<p align="center" style="font-family: sans-serif; font-size: 45px; line-height: 1.3; color: rgb(108, 65, 39); margin: 0;">
+  <strong>RAFT</strong>
+</p>
+<p align="center" style="font-family: sans-serif; font-size: 30px; line-height: 1.3; color: rgb(108, 65, 39); margin-top: 10px;">
+  Unive<strong>r</strong>sal D<strong>a</strong>ta <strong>F</strong>ile Plo<strong>t</strong>ter
+</p>
 <p align="center">
    <a href="https://opensource.org/licenses/MIT">
       <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">

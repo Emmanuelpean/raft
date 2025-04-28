@@ -17,7 +17,6 @@ dependencies = [
     "pandas (==2.2.3)",
     "streamlit (==1.42.2)",
 ]
-last_modified = "28th April 2025"
 
 [tool.poetry]
 

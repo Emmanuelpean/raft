@@ -15,15 +15,15 @@ from data_processing.fitting import MODELS, get_model_parameters
 from interface.plot import plot_signals, scatter_plot, make_figure
 from interface.streamlit import tab_bar, display_data
 from utils.file_io import read_file, render_image
-from utils.miscellaneous import normalise_list, make_unique, get_pyproject_info
+from utils.miscellaneous import normalise_list, make_unique, get_pyproject_info, get_last_commit_date_from_github
 from utils.session_state import refresh_session_state_widgets, set_session_state_value_function, set_default_widgets
 from utils.strings import matrix_to_string, number_to_str, generate_html_table, dedent
 
 __version__ = get_pyproject_info("project", "version")
 __name__ = get_pyproject_info("project", "name")
-__date__ = get_pyproject_info("project", "last_modified")
-__author__ = get_pyproject_info("project", "authors")[0]["name"]
 __github__ = get_pyproject_info("project", "urls", "repository")
+__date__ = get_last_commit_date_from_github(__github__, "type-hints")
+__author__ = get_pyproject_info("project", "authors")[0]["name"]
 __development__ = True
 
 # Profiler
