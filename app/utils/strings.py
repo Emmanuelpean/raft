@@ -22,7 +22,7 @@ def matrix_to_string(
     if isinstance(header, list) and isinstance(header[0], str):
         header = [header]
     if isinstance(header, list):
-        buffer.write("\n".join([",".join(head) for head in header]) + "\n")
+        buffer.write("\r\n".join([",".join(head) for head in header]) + "\r\n")
 
     # Find maximum column length
     max_len = max(len(array) for array in arrays)

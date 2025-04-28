@@ -21,7 +21,7 @@ class TestMatrixToString:
         arrays = [np.array([1.2, 2.0, 5.0]), np.array([1.6, 2.0, 5.64325253463463e23])]
         header = ["A", "B"]
         result = matrix_to_string(arrays, header)
-        expected = "A,B\n1.2,1.6\r\n2.0,2.0\r\n5.0,5.64325253463463e+23\r\n"
+        expected = "A,B\r\n1.2,1.6\r\n2.0,2.0\r\n5.0,5.64325253463463e+23\r\n"
         assert result == expected
 
     def test_no_header(self) -> None:
@@ -259,7 +259,7 @@ class TestNumberToString:
             (1.325e5, 5, "g", False, True, "1.325E5"),
         ],
     )
-    def test_number(self, value, precision, format_str, html, auto_exponent, expected):
+    def test_number(self, value, precision, format_str, html, auto_exponent, expected) -> None:
 
         print(expected)
         assert (
