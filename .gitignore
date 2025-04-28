@@ -2,6 +2,6 @@
 .coverage
 htmlcov
 __pycache__/
-raft/__pycache__/
+app/__pycache__/
 tests/__pycache__/
 /.idea
