@@ -186,7 +186,7 @@ detect_placeholder = st.sidebar.empty()
 # If no file is provided or no signal is stored
 if not file:  # covers None and empty list
     st.html(render_image(LOGO_PATH, 200))  # main logo
-    title_string = """<div style="text-align: center; font-family: sans-serif; font-size: 45px; line-height: 1.3; 
+    title_string = """<div style="text-align: center; font-family: sans-serif; font-size: 45px; line-height: 1.3;
     color: rgb(108, 65, 39)">RAFT</div>
     <div style="text-align: center; font-family: sans-serif; font-size: 45px; line-height: 1.3;color: rgb(108, 65, 39)">
     Unive<strong>r</strong>sal D<strong>a</strong>ta <strong>F</strong>ile Plo<strong>t</strong>ter</div>"""
@@ -326,24 +326,25 @@ else:
 
             # ------------------------------------------------ AVERAGING -----------------------------------------------
 
-            expander_label = AVERAGING_LABEL
-            try:
-                if sss.averaging_n > 1:
-                    signals = average_signals(signals, sss.averaging_n)
-                    expander_label = f"__✔ {AVERAGING_LABEL} (Every {sss.averaging_n} Signals)__"
-            except Exception as e:
-                print("Averaging failed")
-                print(e)
+            if len(signals) > 1:
                 expander_label = AVERAGING_LABEL
+                try:
+                    if sss.averaging_n > 1:
+                        signals = average_signals(signals, sss.averaging_n)
+                        expander_label = f"__✔ {AVERAGING_LABEL} (Every {sss.averaging_n} Signals)__"
+                except Exception as e:
+                    print("Averaging failed")
+                    print(e)
+                    expander_label = AVERAGING_LABEL
 
-            with st.sidebar.expander(expander_label, sss["averaging_interacted"]):
+                with st.sidebar.expander(expander_label, sss["averaging_interacted"]):
 
-                st.number_input(
-                    label="Average Every X Signals",
-                    min_value=1,
-                    key="averaging_n",
-                    on_change=set_session_state_value_function("averaging_interacted", True),
-                )
+                    st.number_input(
+                        label="Average Every X Signals",
+                        min_value=1,
+                        key="averaging_n",
+                        on_change=set_session_state_value_function("averaging_interacted", True),
+                    )
 
             # ----------------------------------------------- BACKGROUND -----------------------------------------------
 
@@ -438,7 +439,7 @@ else:
                 * __Fixed Step__ interpolation – Data are interpolated using a specified step size.
                 * __Point Count__ interpolation – Data are interpolated to fit a specified number of points."""
 
-                st.segmented_control(
+                st.radio(
                     label="Interpolation Type",
                     options=INTERP_OPTIONS,
                     key="interp_type",
@@ -548,7 +549,7 @@ else:
                 * __Max. normalisation__ – the y-values are normalised with respect to their maximum value.
                 * __Feature scaling__ – the y-values are normalised based on specified minimum and maximum values."""
 
-                st.segmented_control(
+                st.radio(
                     label="Normalisation Type",
                     options=NORM_OPTIONS,
                     key="norm_type",

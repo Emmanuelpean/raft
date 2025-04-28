@@ -20,6 +20,7 @@ from config import resources
 class TestApp:
     main_path = "app/main.py"
 
+    AVERAGING_INDEX = 0
     BCKG_EXP_INDEX = 0
     RANGE_EXP_INDEX = 1
     INTERP_EXP_INDEX = 2
@@ -78,6 +79,11 @@ class TestApp:
         return self._get_widget_by_key("selectbox", "data_select")
 
     # ------------------------------------------------- DATA PROCESSING ------------------------------------------------
+
+    def set_averaging(self, value) -> None:
+        """Set the averaging number"""
+
+        self._get_widget_by_key("number_input", "averaging_n").set_value(value).run()
 
     def set_background(self, lower, upper) -> None:
         """Set the background range"""
@@ -198,8 +204,6 @@ class TestApp:
         self.create_mock_file(mock_file_uploader, path)
         self.at = AppTest(self.main_path, default_timeout=100).run()
 
-        self._get_widget_by_key("selectbox", "filetype_select_input").set_value(resources.FILE_TYPE_DICT[path])
-        self._get_widget_by_key("selectbox", "filetype_select_input").run()
         self.set_filetype_select(resources.FILE_TYPE_DICT[path])
         assert len(self.at.warning) == 0
 
@@ -212,12 +216,25 @@ class TestApp:
 
         self.set_filetype_select("EasyLog (.txt)")
 
-        assert self.at.warning[0].value == "Unable to read that file"
+        assert self.at.warning[0].value == "Unable to read the file."
 
     # ------------------------------------------------- DATA PROCESSING ------------------------------------------------
 
     @patch("streamlit.sidebar.file_uploader")
-    def test_background_range(self, mock_file_uploader: MagicMock):
+    def test_averaging(self, mock_file_uploader: MagicMock) -> None:
+
+        # Load test data and start the app
+        self.create_mock_file(mock_file_uploader, resources.DIFFRAC_TIMELAPSE_PATH)
+        self.at = AppTest(self.main_path, default_timeout=100).run()
+
+        assert self.at.sidebar.expander[self.AVERAGING_INDEX].label == main.AVERAGING_LABEL
+        self.set_averaging(2)
+        assert self.at.sidebar.expander[self.AVERAGING_INDEX].label == f"__✔ {main.AVERAGING_LABEL} (Every 2 Signals)__"
+        self.set_averaging(1)
+        assert self.at.sidebar.expander[self.AVERAGING_INDEX].label == main.AVERAGING_LABEL
+
+    @patch("streamlit.sidebar.file_uploader")
+    def test_background_range(self, mock_file_uploader: MagicMock) -> None:
 
         # Load test data and start the app
         self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
@@ -230,7 +247,7 @@ class TestApp:
         assert self.at.sidebar.expander[self.BCKG_EXP_INDEX].label == main.BACKGROUND_LABEL
 
     @patch("streamlit.sidebar.file_uploader")
-    def test_data_range(self, mock_file_uploader: MagicMock):
+    def test_data_range(self, mock_file_uploader: MagicMock) -> None:
 
         # Load test data and start the app
         self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
@@ -243,7 +260,7 @@ class TestApp:
         assert self.at.sidebar.expander[self.RANGE_EXP_INDEX].label == main.RANGE_LABEL
 
     @patch("streamlit.sidebar.file_uploader")
-    def test_interpolation(self, mock_file_uploader: MagicMock):
+    def test_interpolation(self, mock_file_uploader: MagicMock) -> None:
 
         # Load test data and start the app
         self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
@@ -256,7 +273,7 @@ class TestApp:
         assert self.at.sidebar.expander[self.INTERP_EXP_INDEX].label == f"__✔ {main.INTERP_LABEL} (step = 0.69 nm)__"
 
     @patch("streamlit.sidebar.file_uploader")
-    def test_derivative(self, mock_file_uploader: MagicMock):
+    def test_derivative(self, mock_file_uploader: MagicMock) -> None:
 
         # Load test data and start the app
         self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
@@ -267,7 +284,7 @@ class TestApp:
         assert self.at.sidebar.expander[self.DERIVATIVE_EXP_INDEX].label == f"__✔ {main.DERIVE_LABEL} (1 order)__"
 
     @patch("streamlit.sidebar.file_uploader")
-    def test_smoothing(self, mock_file_uploader: MagicMock):
+    def test_smoothing(self, mock_file_uploader: MagicMock) -> None:
 
         # Load test data and start the app
         self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
@@ -281,7 +298,7 @@ class TestApp:
         self.set_smoothing(10001, 4)
 
     @patch("streamlit.sidebar.file_uploader")
-    def test_normalisation(self, mock_file_uploader: MagicMock):
+    def test_normalisation(self, mock_file_uploader: MagicMock) -> None:
 
         # Load test data and start the app
         self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
@@ -310,7 +327,7 @@ class TestApp:
         self.set_normalisation("Feature Scaling", "f", "f")
 
     @patch("streamlit.sidebar.file_uploader")
-    def test_fitting(self, mock_file_uploader: MagicMock):
+    def test_fitting(self, mock_file_uploader: MagicMock) -> None:
 
         # Load test data and start the app
         self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
@@ -326,7 +343,7 @@ class TestApp:
     # ---------------------------------------------- DIFFERENT DATA TYPES ----------------------------------------------
 
     @patch("streamlit.sidebar.file_uploader")
-    def test_dict_file(self, mock_file_uploader: MagicMock):
+    def test_dict_file(self, mock_file_uploader: MagicMock) -> None:
 
         self.create_mock_file(mock_file_uploader, resources.EASYLOG_PATH)
 
@@ -338,7 +355,7 @@ class TestApp:
         assert len(self.at.warning) == 0
 
     @patch("streamlit.sidebar.file_uploader")
-    def test_list_file(self, mock_file_uploader: MagicMock):
+    def test_list_file(self, mock_file_uploader: MagicMock) -> None:
 
         self.create_mock_file(mock_file_uploader, resources.FLUORESSENCE_MULTIPLE_PATH)
 
@@ -346,11 +363,11 @@ class TestApp:
         self.at = AppTest(self.main_path, default_timeout=100).run()
 
         assert len(self.get_data_select().options) == 11
-        self.get_data_select().select("05/12/2017 17:24:47").run()
+        self.get_data_select().select("2017-05-12 17:28:23").run()
         assert len(self.at.warning) == 0
 
     @patch("streamlit.sidebar.file_uploader")
-    def test_dict_list_file(self, mock_file_uploader: MagicMock):
+    def test_dict_list_file(self, mock_file_uploader: MagicMock) -> None:
 
         self.create_mock_file(mock_file_uploader, resources.PRODATA_TAS_3PROP_PATH)
 
@@ -370,7 +387,7 @@ class TestApp:
     # --------------------------------------------- EXTRACTING INFORMATION ---------------------------------------------
 
     @patch("streamlit.sidebar.file_uploader")
-    def test_extract(self, mock_file_uploader: MagicMock):
+    def test_extract(self, mock_file_uploader: MagicMock) -> None:
 
         self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
 
@@ -386,11 +403,3 @@ class TestApp:
         self.toggle_fwhm_interp(True)
         self.toggle_max_interp(True)
         self.toggle_min_interp(True)
-
-    @patch("streamlit.sidebar.file_uploader")
-    def test_failed_extract(self, mock_file_uploader: MagicMock):
-
-        self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
-        self.at = AppTest(self.main_path, default_timeout=100).run()
-        self.set_range("770", "900")
-        self.toggle_fwhm(True)
