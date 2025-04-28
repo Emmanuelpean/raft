@@ -27,6 +27,7 @@ pytest-cov = "6.1.1"
 beautifulsoup4 = "4.13.3"
 wfork-streamlit-profiler = "1.3.0"
 black = '25.1.0'
+coverage = '7.8.0'
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
