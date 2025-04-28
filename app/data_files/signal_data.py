@@ -17,66 +17,24 @@ methods for data manipulation (e.g., smoothing, range reduction), calculating ex
 from __future__ import annotations
 
 import datetime as dt
-import re
 
 import numpy as np
 import plotly.graph_objects as go
-import plotly.subplots as ps
 import scipy.signal as ss
 
 from config import constants
 from data_processing.fitting import fit_data
-from utils.miscellaneous import merge_dicts
-from utils.string import number_to_str
 from data_processing.processing import (
     normalise,
     feature_scale,
     interpolate_point,
     interpolate_data,
     get_derivative,
+    finite_argm,
 )
-
-
-def get_label(
-    string: str,
-    dictionary: dict[str, str],
-    capitalize: bool = True,
-) -> str:
-    """Create a label from a string to display it with matplotlib
-    :param string: string
-    :param dictionary: dictionary containing conversion for specific strings
-    :param capitalize: if True, try to capitalize the label
-    Note: The string should not contain the symbol '?'"""
-
-    if "?" in string:
-        raise AssertionError("? should not be in the string")
-
-    label = " " + string + " "  # initialise the label
-
-    # Replace the strings that have a dictionary entry only if they start and end with a white space or _ or ^
-    for item in sorted(dictionary.keys(), key=lambda a: -len(a)):
-        condition_start = any(x + item in label for x in [" ", "_", "^"])
-        condition_end = any(item + x in label for x in [" ", "_", "^"])
-        if condition_start and condition_end:
-            label = label.replace(item, "?" + dictionary[item])
-
-    # Superscripts
-    label = re.sub(r"\^([0-9a-zA-Z+-]+)", r"<sup>\1</sup>", label)
-
-    # Subscripts
-    label = re.sub(r"_([0-9a-zA-Z+-]+)", r"<sub>\1</sub>", label)
-
-    # Remove whitespaces
-    label = label.strip()
-
-    # Capitalize
-    if label[0] != "?" and capitalize and len(label.split("_")[0]) > 1:
-        label = label[0].capitalize() + label[1:]
-
-    label = label.replace("?", "")
-    label = label.replace("|", " ")
-
-    return label
+from interface.plot import make_figure
+from utils.miscellaneous import merge_dicts
+from utils.strings import number_to_str, get_label_html
 
 
 class Dimension(object):
@@ -88,10 +46,10 @@ class Dimension(object):
         quantity: str = "",
         unit: str = "",
     ) -> None:
-        """Object initialisation
+        """Initialise the object by storing the parameters as attributes
         :param data: value or np.ndarray of values
-        :param quantity: quantity associated with the data
-        :param unit: unit associated with the data"""
+        :param quantity: quantity associated with the data. An empty string by default.
+        :param unit: unit associated with the data. An empty string by default."""
 
         self.data = data
         self.quantity = quantity
@@ -106,46 +64,34 @@ class Dimension(object):
         input_kwargs = dict(data=self.data, quantity=self.quantity, unit=self.unit)
         return Dimension(**merge_dicts(args, kwargs, input_kwargs))
 
+    def __getitem__(self, item) -> Dimension:
+        """getitem special method"""
+
+        return self(self.data[item])
+
+    # ----------------------------------------------------- LABELS -----------------------------------------------------
+
     def get_quantity_label_html(self) -> str:
         """Get the quantity label"""
 
-        if self.quantity:
-            # If the label is only one alpha character
-            if sum([c.isalpha() for c in self.quantity]) == 1:
-                capitalise = False
+        # Capitalise the quantity if it's more than 1 character
+        capitalise = sum([c.isalpha() for c in self.quantity]) > 1
 
-            else:
-                capitalise = True
-
-            return get_label(self.quantity, constants.quantities_label, capitalise)
-
-        else:
-            return ""
+        # Return the label
+        return get_label_html(self.quantity, constants.QUANTITIES_LABEL, capitalise)
 
     def get_unit_label_html(self) -> str:
         """Get the unit label"""
 
-        if self.unit:
-            return get_label(self.unit, constants.units_label, False)
-        else:
-            return ""
+        return get_label_html(self.unit, constants.UNITS_LABEL, False)
 
     def get_label_html(self) -> str:
         """Return the quantity and unit as a string"""
 
         if self.unit:
-            return self.get_quantity_label_html() + " (" + self.get_unit_label_html() + ")"
+            return f"{self.get_quantity_label_html()} ({self.get_unit_label_html()})"
         else:
             return self.get_quantity_label_html()
-
-    def get_value_label_html(self) -> str:
-        """Return the value label for display"""
-
-        label = f"{self.get_quantity_label_html()}: {number_to_str(self.data, 4, True)}"
-        if self.unit:
-            return f"{label} {self.get_unit_label_html()}"
-        else:
-            return label
 
     def get_label_raw(self) -> str:
         """Get a simple label of the dimension"""
@@ -155,15 +101,29 @@ class Dimension(object):
         else:
             return self.quantity
 
+    def get_value_label_html(self, *args, **kwargs) -> str:
+        """Return the value label for display"""
+
+        if not isinstance(self.data, (int, float, np.integer)):
+            raise AssertionError("Data should be an integer or float")
+
+        label = f"{self.get_quantity_label_html()}: {number_to_str(self.data, *args, **kwargs)}"
+        if self.unit:
+            return f"{label} {self.get_unit_label_html()}"
+        else:
+            return label
+
     def __repr__(self) -> str:
         """__repr__ method"""
 
         # Data
         string = f"Dimension({self.data}"
 
-        # Quantity, unit
+        # Quantity
         if self.quantity:
             string += f", {self.quantity}"
+
+        # Unit
         if self.unit:
             string += f", {self.unit}"
 
@@ -176,77 +136,94 @@ class SignalData(object):
 
     def __init__(
         self,
-        x: Dimension | list[Dimension],
-        y: Dimension | list[Dimension],
+        x: Dimension | list[Dimension] | tuple[Dimension],
+        y: Dimension | list[Dimension] | tuple[Dimension],
         filename: str = "",
         signalname: str | list[str] = "",
         z_dict: dict | None = None,
     ) -> None:
-        """Initialise the object by storing the input arguments
+        """Initialise the object by processing and storing the input arguments
         :param x: x dimension
         :param y: y dimension
         :param filename: file filename
         :param signalname: signal filename
         :param z_dict: additional optional information about the signal"""
 
-        # If the input is a list of Dimensions, convert them to a single Dimension
+        # For each dimension, if the input is a list of Dimensions, convert them to a single Dimension, else store the dimension
         if isinstance(x, (list, tuple)):
-            x = Dimension(np.array([d.data for d in x]), x[0].quantity, x[0].unit)
+            self.x = Dimension(np.array([dim.data for dim in x]), x[0].quantity, x[0].unit)
+        else:
+            self.x = x
+
         if isinstance(y, (list, tuple)):
-            y = Dimension(np.array([d.data for d in y]), y[0].quantity, y[0].unit)
+            self.y = Dimension(np.array([dim.data for dim in y]), y[0].quantity, y[0].unit)
+        else:
+            self.y = y
 
-        self.x = x
-        self.y = y
-        if not self.x.quantity:
-            self.x.quantity = "X-quantity"
-            if not self.x.unit:
-                self.x.unit = "X-unit"
-        if not self.y.quantity:
-            self.y.quantity = "Y-quantity"
-            if not self.y.unit:
-                self.y.unit = "Y-unit"
+        # Add missing quantity and units only if both are missing
+        if not self.x.quantity and not self.x.unit:
+            self.x.quantity, self.x.unit = "X-quantity", "X-unit"
+        if not self.y.quantity and not self.y.unit:
+            self.y.quantity, self.y.unit = "Y-quantity", "Y-unit"
 
-        # Names
+        # File name and signal name
         self.filename = filename
         if isinstance(signalname, str):
-            self.signalname = [signalname]
+            self.signalnames = [signalname]
         else:
-            self.signalname = signalname
+            self.signalnames = signalname
 
-        # Z dict
+        # Z dictionary
         if z_dict is None:
             self.z_dict = {}
         else:
             self.z_dict = z_dict
 
+    def __call__(self, *args: object, **kwargs: object) -> SignalData:
+        """Return a SignalData object with the same parameter as this one, but overridden with args and kwargs.
+        :param args: arguments passed to the constructor in order
+        :param kwargs: keyword arguments passed to the constructor"""
+
+        args = dict(zip(("x", "y", "filename", "signalname", "z_dict"), args))
+        input_kwargs = dict(x=self.x, y=self.y, filename=self.filename, signalname=self.signalnames, z_dict=self.z_dict)
+        return SignalData(**merge_dicts(args, kwargs, input_kwargs))
+
+    @property
+    def signalname(self) -> str:
+        """Return the formatted signal name"""
+
+        return " - ".join([name for name in self.signalnames if name])
+
     def get_name(self, filename: bool) -> str:
         """Get the filename of the signal for display purpose
-        :param filename: if True, use the filename"""
-
-        signalname = [e for e in self.signalname if e]
+        :param filename: if True, use the filename
+        :return: filename if the signalname does not exist
+                 filename + signalname if filename is True and exist, and signalname exist
+                 signalname if signalname exist and filename is False or does not exist"""
 
         # If no signal name, just return the filename
-        if not signalname:
+        if not self.signalname:
             return self.filename
 
         # If the signal has a filename
         else:
             # If filename arg, return the long name
             if filename and self.filename:
-                return self.filename + ": " + " - ".join(signalname)
+                return f"{self.filename}: {self.signalname}"
 
             # Else, just return the signalname
             else:
-                return " - ".join(signalname)
+                return self.signalname
 
     def plot(
         self,
         figure: go.Figure | None = None,
         filename: bool = False,
         secondary_y: bool = False,
+        plot_method: str = "Scattergl",
         **kwargs,
     ) -> go.Figure:
-        """Plot the signal data in a plotly figure
+        """Plot the signal data in a plotly figure and format it
         :param figure: plotly figure object
         :param filename: argument passed to get_name
         :param secondary_y: if True, use the secondary y-axis
@@ -254,17 +231,15 @@ class SignalData(object):
 
         # Generate a new figure if not provided
         if figure is None:
-            figure = ps.make_subplots(1, 1, specs=[[{"secondary_y": secondary_y}]])
+            figure = make_figure(secondary_y)
 
-        font = dict(size=16, color="black")
-        hovertemplate = "X: %{x}<br>Y: %{y}<br>" + f"File {self.filename}<br>"
-        signalname = [f for f in self.signalname if f]
-        if signalname:
-            hovertemplate += f"Curve: {' - '.join(signalname)}<br>"
-        hovertemplate += "<extra></extra>"
+        # Hover template
+        hovertemplate = "<extra></extra>X: %{x}<br>Y: %{y}<br>" + f"File {self.filename}<br>"
+        if self.signalname:
+            hovertemplate += f"Curve: {self.signalname}<br>"
 
         # Generate the trace and add it to the figure
-        trace = go.Scattergl(
+        trace = getattr(go, plot_method)(
             x=self.x.data,
             y=self.y.data,
             name=self.get_name(filename),
@@ -274,51 +249,53 @@ class SignalData(object):
         )
         figure.add_trace(trace, secondary_y=secondary_y)
 
-        # Set the x-axis settings
-        figure.update_xaxes(
-            automargin="left+top+bottom+right",
-            title_text=self.x.get_label_html(),
-            title_font=font,
-            tickfont=font,
-            showgrid=True,
-            gridcolor="lightgray",
-        )
+        # If it's the first plot in the figure, update the axes
+        if len(figure.data) == 1:
 
-        # If not datetimes are displayed, update the tickformat of the xaxes
-        if not isinstance(self.x.data[0], dt.datetime):
-            figure.update_xaxes(tickformat=",")
-
-        # Set the y-axis settings
-        yaxis_kwargs = dict(
-            automargin="left+top+bottom+right",
-            title_text=self.y.get_label_html(),
-            tickformat=",",
-            title_font=font,
-            tickfont=font,
-            gridcolor="lightgray",
-            exponentformat="power",
-        )
-
-        if secondary_y:
-            figure.update_yaxes(
-                showgrid=False,
-                zeroline=False,
+            # Set the axes settings
+            font = dict(size=16, color="black")
+            axes_kwargs = dict(
+                automargin="left+top+bottom+right",
+                title_font=font,
+                tickfont=font,
+                showgrid=True,
+                gridcolor="lightgray",
+                exponentformat="power",
+                tickformat=",",
                 color="black",
-                secondary_y=secondary_y,
-                **yaxis_kwargs,
-            )
-        else:
-            figure.update_yaxes(
-                **yaxis_kwargs,
             )
 
-        # Update the figure layout
-        figure.update_layout(
-            {"uirevision": "foo"},
-            margin=dict(l=0, r=0, t=40, b=0, pad=0),
-            legend=dict(font=font),
-            height=800,
-        )
+            # X-axis
+            figure.update_xaxes(
+                title_text=self.x.get_label_html(),
+                **axes_kwargs,
+            )
+
+            # If datetimes are displayed, update the tickformat of the xaxes
+            if isinstance(self.x.data[0], dt.datetime):
+                figure.update_xaxes(tickformat=None)
+
+            # Y-axis
+            if secondary_y:
+                figure.update_yaxes(
+                    title_text=self.y.get_label_html(),
+                    zeroline=False,
+                    secondary_y=secondary_y,
+                    **merge_dicts(dict(showgrid=False), axes_kwargs),
+                )
+            else:
+                figure.update_yaxes(
+                    title_text=self.y.get_label_html(),
+                    **axes_kwargs,
+                )
+
+            # Update the figure layout
+            figure.update_layout(
+                {"uirevision": "foo"},
+                margin=dict(l=0, r=0, t=40, b=0, pad=0),
+                legend=dict(font=font),
+                height=800,
+            )
 
         return figure
 
@@ -337,7 +314,7 @@ class SignalData(object):
             self.x(data=self.x.data),
             self.y(data=self.y.data - mean_val),
             self.filename,
-            self.signalname,
+            self.signalnames,
             self.z_dict,
         )
 
@@ -350,7 +327,7 @@ class SignalData(object):
             self.x,
             self.y(data=y),
             self.filename,
-            self.signalname + ["Smoothed"],
+            self.signalnames + ["Smoothed"],
             self.z_dict,
         )
 
@@ -364,7 +341,7 @@ class SignalData(object):
             self.x(data=self.x.data[index1:index2]),
             self.y(data=self.y.data[index1:index2]),
             self.filename,
-            self.signalname,
+            self.signalnames,
             self.z_dict,
         )
 
@@ -376,7 +353,7 @@ class SignalData(object):
             self.x,
             y,
             self.filename,
-            self.signalname,
+            self.signalnames,
             self.z_dict,
         )
 
@@ -388,7 +365,7 @@ class SignalData(object):
             self.x,
             y,
             self.filename,
-            self.signalname,
+            self.signalnames,
             self.z_dict,
         )
 
@@ -400,7 +377,7 @@ class SignalData(object):
             self.x(x_data),
             self.y(y_data),
             self.filename,
-            self.signalname,
+            self.signalnames,
             self.z_dict,
         )
 
@@ -412,7 +389,7 @@ class SignalData(object):
             self.x(x_data),
             self.y(y_data),
             self.filename,
-            self.signalname,
+            self.signalnames,
             self.z_dict,
         )
 
@@ -428,7 +405,7 @@ class SignalData(object):
             self.x(x_data),
             self.y(y_data),
             self.filename,
-            self.signalname + ["Fit"],
+            self.signalnames + ["Fit"],
             self.z_dict,
         )
         return fit_signal, params, param_errors, r_squared
@@ -444,25 +421,25 @@ class SignalData(object):
         :param point: 'max', 'min'
         :param interpolation: if True, use interpolation to increase the accuracy of the measurement"""
 
-        if point == "min":
-            method, quantity = "argmin", constants.min_qt
-        else:
-            method, quantity = "argmax", constants.max_qt
-        x_data, y_data = self.x.data, self.y.data
-        index = getattr(y_data, method)()
+        try:
+            if point == "min":
+                method, quantity = "argmin", constants.MIN_QT
+            else:
+                method, quantity = "argmax", constants.MAX_QT
+            x_data, y_data = self.x.data, self.y.data
+            index = finite_argm(method, y_data)
 
-        if interpolation:
-            try:
+            if interpolation:
                 x_data, y_data = interpolate_point(self.x.data, self.y.data, index, kind="cubic")
                 index = getattr(y_data, method)()
-            except:
-                pass
 
-        # Point dimensions
-        x_e = self.x(data=x_data[index], quantity=quantity + " " + self.x.quantity)
-        y_e = self.y(data=y_data[index], quantity=quantity + " " + self.y.quantity)
+            # Point dimensions
+            x_e = self.x(data=x_data[index], quantity=quantity + " " + self.x.quantity)
+            y_e = self.y(data=y_data[index], quantity=quantity + " " + self.y.quantity)
 
-        return x_e, y_e, Dimension(index)
+            return x_e, y_e, Dimension(index)
+        except:
+            return tuple((Dimension(data=float("nan")),) * 3)
 
     def get_max(self, *args, **kwargs) -> tuple[Dimension, Dimension, Dimension]:
         """Get the maximum intensity signal"""
@@ -480,12 +457,12 @@ class SignalData(object):
         M = self.get_max()
         m = self.get_min()
         if abs(M[1].data) < abs(m[1].data):  # accessing data avoid pycharm from highlighting error
-            x_ext = m[0](quantity=m[0].quantity.replace(constants.min_qt, "extremum"))
-            y_ext = m[1](quantity=m[1].quantity.replace(constants.min_qt, "extremum"))
+            x_ext = m[0](quantity=m[0].quantity.replace(constants.MIN_QT, "extremum"))
+            y_ext = m[1](quantity=m[1].quantity.replace(constants.MIN_QT, "extremum"))
             i_ext = m[2]
         else:
-            x_ext = M[0](quantity=M[0].quantity.replace(constants.max_qt, "extremum"))
-            y_ext = M[1](quantity=M[1].quantity.replace(constants.max_qt, "extremum"))
+            x_ext = M[0](quantity=M[0].quantity.replace(constants.MAX_QT, "extremum"))
+            y_ext = M[1](quantity=M[1].quantity.replace(constants.MAX_QT, "extremum"))
             i_ext = M[2]
 
         return x_ext, y_ext, i_ext
@@ -493,68 +470,131 @@ class SignalData(object):
     def get_fwhm(self, interpolation: bool = False) -> tuple[Dimension, Dimension, Dimension, Dimension, Dimension]:
         """Get the signal FWHM. Calculate the maximum point if not already stored"""
 
-        x_ext, y_ext, i_ext = self.get_extrema()
-        m = i_ext.data
+        try:
+            x_ext, y_ext, i_ext = self.get_extrema()
+            m = i_ext.data
 
-        # Get the half-intensity on the right of the extremum
-        if m != len(self.y.data) - 1:
-            x_right, y_right = self.get_halfint_point(self.x.data[m:], self.y.data[m:], interpolation)
-        else:
-            x_right, y_right = None, None
+            # Get the half-intensity on the right of the extremum
+            if m != len(self.y.data) - 1:
+                x_right, y_right = self.get_halfint_point(self.x.data[m:], self.y.data[m:], interpolation)
+            else:
+                x_right, y_right = float("nan"), float("nan")
 
-        # Get the half-intensity on the left of the extremum
-        if m != 0:
-            x_left, y_left = self.get_halfint_point(self.x.data[: m + 1], self.y.data[: m + 1], interpolation)
-        else:
-            x_left, y_left = None, None
+            # Get the half-intensity on the left of the extremum
+            if m != 0:
+                x_left, y_left = self.get_halfint_point(self.x.data[: m + 1], self.y.data[: m + 1], interpolation)
+            else:
+                x_left, y_left = float("nan"), float("nan")
 
-        if x_left is not None and x_right is not None:
-            fwhm = x_right - x_left
-        else:
-            fwhm = float("nan")
+            return (
+                self.x(data=np.abs(x_right - x_left), quantity=constants.FWHM_QT),
+                self.x(data=x_left),
+                self.y(data=y_left),
+                self.x(data=x_right),
+                self.y(data=y_right),
+            )
 
-        return (
-            self.x(data=np.abs(fwhm), quantity=constants.fwhm_qt),
-            self.x(data=x_left),
-            self.y(data=y_left),
-            self.x(data=x_right),
-            self.y(data=y_right),
-        )
+        except:
+
+            return tuple((Dimension(float("nan")),) * 5)
 
     def get_halfint_point(
         self,
-        x: np.ndarray,
-        y: np.ndarray,
+        x_data: np.ndarray,
+        y_data: np.ndarray,
         interpolation: bool = False,
         halfint: float | None = None,
     ) -> tuple[float, float]:
         """Calculate the half intensity point
-        :param x: x data
-        :param y: y data
+        :param x_data: x data
+        :param y_data: y data
         :param interpolation: if True, use interpolation to improve the calculation
         :param halfint: optional half intensity. If not provided, calculate it through the x and y data"""
 
-        # Calculate the half intensity
-        if not halfint:
-            y_min = np.min(y)
-            y_max = np.max(y)
+        try:
+            # Calculate the half intensity
+            if not halfint:
+                y_min = np.min(y_data)
+                y_max = np.max(y_data)
 
-            # Determine if the peak is upside down
-            if np.abs(y_min) > np.abs(y_max):
-                halfint = (y_min - y_max) / 2.0 + y_max
-            else:
-                halfint = (y_max - y_min) / 2.0 + y_min
+                # Determine if the peak is upside down
+                if np.abs(y_min) > np.abs(y_max):
+                    halfint = (y_min - y_max) / 2.0 + y_max
+                else:
+                    halfint = (y_max - y_min) / 2.0 + y_min
 
-        # Find the closest points to the half intensity
-        index = np.abs(y - halfint).argsort()[0]
+            # Find the closest points to the half intensity
+            index = finite_argm("argmin", np.abs(y_data - halfint))
 
-        # Interpolation
-        if interpolation:
-            try:
-                x_int, y_int = interpolate_point(x, y, index)
+            # Interpolation
+            if interpolation:
+                x_int, y_int = interpolate_point(x_data, y_data, index)
                 return self.get_halfint_point(x_int, y_int, False, halfint)
-            except:  # pragma: no cover
-                print("Interpolation failed")
-                pass
 
-        return x[index], y[index]
+            return float(x_data[index]), float(y_data[index])
+
+        except:
+            return float("nan"), float("nan")
+
+
+def average_signals(
+    signals: list[SignalData],
+    n: int,
+) -> list[SignalData]:
+    """Average every n signals
+    :param signals: list of SignalData objects
+    :param n: number of signals averaged"""
+
+    arrays = [signal.y.data for signal in signals]
+    n = min([n, len(arrays)])
+    arrays = arrays[: len(arrays) - (len(arrays) % n)]
+    averaged = [np.mean(arrays[i : i + n], axis=0) for i in range(0, len(arrays), n)]
+    ys = [signals[0].y(data=avg) for avg in averaged]
+    return [signals[0](y=y, signalname=f"Averaged {i + 1}") for i, y in enumerate(ys)]
+
+
+def get_z_dim(
+    signals: list[SignalData],
+    key: str,
+    shift: bool = False,
+) -> tuple[list[SignalData], list[Dimension]]:
+    """Get the z dimension from the z_dict based on the choice of sorting key
+    :param signals: list of SignalData
+    :param key: z_dict key
+    :param shift: if True and the key is a timestamp, shift the data to 0"""
+
+    z_dims0 = [Dimension(i + 1, "Z-axis") for i in range(len(signals))]
+
+    if len(signals) > 1:
+
+        if key == "Filename":
+            signals = sorted(signals, key=lambda s: s.get_name(True))
+            return signals, z_dims0
+
+        else:
+
+            try:
+                # Z dimensions list
+                z_dims = [signal.z_dict[key] for signal in signals]
+
+                # Try to convert them to float if string
+                if isinstance(z_dims[0].data, str):
+                    for z in z_dims:
+                        z.data = float(z.data)
+
+                # Sort the signals
+                signals, z_dims = [list(f) for f in zip(*sorted(zip(signals, z_dims), key=lambda v: v[1].data))]
+
+                # Time shift
+                if shift and key == constants.TIMESTAMP_ID:
+                    z_dims = [z((z.data - z_dims[0].data).total_seconds(), unit=constants.SECOND_UNIT) for z in z_dims]
+
+                return signals, z_dims
+
+            except Exception as e:
+                print("An error occurred while trying to sort the signals")
+                print(e)
+                return signals, z_dims0
+
+    else:
+        return signals, z_dims0

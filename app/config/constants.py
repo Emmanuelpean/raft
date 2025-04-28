@@ -2,167 +2,85 @@
 
 # ----------------------------------------------------- QUANTITIES -----------------------------------------------------
 
-absorbance_qt = "absorbance"
-absorbed_qt = "absorbed"
-absorptance_qt = "absorptance"
-area_qt = "area"
-concentration_qt = "concentration"
-contribution_qt = "contribution"
-crystals_mean_size_qt = "domain mean size"
-current_density_qt = "current density"
-current_qt = "current"
-derivative_qt = "delta"
-distance_qt = "distance"
-em_wavelength_qt = "emission wavelength"
-energy_qt = "energy"
-exc_wavelength_qt = "excitation wavelength"
-frequency_qt = "frequency"
-fwhm_qt = "fwhm"
-gamma_qt = "gamma"
-horizontal_distance_qt = "horizontal distance"
-humidity_qt = "humidity"
-integrated_qt = "integrated"
-intensity_qt = "intensity"
-max_qt = "max."
-min_qt = "min."
-norm_intensity_0_qt = "I(t)/I(0)"
-pixel_qt = 'pixel'
-posx_qt = "x"
-posy_qt = "y"
-power_qt = "power"
-pulse_qt = "pulse"
-r2_qt = "R^2"
-ratio_qt = "ratio"
-reflectance_qt = "reflectance"
-rel_abs_qt = "relative absorbance"
-rel_change_qt = "relative change"
-repeats_qt = "repeats"
-residual_qt = "residual"
-spacing_qt = "spacing"
-speed_qt = "speed"
-surface_coverage_qt = "surface coverage"
-tau_qt = "tau"
-temperature_qt = "temperature"
-theta_qt = "theta"
-threshold_qt = "threshold"
-time_qt = "time"
-transmittance_qt = "transmittance"
-trmc_qt = "I_TRMC"
-trpl_qt = "I_TRPL"
-two_theta_qt = "2 theta"
-unknown_qt = "unknown quantity"
-vertical_distance_qt = "vertical distance"
-voc_qt = "V_OC"
-voltage_qt = "voltage"
-wavelength_qt = "wavelength"
-wavenumber_qt = "wavenumber"
-x_0_qt = "x_0"
+ABSORBANCE_QT = "absorbance"
+ABSORPTANCE_QT = "absorptance"
+AREA_QT = "area"
+CURRENT_DENSITY_QT = "current density"
+CURRENT_QT = "current"
+DISTANCE_QT = "distance"
+EM_WAVELENGTH_QT = "emission wavelength"
+EXC_WAVELENGTH_QT = "excitation wavelength"
+FWHM_QT = "fwhm"
+HORIZONTAL_DISTANCE_QT = "horizontal distance"
+HUMIDITY_QT = "humidity"
+INTENSITY_QT = "intensity"
+MAX_QT = "max."
+MIN_QT = "min."
+POWER_QT = "power"
+REFLECTANCE_QT = "reflectance"
+REL_ABS_QT = "relative absorbance"
+REPEATS_QT = "repeats"
+SPEED_QT = "speed"
+TEMPERATURE_QT = "temperature"
+THETA_QT = "theta"
+TIME_QT = "time"
+TRANSMITTANCE_QT = "transmittance"
+TWO_THETA_QT = "2 theta"
+VERTICAL_DISTANCE_QT = "vertical distance"
+VOLTAGE_QT = "voltage"
+WAVELENGTH_QT = "wavelength"
+WAVENUMBER_QT = "wavenumber"
 
-# Labels (string used to display the quantities)
-quantities_label = {
-    derivative_qt: "Δ",
-    fwhm_qt: "FWHM",
-    gamma_qt: "γ",
-    norm_intensity_0_qt: "I(t) / I(0)",
-    rel_change_qt: "rel. change",
-    spacing_qt: "d",
-    tau_qt: "τ",
-    theta_qt: "θ",
-    two_theta_qt: "2θ",
-    x_0_qt: r"x<sub>0<\sub>",
+# Quantity labels
+QUANTITIES_LABEL = {
+    FWHM_QT: "FWHM",
+    THETA_QT: "θ",
+    TWO_THETA_QT: "2θ",
 }
 
 # -------------------------------------------------------- UNITS -------------------------------------------------------
 
 # Vols, Amperes and Watts
-amps_unit = "A"
-ma_cm2_unit = "mA/cm^2"
-ma_cm_unit = "mA/cm"
-ma_unit = "mA"
-mw_unit = "mW"
-volt_unit = "V"
-watt_unit = "W"
+MA_CM_2_UNIT = "mA/cm^2"
+MA_UNIT = "mA"
+MW_UNIT = "mW"
+VOLT_UNIT = "V"
 
 # Length units
-angstrom_unit = "angstrom"
-cm_1_unit = "cm^-1"
-cm_3_unit = "cm^-3"
-meter_unit = "m"
-micrometer_unit = "um"
-mum2_unit = "um^2"
-nm_unit = "nm"
+ANGSTROM_UNIT = "angstrom"
+CM_1_UNIT = "cm^-1"
+MICROMETER_UNIT = "um"
+NM_UNIT = "nm"
 
 # Time units
-day_unit = "days"
-femtosecond_unit = "fs"
-hour_unit = "h"
-microsecond_unit = "us"
-millisecond_unit = "ms"
-minute_unit = "min"
-nanosecond_unit = "ns"
-persec_unit = "/s"
-picosecond_unit = "ps"
-second_unit = "s"
-
-# Energy units
-ev_unit = "eV"
-hertz_unit = "Hz"
-joule_unit = "J"
-kelvin_unit = "K"
-onesun_unit = "Sun"
+NANOSECOND_UNIT = "ns"
+SECOND_UNIT = "s"
 
 # Other units
-au_unit = "a.u."
-celsius_unit = "deg C"
-counts_unit = "counts"
-deg_unit = "deg"
-micromolar_unit = "uM"
-microwatt_cm2_unit = "uW/cm^2"
-microwatt_unit = "uW"
-molar_unit = "M"
-nm_min_unit = "nm/min"
-none_unit = ""
-nonlinear_unit = "non linear scale"
-norm_unit = "normalised"
-percent_unit = "%"
-perpixel_unit = "/pixel"
-relhum_unit = "% RH"
-unknown_unit = "unknown"
+AU_UNIT = "a.u."
+CELSIUS_UNIT = "deg C"
+COUNTS_UNIT = "counts"
+DEG_UNIT = "deg"
+NM_MIN_UNIT = "nm/min"
+PERCENT_UNIT = "%"
 
-# Labels (string used to display the units, use | to for whitespace)
-units_label = {
-    angstrom_unit: "Å",
-    celsius_unit: "°C",
-    deg_unit: "deg",
-    ev_unit: "eV",
-    ma_unit: "mA",
-    micrometer_unit: "μm",
-    micromolar_unit: "μM",
-    microsecond_unit: "μs",
-    microwatt_cm2_unit: "μW/cm^2",
-    microwatt_unit: "μW",
-    mw_unit: "mW",
-    norm_unit: "norm.",
-    relhum_unit: "%RH",
-    volt_unit: "V",
+# Unit labels (string used to display the units, use | to for whitespace)
+UNITS_LABEL = {
+    ANGSTROM_UNIT: "Å",
+    CELSIUS_UNIT: "°C",
+    DEG_UNIT: "deg",
+    MA_UNIT: "mA",
+    MICROMETER_UNIT: "μm",
+    MW_UNIT: "mW",
+    VOLT_UNIT: "V",
 }
 
 # ------------------------------------------------------ PYDA IDS ------------------------------------------------------
 
-elapsed_time_id = "elapsed_time"
-exc_wl_id = "excitation_wl"
-filename_id = "filename"
-int_time_id = "IntegrationTime"
-measure_time_id = "measure_time"
-posx_id = "pos-x"
-posy_id = "pos-y"
-pulse_period_id = "pulse_period"
-pyda_id = "pyda:"
-scan_speed_id = "scan_speed"
-slitwidth_id = "slitwidth"
-timestamp_id = "TimeStamp"
-wl_id = "wavelength"
-x_quantity_id = "x_quantity"
-x_unit_id = "x_unit"
-y_quantity_id = "y_quantity"
-y_unit_id = "y_unit"
+EXCITATION_WAVELENGTH_ID = "Excitation Wavelength"
+INTEGRATION_TIME_ID = "Integration Time"
+MEASUREMENT_TIME_ID = "Measurement Time"
+PYDA_ID = "pyda:"
+SCAN_SPEED_ID = "Scan Speed"
+TIMESTAMP_ID = "Date & Time"
+WAVELENGTH_ID = "Wavelength"

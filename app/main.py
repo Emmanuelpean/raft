@@ -5,24 +5,33 @@ import os
 import numpy as np
 import pandas as pd
 import streamlit as st
+from wfork_streamlit_profiler import Profiler
 
 from config.resources import LOGO_PATH, CSS_STYLE_PATH, ICON_PATH, DATA_PROCESSING_PATH, LOGO_TEXT_PATH, FILE_TYPE_DICT
 from data_files.data_files import FILETYPES, read_data_file
-from data_files.signal_data import Dimension, SignalData
+from config.constants import TIMESTAMP_ID
+from data_files.signal_data import Dimension, SignalData, average_signals, get_z_dim
 from data_processing.fitting import MODELS, get_model_parameters
 from interface.plot import plot_signals, scatter_plot, make_figure
 from interface.streamlit import tab_bar, display_data
-from utils.checks import are_identical
 from utils.file_io import read_file, render_image
 from utils.miscellaneous import normalise_list, make_unique
 from utils.session_state import refresh_session_state_widgets, set_session_state_value_function, set_default_widgets
-from utils.string import matrix_to_string, number_to_str, generate_html_table, dedent
+from utils.strings import matrix_to_string, number_to_str, generate_html_table, dedent
 
 __version__ = "2.0.0"
 __name__ = "Raft"
 __date__ = "March 2025"
 __author__ = "Emmanuel V. Péan"
 __github__ = "https://github.com/Emmanuelpean/raft"
+__development__ = True
+
+# Profiler
+if __development__:
+    profiler = Profiler()
+    profiler.start()
+else:
+    profiler = None
 
 # ------------------------------------------------------ CONSTANTS -----------------------------------------------------
 
@@ -30,6 +39,7 @@ __github__ = "https://github.com/Emmanuelpean/raft"
 PROJECT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Section labels
+AVERAGING_LABEL = "Averaging"
 BACKGROUND_LABEL = "Background Subtraction"
 RANGE_LABEL = "Data Range"
 INTERP_LABEL = "Interpolation"
@@ -80,6 +90,11 @@ widgets_defaults = {
     "derive_order": 0,
     "guess_values": None,
     "reset_settings": True,
+    "precision_input": 4,
+    "sorting_key": "Filename",
+    "timestamp_shift": True,
+    "averaging_interacted": False,
+    "averaging_n": 1,
 }
 
 set_default_widgets(widgets_defaults)
@@ -98,7 +113,6 @@ def reset_data() -> None:
     sss.data = None  # remove the stored data
     if sss.reset_settings:
         set_default_widgets(widgets_defaults, True)  # reset the default settings
-    refresh_session_state_widgets(widgets_defaults)
 
 
 def close_expanders() -> None:
@@ -107,6 +121,9 @@ def close_expanders() -> None:
     for key in widgets_defaults:
         if "interacted" in key:
             sss[key] = False
+
+
+refresh_session_state_widgets(widgets_defaults)
 
 
 # ---------------------------------------------------- FILE UPLOADER ---------------------------------------------------
@@ -194,7 +211,7 @@ else:
             # Check data consistency
             if isinstance(signals, list):
                 for signal in signals[1:]:
-                    if not are_identical(signals[0].x.data, signal.x.data):
+                    if not np.array_equal(signals[0].x.data, signal.x.data, equal_nan=True):
                         signals, filetype = [], None
                         break
 
@@ -207,6 +224,9 @@ else:
 
     if filetype_select == FILETYPES[0] and filetype:
         detect_placeholder.markdown(f"Detected: {filetype}")
+
+    # Condition determining if multiple files have been loaded
+    multifile_cond = isinstance(file, list) and len(file) > 1
 
     # If the signal could not be loaded, display a warning message
     if filetype is None:
@@ -222,20 +242,27 @@ else:
 
         # ----------------------------------------------- DATA SELECTION -----------------------------------------------
 
-        # Select the data type to plot if signal is a dictionary
+        # If the signals are stored in a dictionary...
         if isinstance(signals, dict):
-            selection = st.sidebar.selectbox(
-                label="Data Type",
-                options=["All"] + list(signals.keys()),
-                on_change=close_expanders,
-                key="type_select",
-            )
-            if selection in signals:
-                signals = signals[selection]
+
+            # If the dictionary has only 1 key, use that key
+            if len(signals) == 1:
+                signals = list(signals.values())[0]
+
+            # Otherwise, allow to select the key to plot if signal is a dictionary
+            else:
+                selection = st.sidebar.selectbox(
+                    label="Data Type",
+                    options=["All"] + list(signals.keys()),
+                    on_change=close_expanders,
+                    key="type_select",
+                )
+                if selection in signals:
+                    signals = signals[selection]
 
         # Select the signal in a list if multiple signals
         if isinstance(signals, list) and len(signals) > 1:
-            names = [signal.get_name(len(signals) > 1) for signal in signals]
+            names = [signal.get_name(multifile_cond) for signal in signals]
             signal_dict = dict(zip(names, signals))
             col_selection = st.sidebar.selectbox(
                 label="Data Selection",
@@ -248,43 +275,45 @@ else:
 
         # ----------------------------------------------- SIGNAL SORTING -----------------------------------------------
 
-        # Default list of z dimensions
-        z_dims = [Dimension(i + 1, "Z-axis") for i in range(len(signals))]
+        if isinstance(signals, list):
 
-        if isinstance(signals, list) and len(signals) > 1:
+            if len(signals) > 1:
+                # List of all z_dict keys
+                z_keys = list(set([key for signal in signals for key in signal.z_dict]))
 
-            # List of all z_dict keys
-            z_keys = list(set([key for signal in signals for key in signal.z_dict]))
+                if sss.sorting_key == TIMESTAMP_ID:
+                    col1, col2 = st.sidebar.columns(2, vertical_alignment="bottom")
+                else:
+                    col1 = st.sidebar
+                    col2 = None
 
-            # Select the key used to sort the data
-            help_str = """Select the quantity by which to sort the data files. For example:
-            * Filename – sorts the files alphabetically by their filenames.
-            * Timestamp – sorts the files according to the timestamps extracted from their contents.
-            * Emission Wavelength - sort the files according to the emission wavelength extracted from their contents
-            * ..."""
-            sorting_key = st.sidebar.selectbox(
-                label="Data Sorting",
-                options=["Filename"] + z_keys,
-                help=dedent(help_str),
-            )
+                # Select the key used to sort the data
+                help_str = """Select the quantity by which to sort the data files. For example:
+                * Filename – sorts the files alphabetically by their filenames.
+                * Timestamp – sorts the files according to the timestamps extracted from their contents.
+                * Emission Wavelength - sort the files according to the emission wavelength extracted from their contents
+                * ..."""
+                sorting_key = col1.selectbox(
+                    label="Data Sorting",
+                    options=["Filename"] + sorted(z_keys, key=lambda string: string.lower()),
+                    help=dedent(help_str),
+                    key="sorting_key",
+                    format_func=lambda string: string.capitalize(),
+                    disabled=len(z_keys) == 0,
+                )
 
-            if sorting_key == "Filename":
-                signals = sorted(signals, key=lambda s: s.get_name(len(signals) > 1))
+                if col2:
+                    col2.toggle(
+                        label="Use Elapsed Time",
+                        key="timestamp_shift",
+                    )
+
+                signals, z_dims = get_z_dim(signals, sss.sorting_key, sss.timestamp_shift)
+
             else:
-                try:
-                    # Z dimensions list
-                    z_dims = [signal.z_dict[sorting_key] for signal in signals]
-
-                    # Try to convert them to float if str
-                    if isinstance(z_dims[0].data, str):
-                        for z in z_dims:
-                            z.data = float(z.data)
-
-                    # Sort the signals
-                    signals, z_dims = [list(f) for f in zip(*sorted(zip(signals, z_dims), key=lambda v: v[1].data))]
-                except Exception as e:
-                    print("An error occurred while trying to sort the signals")
-                    print(e)
+                signals, z_dims = get_z_dim(signals, "Filename", sss.timestamp_shift)
+        else:
+            z_dims = []
 
         # ----------------------------------------------------------------------------------------------------------
         # ----------------------------------------------- DATA PROCESSING ----------------------------------------------
@@ -293,6 +322,27 @@ else:
         if isinstance(signals, list):
 
             st.sidebar.markdown("## Data Processing")
+
+            # ------------------------------------------------ AVERAGING -----------------------------------------------
+
+            expander_label = AVERAGING_LABEL
+            try:
+                if sss.averaging_n > 1:
+                    signals = average_signals(signals, sss.averaging_n)
+                    expander_label = f"__✔ {AVERAGING_LABEL} (Every {sss.averaging_n} Signals)__"
+            except Exception as e:
+                print("Averaging failed")
+                print(e)
+                expander_label = AVERAGING_LABEL
+
+            with st.sidebar.expander(expander_label, sss["averaging_interacted"]):
+
+                st.number_input(
+                    label="Average Every X Signals",
+                    min_value=1,
+                    key="averaging_n",
+                    on_change=set_session_state_value_function("averaging_interacted", True),
+                )
 
             # ----------------------------------------------- BACKGROUND -----------------------------------------------
 
@@ -376,7 +426,7 @@ else:
 
                 # Label
                 if dx:
-                    dx_str = number_to_str(dx, 3, True)
+                    dx_str = number_to_str(dx, 3, "g", True, True)
                     expander_label = f"__✔ {INTERP_LABEL} (step = {dx_str} {signals[0].x.get_unit_label_html()})__"
             except:
                 expander_label = INTERP_LABEL
@@ -546,6 +596,7 @@ else:
                     except:
                         guess_values = np.ones(len(parameters))
                     sss.guess_values = dict(zip(parameters, guess_values))
+                    sss.default_gvs = dict(zip(parameters, [True] * len(parameters)))
 
                 try:
                     fits = [signal.fit(fit_function, sss.guess_values) for signal in signals]
@@ -553,6 +604,9 @@ else:
                     rel_error = np.array(param_errors) / np.array(fit_params)
                     expander_label = f"__✔ {FITTING_LABEL} ({sss.fitting_model})__"
                 except Exception as e:
+                    fit_signals, fit_params, param_errors, r_squared = [], [], [], []
+                    equation, parameters = "", []
+                    rel_error = []
                     print("Fit failed")
                     print(e)
 
@@ -590,7 +644,11 @@ else:
                     guess_value_key = sss.fitting_model + parameter + "guess_value"
 
                     if guess_value_key not in sss:
-                        sss[guess_value_key] = number_to_str(sss.guess_values[parameter], 4, False)
+                        if sss.default_gvs[parameter]:
+                            precision = 4
+                        else:
+                            precision = 10
+                        sss[guess_value_key] = number_to_str(sss.guess_values[parameter], precision, "g")
 
                     def store_guess_value() -> None:
                         """Store the guess value as a float in the guess_values dictionary"""
@@ -598,6 +656,7 @@ else:
                         set_session_state_value_function("fitting_interacted", True)
                         try:
                             sss.guess_values[parameter] = float(sss[guess_value_key])
+                            sss.default_gvs[parameter] = False  # not default value anymore
                         except:
                             pass
 
@@ -606,10 +665,6 @@ else:
                         key=guess_value_key,
                         on_change=store_guess_value,
                     )
-
-            # Set the fit signals as the new default
-            if fit_signals:
-                signals = fit_signals
 
             # Data reset toggle
             st.sidebar.toggle(
@@ -620,44 +675,49 @@ else:
 
             # ----------------------------------------------- DATA EXPORT ----------------------------------------------
 
-            if len(signals) == 1:
+            # Add raw data
+            header_name = [signal.get_name(multifile_cond) for signal in raw_signals]
+            header_y_name = [signal.y.get_label_raw() for signal in raw_signals]
+            data = [signal.y.data for signal in raw_signals]
 
-                # Add raw data
-                header = [raw_signals[0].x.get_label_raw(), raw_signals[0].y.get_label_raw()]
-                data = [raw_signals[0].x.data, raw_signals[0].y.data]
+            # Add smoothed data if exist
+            if s_signals:
+                header_name += [signal.get_name(multifile_cond) for signal in s_signals]
+                header_y_name += [signal.y.get_label_raw() + " (smoothed)" for signal in s_signals]
+                data += [signal.y.data for signal in s_signals]
 
-                # Add smoothed data if exist
-                if s_signals:
-                    header += [raw_signals[0].y.get_label_raw() + " (smoothed)"]
-                    data += [s_signals[0].y.data]
+            # Add fitted data if exist
+            if fit_signals:
+                header_name += [signal.get_name(multifile_cond) for signal in fit_signals]
+                header_y_name += [signal.y.get_label_raw() + " (fit)" for signal in fit_signals]
+                data += [signal.y.data for signal in fit_signals]
 
-                # Add fitted data if exist
-                if fit_signals:
-                    header += [raw_signals[0].y.get_label_raw() + " (fit)"]
-                    data += [fit_signals[0].y.data]
+            data = [raw_signals[0].x.data] + data
+            header_name = ["Name"] + header_name
+            header_y_name = [raw_signals[0].x.get_label_raw()] + header_y_name
 
-                # Generate the export data and download button
-                export_data = matrix_to_string(data, header)
-                st.sidebar.download_button(
-                    label="Download Processed Data",
-                    data=export_data,
-                    file_name="data.csv",
-                    use_container_width=True,
-                    key="download_button",
-                )
+            # Generate the export data and download button
+            export_data = matrix_to_string(data, [header_name, header_y_name])
+            st.sidebar.download_button(
+                label="Download Processed Data",
+                data=export_data,
+                file_name="data.csv",
+                use_container_width=True,
+                key="data_download_button",
+            )
 
-            else:
+            if fit_params:
 
                 # Header
                 z_label = z_dims[0].get_label_raw()
-                header = [z_label] + parameters
+                header_name = [z_label] + parameters
 
                 # Data
                 z_values = [z_dim.data for z_dim in z_dims]
                 data = [z_values] + [list(f) for f in np.transpose(fit_params)]
 
                 # Generate the export data and download button
-                export_data = matrix_to_string(data, header)
+                export_data = matrix_to_string(data, header_name)
                 st.sidebar.download_button(
                     label="Download Fitting Parameters",
                     data=export_data,
@@ -674,8 +734,7 @@ else:
 
             # ------------------------------------------------ MAX POINT -----------------------------------------------
 
-            x_max, y_max, i_max = None, None, None
-            xmax_signal, ymax_signal = None, None
+            x_max, y_max = None, None
 
             columns = st.sidebar.columns(2)
             max_button = columns[0].checkbox(
@@ -688,16 +747,13 @@ else:
                 help="Use cubic interpolation to improve the calculation of the maximum point.",
             )
             if max_button:
-                try:
-                    x_max, y_max, i_max = zip(*[signal.get_max(max_interp_button) for signal in signals])
-                    xmax_signal, ymax_signal = SignalData(z_dims, x_max, "x_max"), SignalData(z_dims, y_max, "y_max")
-                except:
-                    pass
+                output = list(zip(*[signal.get_max(max_interp_button) for signal in signals]))
+                x_max = SignalData(z_dims, output[0], signalname="x_max")
+                y_max = SignalData(z_dims, output[1], signalname="y_max")
 
             # ------------------------------------------------ MIN POINT -----------------------------------------------
 
-            x_min, y_min, i_min = None, None, None
-            xmin_signal, ymin_signal = None, None
+            x_min, y_min = None, None
 
             columns = st.sidebar.columns(2)
             min_button = columns[0].checkbox(
@@ -710,16 +766,13 @@ else:
                 help="Use cubic interpolation to improve the calculation of the minimum point.",
             )
             if min_button:
-                try:
-                    x_min, y_min, i_min = zip(*[signal.get_min(min_interp_button) for signal in signals])
-                    xmin_signal, ymin_signal = SignalData(z_dims, x_min, "x_min"), SignalData(z_dims, y_min, "y_min")
-                except:
-                    pass
+                output = list(zip(*[signal.get_min(min_interp_button) for signal in signals]))
+                x_min = SignalData(z_dims, output[0], signalname="x_min")
+                y_min = SignalData(z_dims, output[1], signalname="y_min")
 
             # -------------------------------------------------- FWHM --------------------------------------------------
 
-            fwhm, x_left, y_left, x_right, y_right = None, None, None, None, None
-            fwhm_signal = None
+            fwhm, fwhm_xleft, fwhm_yleft, fwhm_xright, fwhm_yright = None, None, None, None, None
 
             columns = st.sidebar.columns(2)
             fwhm_button = columns[0].checkbox(
@@ -732,11 +785,12 @@ else:
                 help="Use linear interpolation to improve the calculation of the FWHM.",
             )
             if fwhm_button:
-                try:
-                    fwhm, x_left, y_left, x_right, y_right = zip(*[sig.get_fwhm(fwhm_button_interp) for sig in signals])
-                    fwhm_signal = SignalData(z_dims, fwhm, "FWHM")
-                except:
-                    pass
+                output = list(zip(*[sig.get_fwhm(fwhm_button_interp) for sig in signals]))
+                fwhm = SignalData(z_dims, output[0], signalname="FWHM")
+                fwhm_xleft = SignalData(z_dims, output[1], signalname="FWHM (x-left)")
+                fwhm_yleft = SignalData(z_dims, output[2], signalname="FWHM (y-left)")
+                fwhm_xright = SignalData(z_dims, output[3], signalname="FWHM (x-right)")
+                fwhm_yright = SignalData(z_dims, output[4], signalname="FWHM (y-right)")
 
             # -------------------------------------------- FITTED PARAMETERS -------------------------------------------
 
@@ -745,7 +799,7 @@ else:
             if fit_params:
                 for i, key in enumerate(parameters):
                     y = Dimension(np.array([fit_param[i] for fit_param in fit_params]), quantity=key)
-                    fit_extract_signals[key] = SignalData(z_dims, y)
+                    fit_extract_signals[key] = SignalData(z_dims, y, signalname=key)
                     fit_errors[key] = np.array([param_error[i] for param_error in param_errors])
 
             # ----------------------------------------------------------------------------------------------------------
@@ -760,6 +814,11 @@ else:
                 plot_spot = columns[0].container()
                 info_spot = columns[1].container()
                 info_spot.markdown("### About Your Data")
+                info_spot.number_input(
+                    label="Precision",
+                    min_value=0,
+                    key="precision_input",
+                )
 
                 # Fit results
                 if fit_params:
@@ -775,7 +834,7 @@ else:
                     parameters += ["R<sup>2</sup>"]
 
                     # Convert the parameters and errors to strings
-                    fit_params_str = [number_to_str(f, 4, True) for f in fit_params]
+                    fit_params_str = [number_to_str(f, sss.precision_input, "f", True) for f in fit_params]
                     rel_error_str = [f"{f * 100:.2f}" for f in rel_error]
 
                     # Generate the dataframe and display it
@@ -790,26 +849,58 @@ else:
                     info_spot.html(generate_html_table(df))
 
                 # Max point
-                if x_max and y_max:
+                if x_max:
                     info_spot.markdown("##### Maximum Point")
-                    info_spot.html(x_max[0].get_value_label_html())
-                    info_spot.html(y_max[0].get_value_label_html())
+                    if not np.isnan(x_max.y[0].data):
+                        info_spot.html(x_max.y[0].get_value_label_html(sss.precision_input, "f", True))
+                        info_spot.html(y_max.y[0].get_value_label_html(sss.precision_input, "f", True))
+                    else:
+                        info_spot.markdown("Could not calculate the maximum point.")
 
                 # Min point
-                if x_min and y_min:
+                if x_min:
                     info_spot.markdown("##### Minimum Point")
-                    info_spot.html(x_min[0].get_value_label_html())
-                    info_spot.html(y_min[0].get_value_label_html())
+                    if not np.isnan(x_min.y[0].data):
+                        info_spot.html(x_min.y[0].get_value_label_html(sss.precision_input, "f", True))
+                        info_spot.html(y_min.y[0].get_value_label_html(sss.precision_input, "f", True))
+                    else:
+                        info_spot.markdown("Could not calculate the minimum point.")
 
                 # FWHM
                 if fwhm:
                     info_spot.markdown("##### FWHM")
-                    if not np.isnan(fwhm[0].data):
-                        info_spot.html(fwhm[0].get_value_label_html())
+                    if not np.isnan(fwhm.y[0].data):
+                        info_spot.html(fwhm.y[0].get_value_label_html(sss.precision_input, "f", True))
                     else:
                         info_spot.markdown("Could not calculate the FWHM.")
             else:
                 plot_spot = st.container()
+
+            # ------------------------------------------- EXTRACTED DOWNLOAD -------------------------------------------
+
+            if n_extracted:
+                header_name = [z_dims[0].get_label_raw()]
+                data = [[z_dim.data for z_dim in z_dims]]
+
+                if x_max:
+                    header_name += [x_max.y.get_label_raw(), y_max.y[0].get_label_raw()]
+                    data += [x_max.y.data, y_max.y.data]
+                if x_min:
+                    header_name += [x_min.y.get_label_raw(), y_min.y[0].get_label_raw()]
+                    data += [x_min.y.data, y_min.y.data]
+                if fwhm:
+                    header_name += [fwhm.y.get_label_raw()]
+                    data += [fwhm.y.data]
+
+                # Generate the export data and download button
+                export_data = matrix_to_string(data, header_name)
+                st.sidebar.download_button(
+                    label="Download Extracted Parameters",
+                    data=export_data,
+                    file_name="extracted_parameters.csv",
+                    use_container_width=True,
+                    key="extracted_download_button",
+                )
 
             # Determine how many figures to create
             if len(signals) > 1:
@@ -825,9 +916,9 @@ else:
                 plot_signals(
                     signals=raw_signals,
                     figure=figures[0],
-                    legendgroup="Raw Data",
-                    legendgrouptitle_text="Raw Data",
-                    filename=len(signals) > 1,
+                    legendgroup="Raw Data" if len(signals) > 1 else None,
+                    legendgrouptitle_text="Raw Data" if len(signals) > 1 else None,
+                    filename=multifile_cond,
                 )
 
             # Plot the smoothed signals if they exist
@@ -835,9 +926,9 @@ else:
                 plot_signals(
                     signals=s_signals,
                     figure=figures[0],
-                    legendgroup="Smoothed Data",
-                    legendgrouptitle_text="Smoothed Data",
-                    filename=len(signals) > 1,
+                    legendgroup="Smoothed Data" if len(signals) > 1 else None,
+                    legendgrouptitle_text="Smoothed Data" if len(signals) > 1 else None,
+                    filename=multifile_cond,
                 )
 
             # Plot the fit signals if they exist
@@ -845,76 +936,82 @@ else:
                 plot_signals(
                     signals=fit_signals,
                     figure=figures[0],
-                    legendgroup="Fitted Data",
-                    legendgrouptitle_text="Fitted Data",
-                    filename=len(signals) > 1,
+                    legendgroup="Fitted Data" if len(signals) > 1 else None,
+                    legendgrouptitle_text="Fitted Data" if len(signals) > 1 else None,
+                    filename=multifile_cond,
                     line=dict(dash="dot"),
                 )
 
             # Display the maximum point(s)
-            if x_max and y_max:
-                for x, y in zip(x_max, y_max):
-                    scatter_plot(
-                        figure=figures[0],
-                        x_data=x.data,
-                        y_data=y.data,
-                        legendgroup="Max. Point",
-                        label="Max. Point",
-                        marker=dict(color="#CD5C5C"),
-                        showlegend=x == x_max[0],
-                    )
+            if x_max:
+                for i, (x, y) in enumerate(zip(x_max.y.data, y_max.y.data)):
+                    if not np.isnan(x):
+                        scatter_plot(
+                            figure=figures[0],
+                            x_data=x,
+                            y_data=y,
+                            legendgroup="Max. Point",
+                            label="Max. Point",
+                            marker=dict(color="#CD5C5C"),
+                            showlegend=i == 0,
+                        )
 
             # Display the minimum point(s)
-            if x_min and y_min:
-                for x, y in zip(x_min, y_min):
-                    scatter_plot(
-                        figure=figures[0],
-                        x_data=x.data,
-                        y_data=y.data,
-                        legendgroup="Min. Point",
-                        label="Min. Point",
-                        marker=dict(color="#87CEEB"),
-                        showlegend=x == x_min[0],
-                    )
+            if x_min:
+                for i, (x, y) in enumerate(zip(x_min.y.data, y_min.y.data)):
+                    if not np.isnan(x):
+                        scatter_plot(
+                            figure=figures[0],
+                            x_data=x,
+                            y_data=y,
+                            legendgroup="Min. Point",
+                            label="Min. Point",
+                            marker=dict(color="#87CEEB"),
+                            showlegend=i == 0,
+                        )
 
             # Display the FWHM(s)
             if fwhm:
-                for f, x1, y1, x2, y2 in zip(fwhm, x_left, y_left, x_right, y_right):
-                    if not np.isnan(f.data):
+                for i, (f, xleft, yleft, xright, yright) in enumerate(
+                    zip(fwhm.y.data, fwhm_xleft.y.data, fwhm_yleft.y.data, fwhm_xright.y.data, fwhm_yright.y.data)
+                ):
+                    if not np.isnan(f):
                         scatter_plot(
                             figure=figures[0],
-                            x_data=[x1.data, x2.data],
-                            y_data=[y1.data, y2.data],
+                            x_data=[xleft, xright],
+                            y_data=[yleft, yright],
                             label="FWHM",
                             legendgroup="FWHM",
                             marker=dict(color="#66CDAA"),
-                            showlegend=f == fwhm[0],
+                            showlegend=i == 0,
                         )
 
             # --------------------------------------------- EXTRACTED DATA ---------------------------------------------
 
             datasets = [raw_signals + (s_signals if s_signals else []) + (fit_signals if fit_signals else [])]
+
             if len(signals) > 1:
                 figure_index = 1
+
                 # Max point
-                if xmax_signal and ymax_signal:
-                    ymax_signal.plot(figure=figures[figure_index])
-                    xmax_signal.plot(figure=figures[figure_index], secondary_y=True)
+                if x_max and y_max:
+                    y_max.plot(figure=figures[figure_index], plot_method="Scatter")
+                    x_max.plot(figure=figures[figure_index], secondary_y=True, plot_method="Scatter")
                     figure_index += 1
-                    datasets.append([xmax_signal, ymax_signal])
+                    datasets.append([x_max, y_max])
 
                 # Min point
-                if xmin_signal and ymin_signal:
-                    ymin_signal.plot(figure=figures[figure_index])
-                    xmin_signal.plot(figure=figures[figure_index], secondary_y=True)
+                if x_min and y_min:
+                    y_min.plot(figure=figures[figure_index], plot_method="Scatter")
+                    x_min.plot(figure=figures[figure_index], secondary_y=True, plot_method="Scatter")
                     figure_index += 1
-                    datasets.append([xmin_signal, ymin_signal])
+                    datasets.append([x_min, y_min])
 
                 # FWHM
-                if fwhm_signal:
-                    fwhm_signal.plot(figure=figures[figure_index])
+                if fwhm:
+                    fwhm.plot(figure=figures[figure_index], plot_method="Scatter")
                     figure_index += 1
-                    datasets.append([fwhm_signal])
+                    datasets.append([fwhm])
 
                 # Fit parameters
                 for key in fit_extract_signals:
@@ -925,6 +1022,7 @@ else:
                             array=fit_errors[key],
                             visible=True,
                         ),
+                        plot_method="Scatter",
                     )
                     figure_index += 1
                     datasets.append([fit_extract_signals[key]])
@@ -933,13 +1031,13 @@ else:
 
             if len(figures) == 1:
                 with plot_spot:
-                    display_data(figures[0], datasets[0], 1, len(signals) > 1)
+                    display_data(figures[0], datasets[0], 1, multifile_cond, 790)
             else:
                 columns = plot_spot.columns(2)
                 for i, figure in enumerate(figures):
                     figure.update_layout(height=400)
                     with columns[i % 2]:
-                        display_data(figure, datasets[i], i, len(signals) > 1)
+                        display_data(figure, datasets[i], i, multifile_cond, 390)
 
         # Signal dictionary case
         else:
@@ -952,30 +1050,40 @@ else:
                 plot_signals(
                     signals=signals[key],
                     figure=figure,
-                    filename=len(file) > 1,
+                    filename=multifile_cond,
                 )
                 figures.append(figure)
 
             if len(figures) == 1:
                 with plot_spot:
-                    display_data(figures[0], list(signals.values())[0], 1, len(signals) > 1)
+                    display_data(figures[0], list(signals.values())[0], 1, multifile_cond, 790)
             else:
                 columns = plot_spot.columns(2)
                 for i, figure in enumerate(figures):
                     figure.update_layout(height=400)
                     with columns[i % 2]:
                         key = list(signals.keys())[i]
-                        display_data(figures[i], signals[key], i, len(signals) > 1)
+                        display_data(figures[i], signals[key], i, multifile_cond, 390)
 
 # ----------------------------------------------------- INFORMATION ----------------------------------------------------
 
 
 with st.expander("About", expanded=not file):
-    text = f"""*Raft* is a free tool to plot the content a various data files. Just drag and drop your file and get 
-    the relevant information from it!  
+    text = f"""
+    *Raft* is a user-friendly web app designed to give you a quick look at your data without needing to write a single line 
+    of code or spend time reformatting files. It supports a wide range of data file formats and takes care of the behind-
+    the-scenes work of reading and processing the data, so you can jump straight to visualising and exploring your results.
+    
+    The idea came from a simple frustration: too often, valuable time is lost just trying to open and make sense of a data 
+    file. This app removes that barrier. Whether you are checking raw instrument output, exploring simulation results, or 
+    comparing experimental datasets, it lets you plot and inspect the data in just a few clicks. It is especially handy in 
+    fast-paced research environments where quick decisions depend on a fast understanding of the data.
+
     App created and maintained by [{__author__}](https://emmanuelpean.streamlit.app/).  
     [Version {__version__}]({__github__}) (last updated: {__date__})."""
     st.info(text)
+
+# --------------------------------------------------- DATA PROCESSING --------------------------------------------------
 
 with st.expander("Data Processing"):
     text = """*Raft* also offers basic data processing capabilities, allowing you to quickly and easily process and 
@@ -1034,23 +1142,35 @@ with st.expander("Data Processing"):
     st.markdown(dedent(text))
     st.html(render_image(DATA_PROCESSING_PATH, 1000))
 
+# -------------------------------------------------- DATA FILE FORMATS -------------------------------------------------
+
 with st.expander("Data File Formats"):
-    print(FILE_TYPE_DICT.values())
+    st.markdown("""These are example data files for the different supported file types.""")
+
+    n_columns = 5
+
+    # List the software
     softwares = set([filetype for filetype in FILE_TYPE_DICT.values() if "(" in filetype])
-    softwares = set([filetype[: filetype.index("(") - 1] for filetype in softwares])
-    for software in sorted(softwares):
-        st.markdown(f"#### {software}")
+    softwares = sorted(set([filetype[: filetype.index("(") - 1] for filetype in softwares]))
+
+    # For each software, display them
+    for i, software in enumerate(softwares):
+        if i % n_columns == 0:
+            columns = st.columns(n_columns)
         filetypes = [filetype for filetype in FILE_TYPE_DICT.values() if software in filetype]
         paths = [path for path in FILE_TYPE_DICT if FILE_TYPE_DICT[path] in filetypes]
         paths, filetypes = zip(*sorted(zip(paths, filetypes), key=lambda v: os.path.basename(v[0])))
         filetypes = make_unique(filetypes)
 
-        for path, filetype in zip(paths, filetypes):
-            with open(path, "rb") as ofile:
+        with columns[i % n_columns].popover(software, use_container_width=True):
+
+            for path, filetype in zip(paths, filetypes):
+                content = read_file(path, "rb", None)
                 st.download_button(
                     label=f"Download {filetype}",
-                    data=ofile,
+                    data=content,
                     file_name=os.path.basename(path),
+                    use_container_width=True,
                 )
 
 # ------------------------------------------------------ CHANGELOG -----------------------------------------------------
@@ -1062,3 +1182,7 @@ with st.expander("Changelog"):
 
 with st.expander("License & Disclaimer"):
     st.markdown(read_file(os.path.join(PROJECT_PATH, "LICENSE.txt")))
+
+# Stop the profiler
+if profiler:
+    profiler.stop()

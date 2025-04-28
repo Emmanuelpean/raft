@@ -11,7 +11,7 @@ import pytest
 import numpy as np
 import pandas as pd
 import bs4
-from utils.string import matrix_to_string, generate_html_table, dedent, number_to_str
+from utils.strings import matrix_to_string, generate_html_table, dedent, number_to_str, get_label_html
 
 
 class TestMatrixToString:
@@ -197,56 +197,103 @@ class TestNumberToString:
 
         assert number_to_str(0) == "0"
 
-    def test_numbers_default(self) -> None:
+    def test_nan(self) -> None:
+        """Test zero as an edge case"""
+
+        assert number_to_str(float("nan")) == ""
+
+    def test_5_f_True_True(self) -> None:
         """Test various numbers with default settings"""
 
-        # < 1e-2
-        assert number_to_str(1.4647336e-4) == "1.4647E-4"
+        kwargs = dict(precision=5, format_str="f", html=True, auto_exponent=True)
 
-        # 1e-2 < value < 1
-        assert number_to_str(1.4647336e-2) == "0.01465"
+        # Medium value
+        assert number_to_str(45.25452732, **kwargs) == "45.25453"
+        assert number_to_str(45.336, **kwargs) == "45.33600"
 
-        # 1e4 > value > 1
-        assert number_to_str(153.43433) == "153.4"
-        assert number_to_str(153) == "153"  # trailing zeros
+        # Low/High value
+        assert number_to_str(0.00025452732, **kwargs) == "2.54527 &#10005; 10<sup>-4</sup>"
+        assert number_to_str(0.000336, **kwargs) == "3.36000 &#10005; 10<sup>-4</sup>"
 
-        # value > 1e4
-        assert number_to_str(1536.43433) == "1.5364E3"
-        assert number_to_str(1536) == "1.536E3"  # trailing zeros
-
-    def test_numbers_n(self) -> None:
+    def test_5_f_True_False(self) -> None:
         """Test various numbers with default settings"""
 
-        # < 1e-2
-        assert number_to_str(1.4647336e-4, n=5) == "1.46473E-4"
+        kwargs = dict(precision=5, format_str="f", html=True, auto_exponent=False)
 
-        # 1e-2 < value < 1
-        assert number_to_str(1.4647336e-2, n=5) == "0.014647"
+        # Medium value
+        assert number_to_str(45.25452732, **kwargs) == "45.25453"
+        assert number_to_str(45.336, **kwargs) == "45.33600"
 
-        # 1e4 > value > 1
-        assert number_to_str(153.43433, n=5) == "153.43"
-        assert number_to_str(153, n=5) == "153"  # trailing zeros
+        # Low/High value
+        assert number_to_str(0.00025452732, **kwargs) == "0.00025"
+        assert number_to_str(0.000336, **kwargs) == "0.00034"
 
-        # value > 1e4
-        assert number_to_str(1536.43433, n=5) == "1.53643E3"
-        assert number_to_str(1536, n=5) == "1.536E3"  # trailing zeros
-
-    def test_numbers_display(self) -> None:
+    def test_5_f_False_False(self) -> None:
         """Test various numbers with default settings"""
 
-        # < 1e-2
-        assert number_to_str(1.4647336e-4, display=True) == "1.4647 &#10005; 10<sup>-4</sup>"
+        kwargs = dict(precision=5, format_str="f", html=False, auto_exponent=False)
 
-        # 1e-2 < value < 1
-        assert number_to_str(1.4647336e-2, display=True) == "0.01465"
+        # Medium value
+        assert number_to_str(45.25452732, **kwargs) == "45.25453"
+        assert number_to_str(45.336, **kwargs) == "45.33600"
 
-        # 1e4 > value > 1
-        assert number_to_str(153.43433, display=True) == "153.4"
-        assert number_to_str(153, display=True) == "153.0"  # trailing zeros
+        # Low/High value
+        assert number_to_str(0.00025452732, **kwargs) == "0.00025"
+        assert number_to_str(0.000336, **kwargs) == "0.00034"
 
-        # value > 1e4
-        assert number_to_str(1536.43433, display=True) == "1.5364 &#10005; 10<sup>3</sup>"
-        assert number_to_str(1536, display=True) == "1.5360 &#10005; 10<sup>3</sup>"  # trailing zeros
+    @pytest.mark.parametrize(
+        "value, precision,format_str,html,auto_exponent,expected",
+        [
+            # Medium value (precision low)
+            (45.25452732, 5, "f", True, True, "45.25453"),
+            (45.25452732, 5, "f", True, False, "45.25453"),
+            (45.25452732, 5, "f", False, False, "45.25453"),
+            (45.25452732, 5, "f", False, True, "45.25453"),
+            (45.25452732, 5, "g", True, True, "45.255"),
+            (45.25452732, 5, "g", True, False, "45.255"),
+            (45.25452732, 5, "g", False, False, "45.255"),
+            (45.25452732, 5, "g", False, True, "45.255"),
+            # Medium value (precision high)
+            (45.254, 5, "f", True, True, "45.25400"),
+            (45.254, 5, "f", True, False, "45.25400"),
+            (45.254, 5, "f", False, False, "45.25400"),
+            (45.254, 5, "f", False, True, "45.25400"),
+            (45.254, 5, "g", True, True, "45.254"),
+            (45.254, 5, "g", True, False, "45.254"),
+            (45.254, 5, "g", False, False, "45.254"),
+            (45.254, 5, "g", False, True, "45.254"),
+            # Low value (precision low)
+            (1.325224262e-5, 5, "f", True, True, "1.32522 &#10005; 10<sup>-5</sup>"),
+            (1.325224262e-5, 5, "f", True, False, "0.00001"),
+            (1.325224262e-5, 5, "f", False, False, "0.00001"),
+            (1.325224262e-5, 5, "f", False, True, "1.32522E-5"),
+            (1.325224262e-5, 5, "g", True, True, "1.3252 &#10005; 10<sup>-5</sup>"),
+            (1.325224262e-5, 5, "g", True, False, "1.3252e-05"),
+            (1.325224262e-5, 5, "g", False, False, "1.3252e-05"),
+            (1.325224262e-5, 5, "g", False, True, "1.3252E-5"),
+            # Low value (precision high)
+            (1.325e-5, 5, "f", True, True, "1.32500 &#10005; 10<sup>-5</sup>"),
+            (1.325e-5, 5, "f", True, False, "0.00001"),
+            (1.325e-5, 5, "f", False, False, "0.00001"),
+            (1.325e-5, 5, "f", False, True, "1.32500E-5"),
+            (1.325e-5, 5, "g", True, True, "1.325 &#10005; 10<sup>-5</sup>"),
+            (1.325e-5, 5, "g", True, False, "1.325e-05"),
+            (1.325e-5, 5, "g", False, False, "1.325e-05"),
+            (1.325e-5, 5, "g", False, True, "1.325E-5"),
+        ],
+    )
+    def test_number(self, value, precision, format_str, html, auto_exponent, expected):
+
+        assert (
+            number_to_str(
+                value=value,
+                precision=precision,
+                format_str=format_str,
+                html=html,
+                auto_exponent=auto_exponent,
+            )
+            == expected
+        )
 
     def test_negative_medium_numbers(self) -> None:
         """Test single float to scientific notation"""
@@ -258,3 +305,87 @@ class TestNumberToString:
 
         result = number_to_str([1e-4, 1e-5])
         assert result == "1E-4, 1E-5"
+
+
+class TestGetLabel:
+
+    def setup_method(self) -> None:
+        """Set the quantities_label and units_label dicts"""
+
+        # Mock for pc.quantities_label dictionary based on examples
+        self.quantities_label = {
+            "max. wavelength": r"\lambda_{max}",
+            "int. max.": "Int. max.",
+        }
+
+        # Mock for pc.units_label dictionary
+        self.units_label = {"mum": r"\mum"}
+
+    def test_raises_assertion_error_when_question_mark_in_string(self) -> None:
+        with pytest.raises(AssertionError, match="\\? should not be in the string"):
+            get_label_html("test?", {})
+
+    def test_superscripts_and_subscripts(self) -> None:
+        result = get_label_html("sub_sub^1 max. wavelength^2 sup^sup1 sup^-3", self.quantities_label)
+        assert result == r"Sub<sub>sub</sub><sup>1</sup> \lambda_{max}<sup>2</sup> sup<sup>sup1</sup> sup<sup>-3</sup>"
+
+    def test_multiple_dictionary_replacements(self) -> None:
+        result = get_label_html("int. max. max. wavelength^2", self.quantities_label)
+        assert result == r"Int. max. \lambda_{max}<sup>2</sup>"
+
+    def test_no_capitalization(self) -> None:
+        custom_dict = {"rap": r"\tau", "taureau": "t|rap"}
+        result = get_label_html("taureau", custom_dict, False)
+        assert result == "t rap"
+
+    def test_with_units_label(self) -> None:
+        result = get_label_html("test mum_test^2", self.units_label, False)
+        assert result == r"test \mum<sub>test</sub><sup>2</sup>"
+
+    def test_capitalize_true(self) -> None:
+        result = get_label_html("test string", {}, True)
+        assert result == "Test string"
+
+    def test_capitalize_short_word(self) -> None:
+        # Words with length 1 should not be capitalized even if capitalize=True
+        result = get_label_html("a test string", {}, True)
+        assert result == "A test string"
+
+    def test_dictionary_replacement_conditions(self) -> None:
+        # Test that replacements only occur when surrounded by whitespace, underscore, or caret
+        test_dict = {"word": "REPLACED"}
+
+        # Should be replaced
+        assert "REPLACED" in get_label_html(" word ", test_dict)
+        assert "REPLACED" in get_label_html("_word ", test_dict)
+        assert "REPLACED" in get_label_html(" word_", test_dict)
+        assert "REPLACED" in get_label_html("^word ", test_dict)
+        assert "REPLACED" in get_label_html(" word^", test_dict)
+
+        # Should not be replaced
+        assert "REPLACED" not in get_label_html("aword", test_dict)
+        assert "REPLACED" not in get_label_html("worda", test_dict)
+        assert "REPLACED" not in get_label_html("awordb", test_dict)
+
+    def test_sorted_dictionary_keys(self) -> None:
+        # Test that longer keys are replaced first
+        test_dict = {
+            "short": "SHORT",
+            "very long key": "LONG",
+        }
+        result = get_label_html("test very long key short test", test_dict)
+        assert result == "Test LONG SHORT test"
+
+    def test_pipe_replacement(self) -> None:
+        test_dict = {"test": "replacement|with|pipes"}
+        result = get_label_html("test", test_dict)
+        assert result == "replacement with pipes"
+
+    def test_complex_formatting(self) -> None:
+        test_dict = {"complex": r"\lambda_{α}^{β}"}
+        result = get_label_html("complex_value^2", test_dict)
+        assert result == r"\lambda_{α}^{β}<sub>value</sub><sup>2</sup>"
+
+    def test_empty_string(self) -> None:
+        with pytest.raises(IndexError):
+            get_label_html("", {})

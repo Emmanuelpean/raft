@@ -1,21 +1,23 @@
 """Module containing functions for plotting data"""
 
+from __future__ import annotations
+
 import plotly.colors as pc
 import plotly.graph_objects as go
 import plotly.subplots as ps
 
-from data_files.signal_data import SignalData
 from utils.miscellaneous import merge_dicts
 
 
-def make_figure() -> go.Figure:
-    """Create a plotly figure"""
+def make_figure(secondary_y: bool = True) -> go.Figure:
+    """Create a plotly figure
+    :param secondary_y: if True, add a secondary y-axis"""
 
-    return ps.make_subplots(1, 1, specs=[[{"secondary_y": True}]])
+    return ps.make_subplots(1, 1, specs=[[{"secondary_y": secondary_y}]])
 
 
 def plot_signals(
-    signals: SignalData | list[SignalData],
+    signals: "SignalData | list[SignalData]",
     figure: go.Figure,
     colorscale: str = "viridis",
     *args,

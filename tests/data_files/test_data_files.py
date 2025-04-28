@@ -13,16 +13,16 @@ import tempfile
 import pytest
 
 from config import resources
-from app.data_files import *
+from data_files.data_files import *
 from utils.checks import are_close
 
 
 @pytest.mark.parametrize(
     "mode, expected_quantity, expected_unit",
     [
-        ("T", constants.transmittance_qt, constants.percent_unit),
-        ("R", constants.reflectance_qt, constants.percent_unit),
-        ("A", constants.absorbance_qt, ""),
+        ("T", constants.TRANSMITTANCE_QT, constants.PERCENT_UNIT),
+        ("R", constants.REFLECTANCE_QT, constants.PERCENT_UNIT),
+        ("A", constants.ABSORBANCE_QT, ""),
         ("XYZ", "", ""),  # default case
     ],
 )
@@ -136,7 +136,7 @@ def print_signal_info(signal: SignalData) -> None:  # pragma: no cover
         "x_unit": signal.x.unit,
         "y_unit": signal.y.unit,
         "filename": signal.filename,
-        "signalname": signal.signalname[0],
+        "signalname": signal.signalnames[0],
         "z_dict": signal.z_dict,
     }
 
@@ -185,7 +185,7 @@ class TestDataFiles:
         assert signal.x.unit == expected["x_unit"]
         assert signal.y.unit == expected["y_unit"]
         assert signal.filename == expected["filename"]
-        assert signal.signalname[0] == expected["signalname"]
+        assert signal.signalnames[0] == expected["signalname"]
         for key in expected["z_dict"]:
             assert are_close(signal.z_dict[key].data, expected["z_dict"][key].data)
             assert are_close(signal.z_dict[key].quantity, expected["z_dict"][key].quantity)

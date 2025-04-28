@@ -102,3 +102,20 @@ def get_derivative(
         x = (x[1:] + x[:-1]) / 2
 
     return x, y
+
+
+def finite_argm(
+    method: str,
+    data: np.ndarray,
+) -> int:
+    """Get the argmin or argmax of an array ignoring inf and nan
+    :param method: numpy method called
+    :param data: numpy array
+    :return: index or raise an error if all nan/inf"""
+
+    data = data.copy()
+    try:
+        data[np.where(np.abs(data) == np.inf)] = float("nan")
+    except ValueError:
+        pass
+    return int(getattr(np, "nan" + method)(data))

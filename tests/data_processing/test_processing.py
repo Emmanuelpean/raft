@@ -17,6 +17,7 @@ from data_processing.processing import (
     interpolate_data,
     get_derivative,
     interpolate_point,
+    finite_argm,
 )
 from utils.checks import are_close
 
@@ -262,3 +263,46 @@ class TestInterpolatePoint:
         x_int, y_int = interpolate_point(x, y, 6, kind="linear")
         assert len(x_int) == 1000
         assert len(y_int) == 1000
+
+
+class TestFiniteArgm:
+
+    def test_argmax_basic(self) -> None:
+
+        data = np.array([1, 3, np.nan, np.inf, -np.inf, 2])
+        result = finite_argm("argmax", data)
+        assert result == 1  # 3 is at index 1
+
+    def test_argmin_basic(self) -> None:
+
+        data = np.array([np.nan, 3, np.inf, 1, -np.inf, 2])
+        result = finite_argm("argmin", data)
+        assert result == 3  # 1 is at index 3
+
+    def test_all_invalid(self) -> None:
+
+        data = np.array([np.nan, np.inf, -np.inf])
+        with pytest.raises(ValueError):
+            finite_argm("argmax", data)
+
+    def test_no_invalid(self) -> None:
+
+        data = np.array([10, 5, 20, 15])
+        assert finite_argm("argmax", data) == 2  # 20 at index 2
+        assert finite_argm("argmin", data) == 1  # 5 at index 1
+
+    def test_method_not_found(self) -> None:
+
+        data = np.array([1, 2, 3])
+        with pytest.raises(AttributeError):
+            finite_argm("not_a_method", data)
+
+    def test_original_array_not_modified(self) -> None:
+
+        data = np.array([1, 2, np.inf])
+        data_copy = data.copy()
+        try:
+            finite_argm("argmax", data)
+        except Exception:
+            pass
+        assert np.array_equal(data, data_copy), "Original data should not be modified"

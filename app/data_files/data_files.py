@@ -10,7 +10,7 @@ import numpy as np
 from renishawWiRE import WDFReader
 
 from config import constants
-from data_files.data_extraction import stringlist_to_matrix, get_header_as_dicts, grep, get_data_index, get_precision
+from data_files.data_extraction import stringlist_to_matrix, get_header_as_dicts, grep, get_data_index
 from data_files.signal_data import SignalData, Dimension
 from utils.miscellaneous import sort_lists
 
@@ -24,11 +24,11 @@ def get_uvvis_dimension(
     :param mode: any string containing T, R or A"""
 
     if "T" in mode:
-        return Dimension(data, constants.transmittance_qt, constants.percent_unit)
+        return Dimension(data, constants.TRANSMITTANCE_QT, constants.PERCENT_UNIT)
     elif "R" in mode:
-        return Dimension(data, constants.reflectance_qt, constants.percent_unit)
+        return Dimension(data, constants.REFLECTANCE_QT, constants.PERCENT_UNIT)
     elif "A" in mode:
-        return Dimension(data, constants.absorbance_qt)
+        return Dimension(data, constants.ABSORBANCE_QT)
     else:
         return Dimension(data)
 
@@ -67,8 +67,8 @@ def BeamproFile(filename: str) -> dict[str, SignalData]:
     content, name = read_datafile(filename)
     if content[0] not in ("BeamPro 3.0 Crosshair file", "Beamage Crosshair file"):
         raise AssertionError()  # pragma: no cover
-    x_quantity, x_unit = constants.distance_qt, constants.micrometer_unit
-    y_quantity, y_unit = constants.intensity_qt, constants.au_unit
+    x_quantity, x_unit = constants.DISTANCE_QT, constants.MICROMETER_UNIT
+    y_quantity, y_unit = constants.INTENSITY_QT, constants.AU_UNIT
     data_index = get_data_index(content, delimiter="\t")
     if data_index != 5:
         raise AssertionError()  # pragma: no cover
@@ -93,14 +93,14 @@ def DektakFile(filename: str) -> SignalData | None:
     if not isinstance(data_index, int):
         raise AssertionError()  # pragma: no cover
     x_data, y_data = stringlist_to_matrix(content[data_index + 2 : -2], ",")[:2]
-    x = Dimension(x_data, constants.horizontal_distance_qt, constants.micrometer_unit)
-    y = Dimension(y_data, constants.vertical_distance_qt, constants.micrometer_unit)
+    x = Dimension(x_data, constants.HORIZONTAL_DISTANCE_QT, constants.MICROMETER_UNIT)
+    y = Dimension(y_data, constants.VERTICAL_DISTANCE_QT, constants.MICROMETER_UNIT)
 
     # Timestamp
     date_str = grep(content, "Date,", 0)
     date_format = "%m/%d/%y %H:%M:%S"
     date = dt.datetime.strptime(date_str, date_format)
-    z_dict = {constants.timestamp_id: Dimension(date, constants.time_qt)}
+    z_dict = {constants.TIMESTAMP_ID: Dimension(date, constants.TIME_QT)}
 
     return SignalData(x, y, name, z_dict=z_dict)
 
@@ -124,14 +124,14 @@ def read_brml_rawdata_file(
 
     # Data type
     dtype = root.findall("DataRoutes/DataRoute/ScanInformation")[0].get("VisibleName")
-    x_quantity = constants.two_theta_qt
+    x_quantity = constants.TWO_THETA_QT
     if dtype == "Coupled TwoTheta/Theta":
         x_data, theta, y_data = data[2:]
     elif dtype == "TwoTheta":
         x_data, y_data = data[2:]
     elif dtype == "Rocking":
         x_data, y_data = data[2:]
-        x_quantity = constants.theta_qt
+        x_quantity = constants.THETA_QT
     elif dtype == "PSD fixed":
         y_data = np.transpose(data)[0][:-1]  # for unknown reason, y_data is 1 element longer than x_data
         x0 = float(root.findall("DataRoutes/DataRoute/ScanInformation/ScanAxes/ScanAxisInfo/Start")[0].text)
@@ -141,25 +141,25 @@ def read_brml_rawdata_file(
     else:
         raise AssertionError("Unknown data type")  # pragma: no cover
 
-    x = Dimension(x_data, x_quantity, constants.deg_unit)
-    y = Dimension(y_data, constants.intensity_qt, constants.counts_unit)
+    x = Dimension(x_data, x_quantity, constants.DEG_UNIT)
+    y = Dimension(y_data, constants.INTENSITY_QT, constants.COUNTS_UNIT)
 
     # TimeStamp
     date_str = root.findall("TimeStampStarted")[0].text
     date_format = "%Y-%m-%dT%H:%M:%S.%f"
     date = dt.datetime.strptime(date_str[:-7], date_format)  # only keep 6 digits and remove the UTC
-    z_dict[constants.timestamp_id] = Dimension(date, constants.time_qt)
+    z_dict[constants.TIMESTAMP_ID] = Dimension(date, constants.TIME_QT)
 
     # Integration time
     inttime_str = root.findall("DataRoutes/DataRoute/ScanInformation/TimePerStep")[0].text
-    z_dict[constants.int_time_id] = Dimension(float(inttime_str), constants.time_qt, constants.second_unit)
+    z_dict[constants.INTEGRATION_TIME_ID] = Dimension(float(inttime_str), constants.TIME_QT, constants.SECOND_UNIT)
 
     # X-rays wavelength
     wl_el = root.findall(
         "FixedInformation/Instrument/PrimaryTracks/TrackInfoData/MountedOptics/InfoData/Tube/WaveLengthAverage"
     )[0]
     wl_str = wl_el.get("Value")  # wavelength in angstrom
-    z_dict[constants.wl_id] = Dimension(float(wl_str), constants.wavelength_qt, constants.angstrom_unit)
+    z_dict[constants.WAVELENGTH_ID] = Dimension(float(wl_str), constants.WAVELENGTH_QT, constants.ANGSTROM_UNIT)
 
     # Measure time
     meas_time_str = root.findall("TimeStampFinished")[0].text
@@ -168,7 +168,7 @@ def read_brml_rawdata_file(
         measure_time = (end_time - date).total_seconds()
     except ValueError:
         measure_time = 0.0
-    z_dict[constants.measure_time_id] = Dimension(measure_time, constants.time_qt, constants.second_unit)
+    z_dict[constants.MEASUREMENT_TIME_ID] = Dimension(measure_time, constants.TIME_QT, constants.SECOND_UNIT)
 
     # Position
     xml_drives = root.findall("FixedInformation/Drives/InfoData")
@@ -212,19 +212,19 @@ def EasyLogFile(filename: str) -> dict[str, SignalData]:
     date_format = "%Y-%m-%d %H:%M:%S"
     measure_time = [dt.datetime.strptime(f[1], date_format) for f in data_str]
     x_data = np.array([(f - min(measure_time)).total_seconds() for f in measure_time])
-    x = Dimension(x_data, constants.time_qt, constants.second_unit)
+    x = Dimension(x_data, constants.TIME_QT, constants.SECOND_UNIT)
 
     # First measurement as Timestamp
-    z_dict = {constants.timestamp_id: Dimension(measure_time[0], constants.time_qt)}
+    z_dict = {constants.TIMESTAMP_ID: Dimension(measure_time[0], constants.TIME_QT)}
 
     # Y dimension (temperature)
     y_temp_data = np.array([float(f[2]) for f in data_str])
-    y_temp = Dimension(y_temp_data, constants.temperature_qt, constants.celsius_unit)
+    y_temp = Dimension(y_temp_data, constants.TEMPERATURE_QT, constants.CELSIUS_UNIT)
     temperature = SignalData(x, y_temp, name, "Temperature", z_dict.copy())
 
     # Y dimension (humidity)
     y_hum_data = np.array([float(f[3]) for f in data_str])
-    y_hum = Dimension(y_hum_data, constants.humidity_qt, constants.percent_unit)
+    y_hum = Dimension(y_hum_data, constants.HUMIDITY_QT, constants.PERCENT_UNIT)
     humidity = SignalData(x, y_hum, name, "Humidity", z_dict.copy())
 
     return {"Temperature": temperature, "Humidity": humidity}
@@ -266,13 +266,13 @@ def EdinstFile(
     # X dimension
     measure_type = headers[0]["Type"]
     if "Emission Scan" in measure_type or "Excitation Scan" in measure_type:
-        x_quantity, x_unit = constants.wavelength_qt, constants.nm_unit
+        x_quantity, x_unit = constants.WAVELENGTH_QT, constants.NM_UNIT
     elif "Time Scan" in measure_type:
-        x_quantity, x_unit = constants.time_qt, grep(content, "Time(", 0, ")")
+        x_quantity, x_unit = constants.TIME_QT, grep(content, "Time(", 0, ")")
         if x_unit is None:
-            x_unit = constants.nanosecond_unit  # assume ns
+            x_unit = constants.NANOSECOND_UNIT  # assume ns
     elif "Synchronous Scan" in measure_type:
-        x_quantity, x_unit = constants.wavelength_qt, constants.nm_unit
+        x_quantity, x_unit = constants.WAVELENGTH_QT, constants.NM_UNIT
     else:
         raise AssertionError("Unknown scan type")  # pragma: no cover
     x = Dimension(x_data, x_quantity, x_unit)
@@ -284,10 +284,10 @@ def EdinstFile(
     else:
         yaxis = headers[0]["YAxis"]
     if "Absorbance" in yaxis:
-        y_quantity, y_unit = constants.absorptance_qt, constants.percent_unit
+        y_quantity, y_unit = constants.ABSORPTANCE_QT, constants.PERCENT_UNIT
         ys_data *= 100
     elif "Counts" in yaxis:
-        y_quantity, y_unit = constants.intensity_qt, constants.counts_unit
+        y_quantity, y_unit = constants.INTENSITY_QT, constants.COUNTS_UNIT
     else:
         raise AssertionError("Unknown y axis")  # pragma: no cover
 
@@ -331,12 +331,12 @@ def FluorEssenceFile(filename: str) -> list[SignalData] | dict[str, SignalData]:
         data = stringlist_to_matrix(content[index_header:])[1:]  # first column is ignored
 
         # X dimension
-        x = Dimension(data[0], constants.wavelength_qt, headers[0]["Units"])
+        x = Dimension(data[0], constants.WAVELENGTH_QT, headers[0]["Units"])
 
         # ys
         ys_data = data[1:]
         ys_headers = headers[1:]
-        y_quantity = constants.intensity_qt
+        y_quantity = constants.INTENSITY_QT
         ys_unit = [header["Units"] for header in ys_headers]
 
         # Data type
@@ -344,16 +344,16 @@ def FluorEssenceFile(filename: str) -> list[SignalData] | dict[str, SignalData]:
             float(headers[1]["Long Name"])  # check if the Long Name is a float or int
             for header in ys_headers:
                 wl = float(header["Long Name"])
-                dim = Dimension(wl, constants.exc_wavelength_qt, constants.nm_unit)
-                header[constants.pyda_id + constants.exc_wl_id] = dim
-            names = [header["Long Name"] + " " + constants.nm_unit for header in ys_headers]
+                dim = Dimension(wl, constants.EXC_WAVELENGTH_QT, constants.NM_UNIT)
+                header[constants.PYDA_ID + constants.EXCITATION_WAVELENGTH_ID] = dim
+            names = [header["Long Name"] + " " + constants.NM_UNIT for header in ys_headers]
 
         except ValueError:  # Timelapse
             date_format = "%m/%d/%Y %H:%M:%S"
             for header in ys_headers:
                 date = dt.datetime.strptime(header["TimeStamp"], date_format)
-                header[constants.pyda_id + constants.timestamp_id] = Dimension(date, constants.time_qt)
-            names = [str(header[constants.timestamp_id]) for header in ys_headers]
+                header[constants.PYDA_ID + constants.TIMESTAMP_ID] = Dimension(date, constants.TIME_QT)
+            names = [str(header[constants.TIMESTAMP_ID]) for header in ys_headers]
 
         for header in ys_headers:
             for key in header:
@@ -377,9 +377,9 @@ def FluorEssenceFile(filename: str) -> list[SignalData] | dict[str, SignalData]:
         ys = {}
         for header, y_data in zip(headers, data):
             if header["Long Name"] == "Wavelength":
-                ys[header["Long Name"]] = Dimension(y_data, constants.wavelength_qt, header["Units"])
+                ys[header["Long Name"]] = Dimension(y_data, constants.WAVELENGTH_QT, header["Units"])
             else:
-                ys[header["Long Name"]] = Dimension(y_data, constants.intensity_qt, header["Units"])
+                ys[header["Long Name"]] = Dimension(y_data, constants.INTENSITY_QT, header["Units"])
 
         signals = {}
         for key in ys:
@@ -405,12 +405,12 @@ def FlWinlabFile(filename: str) -> SignalData:
     if not isinstance(data_index, int):
         raise AssertionError()  # pragma: no cover
     x_data, y_data = stringlist_to_matrix(content[data_index + 1 : -2])
-    x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
-    y = Dimension(y_data, constants.intensity_qt, constants.au_unit)
+    x = Dimension(x_data, constants.WAVELENGTH_QT, constants.NM_UNIT)
+    y = Dimension(y_data, constants.INTENSITY_QT, constants.AU_UNIT)
 
     # Timestamp
     date = dt.datetime.strptime(content[3] + " " + content[4][:8], "%d/%m/%y %X")
-    z_dict = {constants.timestamp_id: Dimension(date, constants.time_qt)}
+    z_dict = {constants.TIMESTAMP_ID: Dimension(date, constants.TIME_QT)}
 
     return SignalData(x, y, name, z_dict=z_dict)
 
@@ -441,7 +441,7 @@ def LambdaSpxFile(filename: str) -> SignalData:
     x_max = float(content[x_index + 2])  # highest x
     nb_points = int(content[x_index + 4])  # number of points measured
     x_data = np.linspace(x_min, x_max, nb_points)
-    x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
+    x = Dimension(x_data, constants.WAVELENGTH_QT, constants.NM_UNIT)
 
     # Timestamp
     date_format1 = "%m/%d/%Y %I:%M:%S %p"
@@ -451,8 +451,8 @@ def LambdaSpxFile(filename: str) -> SignalData:
     except ValueError:
         date = dt.datetime.strptime(content[16], date_format1)
     z_dict = {
-        constants.timestamp_id: Dimension(date, constants.time_qt),
-        constants.scan_speed_id: Dimension(float(content[62]), constants.speed_qt, constants.nm_min_unit),
+        constants.TIMESTAMP_ID: Dimension(date, constants.TIME_QT),
+        constants.SCAN_SPEED_ID: Dimension(float(content[62]), constants.SPEED_QT, constants.NM_MIN_UNIT),
     }
 
     return SignalData(x, y, name, z_dict=z_dict)
@@ -472,7 +472,7 @@ def ProDataSignal(filename: str) -> dict[str, list[SignalData]]:
     date_format = "%a %b %d %X %Y"
     date_str = grep(content, "Time Stamp :", 0)
     date = dt.datetime.strptime(date_str, date_format)
-    z_dict = {constants.timestamp_id: Dimension(date, constants.time_qt)}
+    z_dict = {constants.TIMESTAMP_ID: Dimension(date, constants.TIME_QT)}
 
     nb_points = grep(content, "Time,", 0, "time points", "int")
 
@@ -486,18 +486,18 @@ def ProDataSignal(filename: str) -> dict[str, list[SignalData]]:
     data = stringlist_to_matrix(data_raw, delimiter)
 
     # X dimension
-    x = Dimension(data[0], constants.time_qt, constants.second_unit)
+    x = Dimension(data[0], constants.TIME_QT, constants.SECOND_UNIT)
 
     # Y dimension
     ys_data = data[1:]
     data_type = content[data_index - 4]
 
     if data_type == "Rel_Absorbance":
-        y_quantity, y_unit = constants.rel_abs_qt, constants.none_unit
+        y_quantity, y_unit = constants.REL_ABS_QT, ""
     elif data_type == "Emission":
-        y_quantity, y_unit = constants.intensity_qt, constants.counts_unit
+        y_quantity, y_unit = constants.INTENSITY_QT, constants.COUNTS_UNIT
     else:
-        y_quantity, y_unit = constants.unknown_qt, constants.none_unit
+        y_quantity, y_unit = "", ""
 
     # Check if any array is all zeros
     nonzero_indices = [i for i in range(len(ys_data)) if np.any(ys_data[i])]
@@ -513,11 +513,11 @@ def ProDataSignal(filename: str) -> dict[str, list[SignalData]]:
     z_data = z_data[nonzero_indices]
 
     if z_type == "Repeat":
-        z_quantity, z_unit = constants.repeats_qt, constants.none_unit
+        z_quantity, z_unit = constants.REPEATS_QT, ""
     elif z_type == "Wavelength":
-        z_quantity, z_unit = constants.em_wavelength_qt, constants.nm_unit
+        z_quantity, z_unit = constants.EM_WAVELENGTH_QT, constants.NM_UNIT
     else:
-        z_quantity, z_unit = constants.unknown_qt, constants.none_unit
+        z_quantity, z_unit = "", ""
 
     z = Dimension(z_data, z_quantity, z_unit)
 
@@ -556,20 +556,20 @@ def ProDataSignal(filename: str) -> dict[str, list[SignalData]]:
     for i in range(len(z_data)):
 
         z_dict["z"] = Dimension(z.data[i], z.quantity, z.unit)
-        shortname = z_dict["z"].get_value_label_html()
-        signals.append(SignalData(x, Dimension(ys_data[i], y_quantity, y_unit), name, shortname, z_dict))
+        signalname = z_dict["z"].get_value_label_html(5, "g", auto_exponent=False)
+        signals.append(SignalData(x, Dimension(ys_data[i], y_quantity, y_unit), name, signalname, z_dict))
 
         if otb_data is not None:
-            y = Dimension(otb_data[i], constants.intensity_qt, constants.volt_unit)
-            otb_signals.append(SignalData(x, y, name, shortname, z_dict))
+            y = Dimension(otb_data[i], constants.INTENSITY_QT, constants.VOLT_UNIT)
+            otb_signals.append(SignalData(x, y, name, signalname, z_dict))
 
         if huntb_data is not None:
-            y = Dimension(huntb_data[i], constants.intensity_qt, constants.volt_unit)
-            huntb_signals.append(SignalData(x, y, name, shortname, z_dict))
+            y = Dimension(huntb_data[i], constants.INTENSITY_QT, constants.VOLT_UNIT)
+            huntb_signals.append(SignalData(x, y, name, signalname, z_dict))
 
         if rawabs_data is not None:
-            y = Dimension(rawabs_data[i], constants.absorbance_qt)
-            rawabs_signals.append(SignalData(x, y, name, shortname, z_dict))
+            y = Dimension(rawabs_data[i], constants.ABSORBANCE_QT)
+            rawabs_signals.append(SignalData(x, y, name, signalname, z_dict))
 
     data = {
         "dT/T": signals,
@@ -622,8 +622,8 @@ def SbtpsSeqFile(filename: str) -> dict[str, list[SignalData]]:
         sweep_indexes = np.arange(index_start + 1, index_end)
         sweeps = [data_header[i].replace(" (mA/cm\xb2)", "") for i in sweep_indexes]
         s_data = sort_lists(data[index_start:index_end], 0)
-        x = Dimension(s_data[0], constants.voltage_qt, constants.volt_unit)
-        ys = [Dimension(y_data, constants.current_density_qt, constants.ma_cm2_unit) for y_data in s_data[1:]]
+        x = Dimension(s_data[0], constants.VOLTAGE_QT, constants.VOLT_UNIT)
+        ys = [Dimension(y_data, constants.CURRENT_DENSITY_QT, constants.MA_CM_2_UNIT) for y_data in s_data[1:]]
         return [SignalData(x, y, name, "%s (%s)" % (sname, s)) for s, y in zip(sweeps, ys)]
 
     # Forward scan
@@ -659,13 +659,13 @@ def SbtpsIvFile(filename: str) -> dict[str, SignalData]:
     data = stringlist_to_matrix(content[data_index + 1 :])
     x_data, y_data_cd, y_data_c, y_data_p, y_data_t = sort_lists(data, 0)
 
-    x = Dimension(x_data, constants.voltage_qt, constants.volt_unit)
+    x = Dimension(x_data, constants.VOLTAGE_QT, constants.VOLT_UNIT)
     current_density = SignalData(
-        x, Dimension(y_data_cd, constants.current_density_qt, constants.ma_cm2_unit), name, "Current density"
+        x, Dimension(y_data_cd, constants.CURRENT_DENSITY_QT, constants.MA_CM_2_UNIT), name, "Current density"
     )
-    current = SignalData(x, Dimension(y_data_c, constants.current_qt, constants.ma_unit), name, "Current")
-    power = SignalData(x, Dimension(y_data_p, constants.power_qt, constants.mw_unit), name, "Power")
-    time = SignalData(x, Dimension(y_data_t, constants.time_qt, constants.second_unit), name, "Time")
+    current = SignalData(x, Dimension(y_data_c, constants.CURRENT_QT, constants.MA_UNIT), name, "Current")
+    power = SignalData(x, Dimension(y_data_p, constants.POWER_QT, constants.MW_UNIT), name, "Power")
+    time = SignalData(x, Dimension(y_data_t, constants.TIME_QT, constants.SECOND_UNIT), name, "Time")
 
     return {"Current density": current_density, "Current": current, "Power": power, "Time": time}
 
@@ -715,8 +715,8 @@ def SpectraSuiteFile(filename: str) -> SignalData:
 
     # Data
     x_data, y_data = stringlist_to_matrix(content[17:-1])
-    x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
-    y = Dimension(y_data, constants.intensity_qt, constants.counts_unit)
+    x = Dimension(x_data, constants.WAVELENGTH_QT, constants.NM_UNIT)
+    y = Dimension(y_data, constants.INTENSITY_QT, constants.COUNTS_UNIT)
 
     # Timestamp
     date_str = content[2][6:]
@@ -726,11 +726,11 @@ def SpectraSuiteFile(filename: str) -> SignalData:
     date = dt.datetime.strptime(date_str, date_format)
     if "BST" in date_str:
         date -= dt.timedelta(seconds=3600)
-    z_dict = {constants.timestamp_id: Dimension(date, constants.time_qt)}
+    z_dict = {constants.TIMESTAMP_ID: Dimension(date, constants.TIME_QT)}
 
     # Integration time
     int_time = grep(content, "Integration Time (usec):", 0, "(", "float")
-    z_dict[constants.int_time_id] = Dimension(int_time / 1e6, constants.time_qt, constants.second_unit)
+    z_dict[constants.INTEGRATION_TIME_ID] = Dimension(int_time / 1e6, constants.TIME_QT, constants.SECOND_UNIT)
 
     return SignalData(x, y, name, z_dict=z_dict)
 
@@ -760,9 +760,9 @@ def PerkinElmerFile(filename: str) -> SignalData | list[SignalData]:
 
         # X dimension
         if x_q == "cm-1":
-            x = Dimension(x_data, constants.wavenumber_qt, constants.cm_1_unit)
+            x = Dimension(x_data, constants.WAVENUMBER_QT, constants.CM_1_UNIT)
         elif x_q == "nm":
-            x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
+            x = Dimension(x_data, constants.WAVELENGTH_QT, constants.NM_UNIT)
         else:
             x = Dimension(x_data, x_q)
 
@@ -775,9 +775,9 @@ def PerkinElmerFile(filename: str) -> SignalData | list[SignalData]:
 
         # X dimension
         if content[index - 1] == '"Wavenumber"':
-            x = Dimension(x_data, constants.wavenumber_qt, constants.cm_1_unit)
+            x = Dimension(x_data, constants.WAVENUMBER_QT, constants.CM_1_UNIT)
         elif content[index - 1] == '"Wavelength"':
-            x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
+            x = Dimension(x_data, constants.WAVELENGTH_QT, constants.NM_UNIT)
         else:
             x = Dimension(x_data, content[5])
 
@@ -797,12 +797,12 @@ def UVWinLabASCII(filename: str) -> SignalData:
     if not isinstance(data_index, int):
         raise AssertionError()  # pragma: no cover
     data = stringlist_to_matrix(content[data_index + 1 :])[:, ::-1]
-    x = Dimension(data[0], constants.wavelength_qt, constants.nm_unit)
+    x = Dimension(data[0], constants.WAVELENGTH_QT, constants.NM_UNIT)
     y = get_uvvis_dimension(data[1], content[80])
 
     # Date
     date = dt.datetime.strptime(content[3] + " " + content[4][:-3], "%d/%m/%y %H:%M:%S")
-    z_dict = {constants.timestamp_id: Dimension(date, constants.time_qt)}
+    z_dict = {constants.TIMESTAMP_ID: Dimension(date, constants.TIME_QT)}
 
     return SignalData(x, y, name, z_dict=z_dict)
 
@@ -816,8 +816,8 @@ def VestaDiffractionFile(filename: str) -> SignalData:
 
     content, name = read_datafile(filename)
     x_data, y_data = stringlist_to_matrix(content)[:2]
-    x = Dimension(x_data, constants.two_theta_qt, constants.deg_unit)
-    y = Dimension(y_data, constants.intensity_qt, constants.au_unit)
+    x = Dimension(x_data, constants.TWO_THETA_QT, constants.DEG_UNIT)
+    y = Dimension(y_data, constants.INTENSITY_QT, constants.AU_UNIT)
     return SignalData(x, y, name)
 
 
@@ -840,10 +840,10 @@ def WireFile(filename: str | BytesIO) -> SignalData:
         # noinspection PyUnresolvedReferences
         x_data, y_data = np.array(reader.xdata[::-1], dtype=float), np.array(reader.spectra[::-1], dtype=float)
         if reader.xlist_unit.name == "RamanShift":
-            x = Dimension(x_data, constants.wavenumber_qt, constants.cm_1_unit)
+            x = Dimension(x_data, constants.WAVENUMBER_QT, constants.CM_1_UNIT)
         else:
-            x = Dimension(x_data, constants.wavelength_qt, constants.nm_unit)
-        y = Dimension(y_data, constants.intensity_qt)
+            x = Dimension(x_data, constants.WAVELENGTH_QT, constants.NM_UNIT)
+        y = Dimension(y_data, constants.INTENSITY_QT)
         return SignalData(x, y, reader.title)
     finally:
         try:
@@ -885,7 +885,9 @@ def Zem3(filename: str) -> dict[str, SignalData]:
         return data
 
 
-FUNCTIONS = {
+# -------------------------------------------------------- READ FUNCTIONS --------------------------------------------------------
+
+READ_FUNCTIONS = {
     "SpectraSuite (.txt)": (SpectraSuiteFile, "txt"),
     "FluorEssence (.txt)": (FluorEssenceFile, "txt"),
     "EasyLog (.txt)": (EasyLogFile, "txt"),
@@ -911,9 +913,13 @@ FUNCTIONS = {
 }
 
 
-def detect_file_type(filename: str | BytesIO) -> tuple[any, str] | tuple[None, None]:
+FILETYPES = ["Detect"] + sorted(READ_FUNCTIONS.keys())
+
+
+def detect_file_type(filename: str | BytesIO) -> tuple[dict | list | SignalData, str] | tuple[None, None]:
     """Detect the type of file and load it
-    :param filename: file to load"""
+    :param filename: file to load
+    :return: a tuple of the signal returned (dict, list or SignalData) and the detected file type or (None, None)"""
 
     # Only search through the filetypes matching the extension
     if isinstance(filename, str):
@@ -921,14 +927,14 @@ def detect_file_type(filename: str | BytesIO) -> tuple[any, str] | tuple[None, N
     else:
         extension = os.path.splitext(filename.name)[1]
     filtered_functions = {}
-    for key, value in FUNCTIONS.items():
-        if extension.lower() == "." + FUNCTIONS[key][1].lower() or FUNCTIONS[key][1] == "":
+    for key, value in READ_FUNCTIONS.items():
+        if extension.lower() == "." + READ_FUNCTIONS[key][1].lower() or READ_FUNCTIONS[key][1] == "":
             filtered_functions[key] = value[0]
 
     # Try to load the data with each function until successful
     for filetype in filtered_functions:
         try:
-            signal = FUNCTIONS[filetype][0](filename)
+            signal = READ_FUNCTIONS[filetype][0](filename)
             return signal, filetype
         except:
             pass
@@ -937,48 +943,41 @@ def detect_file_type(filename: str | BytesIO) -> tuple[any, str] | tuple[None, N
 
 
 def read_data_file(
-    filename: str | list[str],
+    filenames: str | list[str],
     filetype: str,
 ) -> tuple[list[SignalData], str | None]:
     """Read the file(s) content.
     If filetype is "Detect" and filename is a list of files, detect the first file type and then reuse that type for
     the other files. If a file cannot be loaded in the list, it is not returned.
-    :param filename: file filename
+    :param filenames: file filename
     :param filetype: file type
     :return: a list of SignalData and the file type loaded (None if not loaded)"""
 
-    if isinstance(filename, list):
+    # Convert single file to list
+    if not isinstance(filenames, list):
+        filenames = [filenames]
 
-        signals0, filetype = read_data_file(filename[0], filetype)
-
-        # Make sure that the file could be read
-        if filetype is not None:
-            signals = []
-            for file in filename[1:]:
-                signal = read_data_file(file, filetype)[0]
-                if signal:
-                    signals.append(signal[0])
-
-            # noinspection PyTypeChecker
-            return [signals0[0]] + signals, filetype
-        else:
-            return [], None
-
+    # Load the first signal
+    if filetype == FILETYPES[0]:
+        signal, filetype = detect_file_type(filenames[0])
     else:
+        try:
+            signal = READ_FUNCTIONS[filetype][0](filenames[0])
+        except Exception as e:
+            signal = None
+            print(e)
 
-        # Attempt to load the data by testing every file types
-        if filetype == FILETYPES[0]:
-            signal, filetype = detect_file_type(filename)
-            return [signal], filetype
+    # Iterate over the remaining paths
+    if signal is not None:  # Make sure that the file could be read
+        signals = [signal]
+        for file in filenames[1:]:
 
-        # Attempt to load the data using the provided function
-        else:
             try:
-                signal = FUNCTIONS[filetype][0](filename)
-                return [signal], filetype
+                signals.append(READ_FUNCTIONS[filetype][0](file))
             except Exception as e:
                 print(e)
-                return [], None
 
+        return signals, filetype
 
-FILETYPES = ["Detect"] + sorted(FUNCTIONS.keys())
+    else:
+        return [], None

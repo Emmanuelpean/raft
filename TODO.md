@@ -6,9 +6,10 @@
 * Add the following data processing options:
   * [X] Fitting
   * [X] Derivative  
-  * [X] Background substraction  
+  * [X] Background subtraction  
   * [X] Normalisation (with respect to the smoothed data if present)
   * [X] Interpolation
+  * [X] Averaging
 * Added a toggle to reset the data processing settings when new files are loaded
 * [X] Add interpolation for max/min point calculation  
 * [X] Add an option to display or hide the raw data when smoothing is used.
@@ -31,6 +32,7 @@
 
 ### Performance
 * [X] Add caching for data loading  
+* [X] Improve plot performance
 
 ### Bug Fixes  
 * [X] Fix loading bug for diffrac and wire files  
@@ -39,31 +41,36 @@
 * [X] Fix bug when switching fitting models  
 * [X] Fix parameter value not updating when model changes
 * [X] Delete temporary Wire files 
+
 ---
 
 ## 🔧 In Progress
 
 ### Display  
-* [ ] Add precision setting to `Dimension` class for display  
-  * [ ] When loading data, allow input of decimal places (e.g. Repeat 1 → 0 decimals)  
-  * [ ] When displaying results, auto-determine precision from calculation
+* [X] Add precision setting to `Dimension` class for display  
+  * [X] When loading data, allow input of decimal places (e.g. Repeat 1 → 0 decimals)  
+  * [X] When displaying results, auto-determine precision from calculation
 * [X] Add colour map to 3D data  
 * [X] Add hover templates with "filename" and "curve name"  
-* [ ] Add a list of example data to download.
+* [X] Add a list of example data to download.
+* [X] Add proper ReadMe
 
 ### Processing
 * [X] Automatically convert z_dict values
-* [ ] Add test for z_dict value converting
 * [X] Deal with uneven data
 
 ### Testing  
 * [ ] Review and verify all tests  
 * [ ] Ensure 100% test coverage 
+* [ ] Add test for z_dict value converting
 
 ### Bug Fixes
-* [ ] Handle `NaN` values in `number_to_string`  
+* [X] Handle `NaN` values in `number_to_string`  
 * [X] Fix the Reset Data Processing button
 * [X] Split the utils module and add the session state submodule
+* [X] Fix bug leading to missing curves when changing the data sorting key
+* [ ] Add pyproject file
+* [ ] Check if get_max is sensitive to nan and inf. functions return nan if failed to compute
 
 ---
 

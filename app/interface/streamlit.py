@@ -7,7 +7,6 @@ import streamlit as st
 from data_files.signal_data import SignalData
 from utils.miscellaneous import make_unique
 
-
 pd.set_option("styler.render.max_elements", 40000000)
 
 
@@ -60,21 +59,23 @@ def tab_bar(values: list, **kwargs) -> str:
 
 
 def display_data(
-    fig: go.Figure,
+    figure: go.Figure,
     dataset: list[SignalData],
     key: int,
     filename: bool,
+    height: float | int,
 ) -> None:
     """Display a figure and the associated data in different tabs
-    :param fig: figure object
+    :param figure: figure object
     :param dataset: data to display in the dataframe
     :param key: figure key int
-    :param filename: argument passed to get_name of the signals"""
+    :param filename: argument passed to get_name of the signals
+    :param height: table height"""
 
     tabs = st.tabs(["Graph", "Data"])
 
     # Show the figure
-    tabs[0].plotly_chart(fig, use_container_width=True, key=f"figure_{key}")
+    tabs[0].plotly_chart(figure, use_container_width=True, key=f"figure_{key}")
 
     # Get the data amd columns
     x_data = dataset[0].x.data
@@ -83,4 +84,4 @@ def display_data(
 
     # Dataframe
     dataframe = pd.DataFrame({name: array for name, array in zip(df_columns, [x_data] + ys_data)})
-    tabs[1].dataframe(dataframe.style.format("{:5g}"), use_container_width=True, hide_index=True)
+    tabs[1].dataframe(dataframe, use_container_width=True, hide_index=True, height=height)

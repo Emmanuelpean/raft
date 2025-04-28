@@ -7,11 +7,13 @@ import streamlit as st
 
 
 @st.cache_resource
-def read_file(path: str) -> str:
+def read_file(path: str, mode: str = "r", encoding: str | None = "utf-8",) -> str:
     """Read the content of a file and store it as a resource.
-    :param path: file path"""
+    :param path: file path
+    :param mode: open mode
+    :param encoding: file encoding"""
 
-    with open(path, encoding="utf-8") as ofile:
+    with open(path, mode=mode, encoding=encoding) as ofile:
         return ofile.read()
 
 
