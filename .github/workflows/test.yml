@@ -29,7 +29,7 @@ jobs:
       - name: Run Tests with Pytest and Coverage
         run: |
           poetry run coverage run -m pytest --junitxml=pytest.xml tests/
-          poetry run coverage report --show-missing > pytest-coverage.txt
+          poetry run coverage report --show-missing | tail -n +2 | grep -v TOTAL > pytest-coverage.txt
 
       - name: Show coverage file content
         run: cat pytest-coverage.txt
