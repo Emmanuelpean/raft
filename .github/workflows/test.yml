@@ -28,7 +28,8 @@ jobs:
 
       - name: Run Tests with Pytest and Coverage
         run: |
-          poetry run pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=app tests/ | tee pytest-coverage.txt
+          poetry run coverage run -m pytest --junitxml=pytest.xml tests/
+          poetry run coverage report --show-missing > pytest-coverage.txt
 
       - name: Show coverage file content
         run: cat pytest-coverage.txt
