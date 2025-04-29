@@ -28,7 +28,7 @@ jobs:
 
       - name: Run Tests with Pytest and Coverage
         run: |
-          pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=app tests/ | tee pytest-coverage.txt
+          python -m pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=app tests/ | tee pytest-coverage.txt
 
       - name: Show coverage file content
         run: cat pytest-coverage.txt
