@@ -26,11 +26,12 @@ jobs:
       - name: Install Requirements
         run: python -m poetry install
 
-      - name: Run tests
-        run: pytest --cov=. --cov-report=term --cov-report=term-missing
+      - name: Run Tests with Pytest and Coverage
+        run: |
+          poetry run pytest --junitxml=pytest.xml --cov-report=term-missing:skip-covered --cov=app tests/ | tee pytest-coverage.txt
 
-      - name: Generate coverage report
-        run: coverage report > pytest-coverage.txt
+      - name: Show coverage file content
+        run: cat pytest-coverage.txt
 
       - name: Pytest Coverage Comment
         id: coverageComment
