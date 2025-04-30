@@ -18,6 +18,7 @@ from data_processing.processing import (
     get_derivative,
     interpolate_point,
     finite_argm,
+    get_area,
 )
 from utils.checks import are_close
 
@@ -306,3 +307,62 @@ class TestFiniteArgm:
         except Exception:
             pass
         assert np.array_equal(data, data_copy), "Original data should not be modified"
+
+
+class TestGetArea:
+
+    def test_simple_rectangle(self) -> None:
+        """Test area calculation for a simple rectangle."""
+        x = np.array([0, 1, 2, 3])
+        y = np.array([2, 2, 2, 2])
+        expected_area = 6.0  # Width (3) * Height (2)
+        assert get_area(x, y) == expected_area
+
+    def test_triangle(self) -> None:
+        """Test area calculation for a triangle."""
+        x = np.array([0, 4])
+        y = np.array([0, 3])
+        expected_area = 6.0  # 1/2 * base * height
+        assert get_area(x, y) == expected_area
+
+    def test_parabola(self) -> None:
+        """Test area calculation for a parabola y = x^2 from 0 to 1."""
+        x = np.linspace(0, 1, 100)
+        y = x**2
+        expected_area = 1 / 3  # Integral of x^2 from 0 to 1 = 1/3
+        are_close(get_area(x, y), expected_area)
+
+    def test_sine_function(self) -> None:
+        """Test area calculation for sine function from 0 to pi."""
+        x = np.linspace(0, np.pi, 1000)
+        y = np.sin(x)
+        expected_area = 2.0  # Integral of sin(x) from 0 to pi = 2
+
+        are_close(get_area(x, y), expected_area)
+
+    def test_non_uniform_x(self) -> None:
+        """Test with non-uniform x-spacing."""
+        x = np.array([0, 1, 3, 7, 10])
+        y = np.array([5, 5, 5, 5, 5])
+        expected_area = 50.0  # 5 * (10-0)
+        assert get_area(x, y) == expected_area
+
+    def test_negative_values(self) -> None:
+        """Test with negative y values."""
+        x = np.array([0, 1, 2, 3])
+        y = np.array([-1, -2, -1, 0])
+        # Area is negative because it's below x-axis
+        expected_area = -3.5
+        assert get_area(x, y) == expected_area
+
+    def test_empty_arrays(self) -> None:
+        """Test with empty arrays which should raise an error."""
+        x = np.array([])
+        y = np.array([])
+        assert get_area(x, y) == 0.0
+
+    def test_single_point(self) -> None:
+        """Test with just one point which should return 0."""
+        x = np.array([5])
+        y = np.array([10])
+        assert get_area(x, y) == 0.0

@@ -19,6 +19,7 @@
    <a href="https://github.com/emmanuelpean/raft/commits/type-hints">
       <img src="https://img.shields.io/github/last-commit/emmanuelpean/raft/type-hints" alt="Last Commit">
    </a>
+
 </p>
 
 *Raft* is a user-friendly web app designed to give you a quick look at your data without needing to write a single line 

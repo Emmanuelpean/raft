@@ -31,6 +31,7 @@ from data_processing.processing import (
     interpolate_data,
     get_derivative,
     finite_argm,
+    get_area,
 )
 from interface.plot import make_figure
 from utils.miscellaneous import merge_dicts
@@ -251,7 +252,10 @@ class SignalData(object):
         figure.add_trace(trace, secondary_y=secondary_y)
 
         # If it's the first plot in the figure, update the axes
-        if len(figure.data) == 1:
+        primary_y_traces = [trace for trace in figure.data if getattr(trace, "yaxis", "y") == "y"]
+        secondary_y_traces = [trace for trace in figure.data if getattr(trace, "yaxis", "y") == "y2"]
+
+        if len(primary_y_traces) == 1 or len(secondary_y_traces) == 1:
 
             # Set the axes settings
             font = dict(size=16, color="black")
@@ -536,21 +540,46 @@ class SignalData(object):
         except:
             return float("nan"), float("nan")
 
+    def get_area(self) -> Dimension:
+        """Get the area under the curve"""
+
+        try:
+            return Dimension(get_area(self.x.data, self.y.data), constants.AREA_QT)
+        except Exception as e:
+            print("Calculating the area failed")
+            print(e)
+            return Dimension(float("nan"), constants.AREA_QT)
+
 
 def average_signals(
     signals: list[SignalData],
+    dimensions: list[Dimension],
     n: int,
-) -> list[SignalData]:
-    """Average every n signals
+) -> tuple[list[SignalData], list[Dimension]]:
+    """Average every n signals and the associated dimensions
     :param signals: list of SignalData objects
+    :param dimensions: list of Dimension objects associated with the signals
     :param n: number of signals averaged"""
 
-    arrays = [signal.y.data for signal in signals]
-    n = min([n, len(arrays)])
-    arrays = arrays[: len(arrays) - (len(arrays) % n)]
-    averaged = [np.mean(arrays[i : i + n], axis=0) for i in range(0, len(arrays), n)]
-    ys = [signals[0].y(data=avg) for avg in averaged]
-    return [signals[0](y=y, signalname=f"Averaged {i + 1}") for i, y in enumerate(ys)]
+    # Extract the data
+    signal_data = [signal.y.data for signal in signals]
+    dimension_data = [dim.data for dim in dimensions]
+
+    # Remove the unnecessary data
+    n = min([n, len(signal_data)])
+    index = len(signal_data) - (len(signal_data) % n)
+    signal_data = signal_data[:index]
+    dimension_data = dimension_data[:index]
+
+    # Average
+    s_avg_data = [np.mean(signal_data[i : i + n], axis=0) for i in range(0, len(signal_data), n)]
+    d_avg_data = [dimensions[0](np.mean(dimension_data[i : i + n])) for i in range(0, len(dimension_data), n)]
+
+    # Generate the averaged signals
+    ys = [signals[0].y(data=avg) for avg in s_avg_data]
+    signals_avg = [signals[0](y=y, signalname=f"Averaged {i + 1}") for i, y in enumerate(ys)]
+
+    return signals_avg, d_avg_data
 
 
 def get_z_dim(

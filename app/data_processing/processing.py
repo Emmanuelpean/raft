@@ -1,7 +1,8 @@
 """Module containing functions to process and modify data"""
 
 import numpy as np
-from scipy import interpolate as sci
+import scipy.interpolate as sci
+import scipy.integrate as scint
 
 
 def normalise(
@@ -77,6 +78,8 @@ def interpolate_data(
         new_x = np.linspace(np.min(x), np.max(x), dx)
     else:
         new_x = np.arange(np.min(x), np.max(x), dx)
+        if new_x[-1] > x[-1]:
+            new_x = new_x[:-1]
 
     # Interpolate the ys with the new x
     interp = sci.interp1d(x, y, **kwargs)
@@ -119,3 +122,14 @@ def finite_argm(
     except ValueError:
         pass
     return int(getattr(np, "nan" + method)(data))
+
+
+def get_area(
+    x: np.ndarray,
+    y: np.ndarray,
+) -> float:
+    """Get the area under the curve
+    :param x: ndarray corresponding to the x-axis
+    :param y: ndarray corresponding to the y-axis"""
+
+    return scint.trapezoid(y, x)

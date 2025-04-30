@@ -166,6 +166,11 @@ class TestApp:
 
         self._get_widget_by_key("checkbox", "fwhm_button_interp").set_value(value).run()
 
+    def toggle_area(self, value: bool) -> None:
+        """Toggle the display fwhm checkbox"""
+
+        self._get_widget_by_key("checkbox", "area_button").set_value(value).run()
+
     @staticmethod
     def create_mock_file(
         mock_file_uploader: MagicMock,
@@ -398,6 +403,7 @@ class TestApp:
         self.toggle_max_point(True)
         self.toggle_min_point(True)
         self.toggle_fwhm(True)
+        self.toggle_area(True)
 
         # Try interpolation
         self.toggle_fwhm_interp(True)

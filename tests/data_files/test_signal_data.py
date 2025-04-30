@@ -555,53 +555,64 @@ class TestSignalData:
         assert are_close(x_half, 1.810810810810811)
         assert are_close(y_half, 0.49987404638939104)
 
+    def test_get_area(self) -> None:
+
+        sample_signal = self.sample_signal()
+        assert are_close(sample_signal.get_area().data, 2.502567)
+
 
 class TestAverageSignals:
 
     @pytest.fixture
-    def sample_signal(self) -> tuple[list[np.ndarray], list[SignalData]]:
+    def sample_signal(self) -> tuple[list[np.ndarray], list[SignalData], list[Dimension], np.array]:
         """Sample SignalData object for testing"""
 
         x_data = np.linspace(0, 10, 21)
+        z_data = np.array([0.2, 0.3, 0.4, 0.5])
+        z_dims = [Dimension(z) for z in z_data]
         ys_data = []
         signals = []
-        for i in (0.2, 0.3, 0.4, 0.5):
+        for i in z_data:
             y_data = np.exp(-((x_data - 3) ** 2) / 2) + i
             ys_data.append(y_data)
             x_dim = Dimension(x_data, "time", "s")
             y_dim = Dimension(y_data, "amplitude", "V")
             signal = SignalData(x_dim, y_dim, "Test Signal", "TS", {"param1": "value1"})
             signals.append(signal)
-        return ys_data, signals
+        return ys_data, signals, z_dims, z_data
 
     def test_low_n(self, sample_signal) -> None:
 
-        ys_data, signals = sample_signal
-        output = average_signals(signals, 2)
-        assert len(output) == 2
-        assert are_close(output[0].y.data, np.mean(ys_data[:2], axis=0))
-        assert are_close(output[1].y.data, np.mean(ys_data[2:], axis=0))
+        ys_data, signals, z_dims, z_data = sample_signal
+        output = average_signals(signals, z_dims, 2)
+        assert len(output[0]) == 2
+        assert are_close(output[0][0].y.data, np.mean(ys_data[:2], axis=0))
+        assert are_close(output[0][1].y.data, np.mean(ys_data[2:], axis=0))
+        assert are_close(output[1][0].data, np.mean(z_data[:2]))
 
     def test_non_matching_n(self, sample_signal) -> None:
 
-        ys_data, signals = sample_signal
-        output = average_signals(signals, 3)
-        assert len(output) == 1
-        assert are_close(output[0].y.data, np.mean(ys_data[:3], axis=0))
+        ys_data, signals, z_dims, z_data = sample_signal
+        output = average_signals(signals, z_dims, 3)
+        assert len(output[0]) == 1
+        assert are_close(output[0][0].y.data, np.mean(ys_data[:3], axis=0))
+        assert are_close(output[1][0].data, np.mean(z_data[:3], axis=0))
 
     def test_matching_n(self, sample_signal) -> None:
 
-        ys_data, signals = sample_signal
-        output = average_signals(signals, 4)
-        assert len(output) == 1
-        assert are_close(output[0].y.data, np.mean(ys_data, axis=0))
+        ys_data, signals, z_dims, z_data = sample_signal
+        output = average_signals(signals, z_dims, 4)
+        assert len(output[0]) == 1
+        assert are_close(output[0][0].y.data, np.mean(ys_data, axis=0))
+        assert are_close(output[1][0].data, np.mean(z_data, axis=0))
 
     def test_high_n(self, sample_signal) -> None:
 
-        ys_data, signals = sample_signal
-        output = average_signals(signals, 5)
-        assert len(output) == 1
-        assert are_close(output[0].y.data, np.mean(ys_data, axis=0))
+        ys_data, signals, z_dims, z_data = sample_signal
+        output = average_signals(signals, z_dims, 5)
+        assert len(output[0]) == 1
+        assert are_close(output[0][0].y.data, np.mean(ys_data, axis=0))
+        assert are_close(output[1][0].data, np.mean(z_data, axis=0))
 
 
 class TestGetZDim:

@@ -330,7 +330,7 @@ else:
                 expander_label = AVERAGING_LABEL
                 try:
                     if sss.averaging_n > 1:
-                        signals = average_signals(signals, sss.averaging_n)
+                        signals, z_dims = average_signals(signals, z_dims, sss.averaging_n)
                         expander_label = f"__✔ {AVERAGING_LABEL} (Every {sss.averaging_n} Signals)__"
                 except Exception as e:
                     print("Averaging failed")
@@ -428,9 +428,11 @@ else:
 
                 # Label
                 if dx:
-                    dx_str = number_to_str(dx, 3, "g", True, True)
-                    expander_label = f"__✔ {INTERP_LABEL} (step = {dx_str} {signals[0].x.get_unit_label_html()})__"
-            except:
+                    dx_str = number_to_str(dx, 3, "g", False, True)
+                    expander_label = f"__✔ {INTERP_LABEL} (step = {dx_str} {signals[0].x.unit})__"
+            except Exception as e:
+                print("Interpolation failed")
+                print(e)
                 expander_label = INTERP_LABEL
 
             with st.sidebar.expander(expander_label, sss["interp_interacted"]):
@@ -445,6 +447,7 @@ else:
                     key="interp_type",
                     on_change=set_session_state_value_function("interp_interacted", True),
                     help=dedent(help_str),
+                    horizontal=True,
                 )
 
                 if sss["interp_type"] != "None":
@@ -555,6 +558,7 @@ else:
                     key="norm_type",
                     on_change=set_session_state_value_function("norm_interacted", True),
                     help=dedent(help_str),
+                    horizontal=True,
                 )
 
                 if sss["norm_type"] == "Feature Scaling":
@@ -794,6 +798,20 @@ else:
                 fwhm_xright = SignalData(z_dims, output[3], signalname="FWHM (x-right)")
                 fwhm_yright = SignalData(z_dims, output[4], signalname="FWHM (y-right)")
 
+            # -------------------------------------------------- FWHM --------------------------------------------------
+
+            area = None
+
+            columns = st.sidebar.columns(2)
+            area_button = columns[0].checkbox(
+                label="Display Area",
+                key="area_button",
+            )
+
+            if area_button:
+                output = [signal.get_area() for signal in signals]
+                area = SignalData(z_dims, output, signalname="FWHM")
+
             # -------------------------------------------- FITTED PARAMETERS -------------------------------------------
 
             fit_extract_signals = {}
@@ -808,11 +826,11 @@ else:
             # ------------------------------------------------- DISPLAY ------------------------------------------------
             # ----------------------------------------------------------------------------------------------------------
 
-            extracted_data = [x_max, x_min, fwhm] + list(fit_extract_signals.keys())
+            extracted_data = [x_max, x_min, fwhm, area] + list(fit_extract_signals.keys())
             n_extracted = len([e for e in extracted_data if e is not None])
 
             if len(signals) == 1 and n_extracted:
-                columns = st.columns([3.5, 1])
+                columns = st.columns([3, 1])
                 plot_spot = columns[0].container()
                 info_spot = columns[1].container()
                 info_spot.markdown("### About Your Data")
@@ -875,12 +893,21 @@ else:
                         info_spot.html(fwhm.y[0].get_value_label_html(sss.precision_input, "f", True))
                     else:
                         info_spot.markdown("Could not calculate the FWHM.")
+
+                # Area
+                if area:
+                    info_spot.markdown("##### Area")
+                    if not np.isnan(area.y[0].data):
+                        info_spot.html(area.y[0].get_value_label_html(sss.precision_input, "f", True))
+                    else:
+                        info_spot.markdown("Could not calculate the Area.")
+
             else:
                 plot_spot = st.container()
 
             # ------------------------------------------- EXTRACTED DOWNLOAD -------------------------------------------
 
-            if n_extracted:
+            if any([x_max, x_min, fwhm]):
                 header_name = [z_dims[0].get_label_raw()]
                 data = [[z_dim.data for z_dim in z_dims]]
 
@@ -893,6 +920,9 @@ else:
                 if fwhm:
                     header_name += [fwhm.y.get_label_raw()]
                     data += [fwhm.y.data]
+                if area:
+                    header_name += [area.y.get_label_raw()]
+                    data += [area.y.data]
 
                 # Generate the export data and download button
                 export_data = matrix_to_string(data, header_name)
@@ -1015,6 +1045,12 @@ else:
                     figure_index += 1
                     datasets.append([fwhm])
 
+                # Area
+                if area:
+                    area.plot(figure=figures[figure_index], plot_method="Scatter")
+                    figure_index += 1
+                    datasets.append([area])
+
                 # Fit parameters
                 for key in fit_extract_signals:
                     fit_extract_signals[key].plot(
@@ -1068,7 +1104,6 @@ else:
                         display_data(figures[i], signals[key], i, multifile_cond)
 
 # ----------------------------------------------------- INFORMATION ----------------------------------------------------
-
 
 with st.expander("About", expanded=not file):
     text = f"""

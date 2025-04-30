@@ -54,13 +54,14 @@
 * [X] Add hover templates with "filename" and "curve name"  
 * [X] Add a list of example data to download.
 * [X] Add proper ReadMe
+* [ ] Add tests for area calculation
 
 ### Processing
 * [X] Automatically convert z_dict values
 * [X] Deal with uneven data
 
 ### Testing  
-* [ ] Review and verify all tests  
+* [X] Review and verify all tests  
 * [ ] Ensure 100% test coverage 
 * [X] Add test for z_dict value converting
 
@@ -71,7 +72,7 @@
 * [X] Fix bug leading to missing curves when changing the data sorting key
 * [X] Add pyproject file
 * [X] Check if get_max is sensitive to nan and inf. functions return nan if failed to compute
-
+* [ ] Fix missing colouring in production
 ---
 
 ## 🧩 Planned Features
