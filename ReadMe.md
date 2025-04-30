@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/Emmanuelpean/raft/blob/main/resources/medias/logo.svg" alt="Raft">
+  <img src="https://github.com/Emmanuelpean/raft/blob/main/resources/medias/logo.svg" alt="Raft" width="150">
 </p>
 
 <h1 align="center">RAFT</h1>
