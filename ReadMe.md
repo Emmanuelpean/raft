@@ -8,10 +8,11 @@
 <div align="center">
 
   [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-  [![Tests Status](./reports/tests/tests-badge.svg)](https://github.com/Emmanuelpean/raft/actions?query=branch%3Atype-hints+event%3Apush)
-  [![Coverage Status](./reports/coverage/coverage-badge.svg)](./reports/coverage/htmlcov/index.html)
+  [![Tests Status](./reports/tests/tests-badge.svg?dummy=8484744)](https://github.com/Emmanuelpean/raft/actions?query=branch%3Atype-hints+event%3Apush)
+  [![Coverage Status](./reports/coverage/coverage-badge.svg?dummy=8484744)](https://emmanuelpean.github.io/raft/reports/tests/report.html?sort=result)
   [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
   [![Last Commit](https://img.shields.io/github/last-commit/emmanuelpean/raft/type-hints)](https://github.com/emmanuelpean/raft/commits/type-hints)
+  [![Last Commit](![Tests](https://github.com/emmanuelpean/type-hints/actions/workflows/test.yml/badge.svg))](https://github.com/emmanuelpean/raft/commits/type-hints)
 
 </div>
 
