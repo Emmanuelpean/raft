@@ -1,26 +1,19 @@
 <p align="center">
-   <img src="https://github.com/Emmanuelpean/raft/blob/main/resources/medias/logo.svg" alt="Raft">
+  <img src="https://github.com/Emmanuelpean/raft/blob/main/resources/medias/logo.svg" alt="Raft">
 </p>
+
 <h1 align="center">RAFT</h1>
 <h2 align="center">Universal Data File Plotter</h2>
-<p align="center">
-   <a href="https://opensource.org/licenses/MIT">
-      <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
-   </a>
-   <a href="https://github.com/Emmanuelpean/raft/actions?query=branch%3Atype-hints+event%3Apush">
-      <img src="https://github.com/emmanuelpean/raft/actions/workflows/test.yml/badge.svg?event=push&branch=type-hints" alt="Testing">
-   </a>
-   <a href="#">
-      <img src="https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/emmanuelpean/f16aa96ae648cb1668b4d57a531b5e9b/raw/raft-pytest-coverage-comment__main.json" alt="Coverage">
-   </a>
-   <a href="https://github.com/psf/black">
-      <img src="https://img.shields.io/badge/code%20style-black-000000.svg" alt="Black">
-   </a>
-   <a href="https://github.com/emmanuelpean/raft/commits/type-hints">
-      <img src="https://img.shields.io/github/last-commit/emmanuelpean/raft/type-hints" alt="Last Commit">
-   </a>
 
-</p>
+<div align="center">
+
+  [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Tests Status](./reports/tests/tests-badge.svg)](https://github.com/Emmanuelpean/raft/actions?query=branch%3Atype-hints+event%3Apush)
+  [![Coverage Status](./reports/coverage/coverage-badge.svg)](./reports/coverage/htmlcov/index.html)
+  [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+  [![Last Commit](https://img.shields.io/github/last-commit/emmanuelpean/raft/type-hints)](https://github.com/emmanuelpean/raft/commits/type-hints)
+
+</div>
 
 *Raft* is a user-friendly web app designed to give you a quick look at your data without needing to write a single line 
 of code or spend time reformatting files. It supports a wide range of data file formats and takes care of the behind-
