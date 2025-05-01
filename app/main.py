@@ -394,7 +394,7 @@ else:
 
                 if xmin is not None or xmax is not None:
                     signals = [signal.reduce_range(xmin, xmax) for signal in signals]
-                    expander_label = f"__✔ {RANGE_LABEL} {xmin} - {xmin}__"
+                    expander_label = f"__✔ {RANGE_LABEL} {xmin} - {xmax}__"
             except Exception as e:
                 print("Could not reduce the range")
                 print(e)
