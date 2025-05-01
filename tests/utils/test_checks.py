@@ -24,6 +24,7 @@ class TestAreIdentical:
         assert are_identical(None, None)
         assert not are_identical(5, 6)
         assert not are_identical("test", "different")
+        raise AssertionError()
 
     def test_identical_lists(self) -> None:
         """Test identical lists."""
