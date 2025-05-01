@@ -46,8 +46,8 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git add reports
+          git add -f reports/
           git commit -m "Added reports"
-          git push -f
+          git push
         env:
           GITHUB_TOKEN: ${{ secrets.PYTEST_COVERAGE_COMMENT }}
