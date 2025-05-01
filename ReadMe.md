@@ -8,7 +8,7 @@
 <div align="center">
 
   [![Passing](https://github.com/emmanuelpean/pears/actions/workflows/test.yml/badge.svg?event=push&branch=main)](https://github.com/Emmanuelpean/raft/actions?query=branch%3Atype-hints+event%3Apush)
-  [![Tests Status](./reports/tests/tests-badge.svg?dummy=8484744)](https://github.com/Emmanuelpean/raft/actions?query=branch%3Atype-hints+event%3Apush)
+  [![Tests Status](./reports/tests/tests-badge.svg?dummy=8484744)](https://emmanuelpean.github.io/raft/reports/tests/report.html?sort=result)
   [![Coverage Status](./reports/coverage/coverage-badge.svg?dummy=8484744)](https://emmanuelpean.github.io/raft/reports/tests/report.html?sort=result)
   [![Last Commit](https://img.shields.io/github/last-commit/emmanuelpean/raft/type-hints)](https://github.com/emmanuelpean/raft/commits/type-hints)
   [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
