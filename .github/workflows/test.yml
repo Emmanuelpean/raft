@@ -28,7 +28,6 @@ jobs:
       - name: Run Tests with Pytest and Coverage
         run: |
           poetry run coverage run -m pytest --junitxml=reports/tests/tests.xml --html=reports/tests/report.html
-        continue-on-error: true
 
       - name: Generate badges and coverage
         run: |
