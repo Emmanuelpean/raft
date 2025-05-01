@@ -29,6 +29,10 @@ class TestApp:
     NORM_EXP_INDEX = 5
     FITTING_EXP_INDEX = 6
 
+    def setup_method(self) -> None:
+
+        self.at = AppTest(self.main_path, default_timeout=100).run()
+
     def teardown_method(self) -> None:
         """Make sure that no exception happened"""
 
@@ -37,7 +41,6 @@ class TestApp:
     def test_default(self) -> None:
 
         # Start the app and run it
-        self.at = AppTest(self.main_path, default_timeout=100).run()
         assert len(self.at.exception) == 0
         assert self.at.expander[-2].label == "Changelog"
         assert self.at.expander[-1].label == "License & Disclaimer"
@@ -63,7 +66,7 @@ class TestApp:
 
     # ------------------------------------------------- DATA SELECTION -------------------------------------------------
 
-    def set_filetype_select(self, value) -> None:
+    def set_filetype_select(self, value: str) -> None:
         """Set the file type select selectbox"""
 
         self._get_widget_by_key("selectbox", "filetype_select_input").set_value(value).run()
@@ -78,26 +81,36 @@ class TestApp:
 
         return self._get_widget_by_key("selectbox", "data_select")
 
+    def set_data_sorting(self, value: str) -> None:
+        """Set the data sorting key"""
+
+        self._get_widget_by_key("selectbox", "sorting_key").set_value(value).run()
+
+    def set_timestamp_shift(self, value: bool) -> None:
+        """Set the status of the time stamp shift checkbox"""
+
+        self._get_widget_by_key("toggle", "timestamp_shift").set_value(value).run()
+
     # ------------------------------------------------- DATA PROCESSING ------------------------------------------------
 
-    def set_averaging(self, value) -> None:
+    def set_averaging(self, value: int) -> None:
         """Set the averaging number"""
 
         self._get_widget_by_key("number_input", "averaging_n").set_value(value).run()
 
-    def set_background(self, lower, upper) -> None:
+    def set_background(self, lower: str = "", upper: str = "") -> None:
         """Set the background range"""
 
         self._get_widget_by_key("text_input", "bckg_range_input1").set_value(lower).run()
         self._get_widget_by_key("text_input", "bckg_range_input2").set_value(upper).run()
 
-    def set_range(self, lower, upper) -> None:
+    def set_range(self, lower: str = "", upper: str = "") -> None:
         """Set the data range"""
 
         self._get_widget_by_key("text_input", "range_input1").set_value(lower).run()
         self._get_widget_by_key("text_input", "range_input2").set_value(upper).run()
 
-    def set_interpolation(self, interp_type, value) -> any:
+    def set_interpolation(self, interp_type: str, value: str) -> any:
         """Set the interpolation type and vaue"""
 
         self._get_widget_by_key("radio", "interp_type").set_value(interp_type).run()
@@ -106,7 +119,7 @@ class TestApp:
         elif interp_type == "Point Count":
             self._get_widget_by_key("text_input", "interp_n").set_value(value).run()
 
-    def set_derivative(self, order) -> any:
+    def set_derivative(self, order: int) -> any:
         """Set the derivative order"""
 
         self._get_widget_by_key("number_input", "derive_order").set_value(order).run()
@@ -117,7 +130,7 @@ class TestApp:
         self._get_widget_by_key("number_input", "sg_fw").set_value(window).run()
         self._get_widget_by_key("number_input", "sg_po").set_value(order).run()
 
-    def set_normalisation(self, norm_type, a="1", b="0") -> None:
+    def set_normalisation(self, norm_type: str, a: str = "1", b: str = "0") -> None:
         """Set the normalisation"""
 
         self._get_widget_by_key("radio", "norm_type").set_value(norm_type).run()
@@ -125,7 +138,7 @@ class TestApp:
             self._get_widget_by_key("text_input", "norm_a").set_value(a).run()
             self._get_widget_by_key("text_input", "norm_a").set_value(b).run()
 
-    def set_fitting(self, model, **kwargs) -> None:
+    def set_fitting(self, model: str, **kwargs) -> None:
         """Get the data range text input"""
 
         self._get_widget_by_key("selectbox", "fitting_model").set_value(model).run()
@@ -171,8 +184,8 @@ class TestApp:
 
         self._get_widget_by_key("checkbox", "area_button").set_value(value).run()
 
-    @staticmethod
     def create_mock_file(
+        self,
         mock_file_uploader: MagicMock,
         path: str,
     ) -> None:
@@ -185,6 +198,7 @@ class TestApp:
             file = BytesIO(f.read())
             file.name = os.path.basename(path)
             mock_file_uploader.return_value = file
+        self.at.run()
 
     # ------------------------------------------------ FILE UPLOAD/READ ------------------------------------------------
 
@@ -195,9 +209,6 @@ class TestApp:
 
             self.create_mock_file(mock_file_uploader, path)
 
-            # Start the app and run it
-            self.at = AppTest(self.main_path, default_timeout=100).run()
-
             # Assert filetype
             assert self.at.sidebar.markdown[1].value == f"Detected: {resources.FILE_TYPE_DICT[path]}"
 
@@ -207,7 +218,6 @@ class TestApp:
         # Load test data and start the app
         path = resources.SPECTRASUITE_HEADER_PATH
         self.create_mock_file(mock_file_uploader, path)
-        self.at = AppTest(self.main_path, default_timeout=100).run()
 
         self.set_filetype_select(resources.FILE_TYPE_DICT[path])
         assert len(self.at.warning) == 0
@@ -217,11 +227,21 @@ class TestApp:
 
         # Load test data and start the app
         self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
-        self.at = AppTest(self.main_path, default_timeout=100).run()
 
         self.set_filetype_select("EasyLog (.txt)")
 
         assert self.at.warning[0].value == "Unable to read the file."
+
+    @patch("streamlit.sidebar.file_uploader")
+    def test_data_sorting(self, mock_file_uploader: MagicMock) -> None:
+        """Test the data sorting using the datetime"""
+
+        self.create_mock_file(mock_file_uploader, resources.DIFFRAC_TIMELAPSE_PATH)
+        self.set_data_sorting("Date & time")
+        self.set_averaging(3)
+        assert self.at.sidebar.expander[self.AVERAGING_INDEX].label == f"__✔ {main.AVERAGING_LABEL} (Every 3 Signals)__"
+        self.set_timestamp_shift(False)
+        assert self.at.sidebar.expander[self.AVERAGING_INDEX].label == main.AVERAGING_LABEL
 
     # ------------------------------------------------- DATA PROCESSING ------------------------------------------------
 
@@ -230,7 +250,6 @@ class TestApp:
 
         # Load test data and start the app
         self.create_mock_file(mock_file_uploader, resources.DIFFRAC_TIMELAPSE_PATH)
-        self.at = AppTest(self.main_path, default_timeout=100).run()
 
         assert self.at.sidebar.expander[self.AVERAGING_INDEX].label == main.AVERAGING_LABEL
         self.set_averaging(2)
@@ -243,7 +262,6 @@ class TestApp:
 
         # Load test data and start the app
         self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
-        self.at = AppTest(self.main_path, default_timeout=100).run()
 
         assert self.at.sidebar.expander[self.BCKG_EXP_INDEX].label == main.BACKGROUND_LABEL
         self.set_background("400", "800")
@@ -256,7 +274,6 @@ class TestApp:
 
         # Load test data and start the app
         self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
-        self.at = AppTest(self.main_path, default_timeout=100).run()
 
         assert self.at.sidebar.expander[self.RANGE_EXP_INDEX].label == main.RANGE_LABEL
         self.set_range("400", "800")
@@ -269,7 +286,6 @@ class TestApp:
 
         # Load test data and start the app
         self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
-        self.at = AppTest(self.main_path, default_timeout=100).run()
 
         assert self.at.sidebar.expander[self.INTERP_EXP_INDEX].label == main.INTERP_LABEL
         self.set_interpolation("Fixed Step", "2")
@@ -282,7 +298,6 @@ class TestApp:
 
         # Load test data and start the app
         self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
-        self.at = AppTest(self.main_path, default_timeout=100).run()
 
         assert self.at.sidebar.expander[self.DERIVATIVE_EXP_INDEX].label == main.DERIVE_LABEL
         self.set_derivative(1)
@@ -293,7 +308,6 @@ class TestApp:
 
         # Load test data and start the app
         self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
-        self.at = AppTest(self.main_path, default_timeout=100).run()
 
         assert self.at.sidebar.expander[self.SMOOTHING_EXP_INDEX].label == main.SMOOTHING_LABEL
         self.set_smoothing(101, 4)
@@ -307,7 +321,6 @@ class TestApp:
 
         # Load test data and start the app
         self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
-        self.at = AppTest(self.main_path, default_timeout=100).run()
 
         # No normalisation
         assert self.at.sidebar.expander[self.NORM_EXP_INDEX].label == main.NORM_LABEL
@@ -336,7 +349,6 @@ class TestApp:
 
         # Load test data and start the app
         self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
-        self.at = AppTest(self.main_path, default_timeout=100).run()
 
         assert self.at.sidebar.expander[self.FITTING_EXP_INDEX].label == main.FITTING_LABEL
         self.set_fitting("Gaussian", c="4")
@@ -351,10 +363,6 @@ class TestApp:
     def test_dict_file(self, mock_file_uploader: MagicMock) -> None:
 
         self.create_mock_file(mock_file_uploader, resources.EASYLOG_PATH)
-
-        # Start the app and run it
-        self.at = AppTest(self.main_path, default_timeout=100).run()
-
         assert sorted(self.get_type_select().options) == sorted(["All", "Temperature", "Humidity"])
         self.get_type_select().select("Humidity").run()
         assert len(self.at.warning) == 0
@@ -363,10 +371,6 @@ class TestApp:
     def test_list_file(self, mock_file_uploader: MagicMock) -> None:
 
         self.create_mock_file(mock_file_uploader, resources.FLUORESSENCE_MULTIPLE_PATH)
-
-        # Start the app and run it
-        self.at = AppTest(self.main_path, default_timeout=100).run()
-
         assert len(self.get_data_select().options) == 11
         self.get_data_select().select("2017-05-12 17:28:23").run()
         assert len(self.at.warning) == 0
@@ -375,9 +379,6 @@ class TestApp:
     def test_dict_list_file(self, mock_file_uploader: MagicMock) -> None:
 
         self.create_mock_file(mock_file_uploader, resources.PRODATA_TAS_3PROP_PATH)
-
-        # Start the app and run it
-        self.at = AppTest(self.main_path, default_timeout=100).run()
 
         # Type select
         assert len(self.get_type_select().options) == 4
@@ -396,9 +397,6 @@ class TestApp:
 
         self.create_mock_file(mock_file_uploader, resources.SPECTRASUITE_HEADER_PATH)
 
-        # Start the app and run it
-        self.at = AppTest(self.main_path, default_timeout=100).run()
-
         # Toggle the min/max and fwhm buttons
         self.toggle_max_point(True)
         self.toggle_min_point(True)
@@ -409,3 +407,26 @@ class TestApp:
         self.toggle_fwhm_interp(True)
         self.toggle_max_interp(True)
         self.toggle_min_interp(True)
+
+    # -------------------------------------------------- OVERALL TEST --------------------------------------------------
+
+    @patch("streamlit.sidebar.file_uploader")
+    def test_typical_user(self, mock_file_uploader: MagicMock) -> None:
+
+        self.create_mock_file(mock_file_uploader, resources.DIFFRAC_TIMELAPSE_PATH)
+        self.set_data_sorting("Date & time")
+
+        # Processing options
+        self.set_averaging(2)
+        self.set_background("13", "13.2")
+        self.set_range("13.2")
+        self.set_smoothing(101, 4)
+
+        # Extraction
+        self.toggle_max_point(True)
+        self.toggle_max_interp(True)
+        self.toggle_min_point(True)
+        self.toggle_min_interp(True)
+        self.toggle_fwhm(True)
+        self.toggle_fwhm_interp(True)
+        self.toggle_area(True)

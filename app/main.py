@@ -349,9 +349,10 @@ else:
             # ----------------------------------------------- BACKGROUND -----------------------------------------------
 
             try:
-                xrange = [float(sss.bckg_range_input1), float(sss.bckg_range_input2)]
-                signals = [signal.remove_background(xrange) for signal in signals]
-                expander_label = f"__✔ {BACKGROUND_LABEL} {xrange[0]} - {xrange[1]}__"
+                xmin = float(sss.bckg_range_input1)
+                xmax = float(sss.bckg_range_input2)
+                signals = [signal.remove_background(xmin, xmax) for signal in signals]
+                expander_label = f"__✔ {BACKGROUND_LABEL} {xmin} - {xmax}__"
             except:
                 expander_label = BACKGROUND_LABEL
 
@@ -379,11 +380,24 @@ else:
 
             # ----------------------------------------------- DATA RANGE -----------------------------------------------
 
+            expander_label = RANGE_LABEL
+
             try:
-                xrange = [float(sss.range_input1), float(sss.range_input2)]
-                signals = [signal.reduce_range(xrange) for signal in signals]
-                expander_label = f"__✔ {RANGE_LABEL} {xrange[0]} - {xrange[1]}__"
-            except:
+                try:
+                    xmin = float(sss.range_input1)
+                except:
+                    xmin = None
+                try:
+                    xmax = float(sss.range_input2)
+                except:
+                    xmax = None
+
+                if xmin is not None or xmax is not None:
+                    signals = [signal.reduce_range(xmin, xmax) for signal in signals]
+                    expander_label = f"__✔ {RANGE_LABEL} {xmin} - {xmin}__"
+            except Exception as e:
+                print("Could not reduce the range")
+                print(e)
                 expander_label = RANGE_LABEL
 
             with st.sidebar.expander(expander_label, sss["range_interacted"]):

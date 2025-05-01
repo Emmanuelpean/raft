@@ -272,14 +272,14 @@ class TestSignalData:
         sample_dimensions = self.sample_dimensions()
         y = sample_dimensions[1](sample_dimensions[1].data + 3)
         signal = SignalData(sample_dimensions[0], y, "Test Signal")
-        new_signal = signal.remove_background([0, 1])
+        new_signal = signal.remove_background(0, 1)
         assert are_close(new_signal.y.data, signal.y.data - 3.02752297)
 
         # Nan value
         y = sample_dimensions[1](sample_dimensions[1].data * float("nan"))
         signal = SignalData(sample_dimensions[0], y, "Test Signal")
         with pytest.raises(AssertionError):
-            signal.remove_background([0, 1])
+            signal.remove_background(0, 1)
 
     def test_smooth(self) -> None:
         """Test smooth method"""
@@ -296,16 +296,13 @@ class TestSignalData:
     def test_reduce_range(self) -> None:
         """Test reduce_range method"""
 
-        # Set up test range
-        x_range = [2.0, 8.0]
-
         # Find expected indices
         index1 = 4
         index2 = 16
 
         # Call reduce_range
         sample_signal = self.sample_signal()
-        reduced = sample_signal.reduce_range(x_range)
+        reduced = sample_signal.reduce_range(2.0, 8.0)
 
         # Verify results
         assert isinstance(reduced, SignalData)

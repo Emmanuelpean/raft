@@ -306,12 +306,17 @@ class SignalData(object):
 
     # ---------------------------------------------- SIGNAL TRANSFORMATION ---------------------------------------------
 
-    def remove_background(self, xrange: list[float | int] | tuple[float | int]) -> SignalData:
+    def remove_background(
+        self,
+        xmin: int | float,
+        xmax: int | float,
+    ) -> SignalData:
         """Remove the background signal
-        :param xrange: range of values where the average background signal is calculated"""
+        :param xmin: min x value where the average background signal is calculated
+        :param xmax: max x value where the average background signal is calculated"""
 
-        index1 = np.abs(self.x.data - xrange[0]).argmin()
-        index2 = np.abs(self.x.data - xrange[1]).argmin()
+        index1 = np.abs(self.x.data - xmin).argmin()
+        index2 = np.abs(self.x.data - xmax).argmin()
         mean_val = np.mean(self.y.data[index1:index2])
         if np.isnan(mean_val):
             raise AssertionError()
@@ -336,15 +341,26 @@ class SignalData(object):
             self.z_dict,
         )
 
-    def reduce_range(self, xrange: list[float | int] | tuple[float | int]) -> SignalData:
+    def reduce_range(
+        self,
+        xmin: int | float | None,
+        xmax: int | float | None,
+    ) -> SignalData:
         """Reduce the x-axis range
-        :param xrange: data range"""
+        :param xmin: min x value
+        :param xmax: max x value"""
 
-        index1 = np.abs(self.x.data - xrange[0]).argmin()
-        index2 = np.abs(self.x.data - xrange[1]).argmin()
+        if xmin is not None:
+            index_min = np.abs(self.x.data - xmin).argmin()
+        else:
+            index_min = None
+        if xmax is not None:
+            index_max = np.abs(self.x.data - xmax).argmin()
+        else:
+            index_max = None
         return SignalData(
-            self.x(data=self.x.data[index1:index2]),
-            self.y(data=self.y.data[index1:index2]),
+            self.x(data=self.x.data[index_min:index_max]),
+            self.y(data=self.y.data[index_min:index_max]),
             self.filename,
             self.signalnames,
             self.z_dict,
