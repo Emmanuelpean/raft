@@ -48,6 +48,6 @@ jobs:
           git config --global user.email "github-actions@github.com"
           git add reports
           git commit -m "Added reports"
-          git push
+          git push -f
         env:
           GITHUB_TOKEN: ${{ secrets.PYTEST_COVERAGE_COMMENT }}
