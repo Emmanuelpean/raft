@@ -40,6 +40,7 @@ jobs:
           poetry run coverage html
           poetry run coverage xml
           poetry run genbadge coverage --output-file=reports/coverage/coverage-badge.svg
+          poetry run coverage html
 
       - name: Commit and push badge
         run: |

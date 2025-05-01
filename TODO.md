@@ -64,6 +64,8 @@
 * [X] Review and verify all tests  
 * [ ] Ensure 100% test coverage 
 * [X] Add test for z_dict value converting
+* [ ] Check that a failed test leads to a failed build
+* [ ] Check that .gitignore is working now
 
 ### Bug Fixes
 * [X] Handle `NaN` values in `number_to_string`  
