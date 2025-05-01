@@ -386,13 +386,13 @@ else:
                 try:
                     xmin = float(sss.range_input1)
                 except:
-                    xmin = None
+                    xmin = "min"
                 try:
                     xmax = float(sss.range_input2)
                 except:
-                    xmax = None
+                    xmax = "max"
 
-                if xmin is not None or xmax is not None:
+                if isinstance(xmin, float) or isinstance(xmax, float):
                     signals = [signal.reduce_range(xmin, xmax) for signal in signals]
                     expander_label = f"__✔ {RANGE_LABEL} {xmin} - {xmax}__"
             except Exception as e:

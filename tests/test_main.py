@@ -209,6 +209,9 @@ class TestApp:
 
             self.create_mock_file(mock_file_uploader, path)
 
+            # Start the app and run it (necessary to reset the file uploader)
+            self.at = AppTest(self.main_path, default_timeout=100).run()
+
             # Assert filetype
             assert self.at.sidebar.markdown[1].value == f"Detected: {resources.FILE_TYPE_DICT[path]}"
 
@@ -278,7 +281,7 @@ class TestApp:
         assert self.at.sidebar.expander[self.RANGE_EXP_INDEX].label == main.RANGE_LABEL
         self.set_range("400", "800")
         assert self.at.sidebar.expander[self.RANGE_EXP_INDEX].label == f"__✔ {main.RANGE_LABEL} 400.0 - 800.0__"
-        self.set_range("400", "")
+        self.set_range("", "")
         assert self.at.sidebar.expander[self.RANGE_EXP_INDEX].label == main.RANGE_LABEL
 
     @patch("streamlit.sidebar.file_uploader")
