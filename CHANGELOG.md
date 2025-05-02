@@ -1,4 +1,13 @@
 ##### V 2.0.0 - April 2025
+* **✨ New Features**
+  * New data processing options:
+    * Averaging
+    * Fitting
+    * Derivative calculation 
+    * Background subtraction  
+    * Normalisation
+    * Interpolation
+* Added a toggle 
 * **Code Quality**
   * Refactored the script for improved readability and maintainability. 
   * Achieved high test coverage to ensure result reliability.

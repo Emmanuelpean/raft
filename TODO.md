@@ -74,7 +74,7 @@
 * [X] Fix bug leading to missing curves when changing the data sorting key
 * [X] Add pyproject file
 * [X] Check if get_max is sensitive to nan and inf. functions return nan if failed to compute
-* [ ] Fix missing colouring in production
+* [X] Fix missing colouring in production
 * [X] Fill data processing text
 * [X] remove mentions of poetry
 * [ ] Update the changelog
