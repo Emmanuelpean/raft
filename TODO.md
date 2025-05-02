@@ -75,9 +75,9 @@
 * [X] Add pyproject file
 * [X] Check if get_max is sensitive to nan and inf. functions return nan if failed to compute
 * [ ] Fix missing colouring in production
-* [ ] Fill data processing text
+* [X] Fill data processing text
 * [X] remove mentions of poetry
-* [ ] Use artifacts to store the badges and reports
+* [ ] Update the changelog
 
 ---
 

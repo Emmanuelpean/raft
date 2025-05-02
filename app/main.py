@@ -1149,13 +1149,20 @@ with st.expander("Data Processing"):
     applied to the smoothed signal. The available options include:"""
     st.markdown(text)
 
+    st.markdown(f"""##### {AVERAGING_LABEL}""")
+    text = """If multiple signals are displayed, they can be averaged in groups of X signals. For example, if 5 signals 
+    are displayed and averaged every 2 signals, this yields 2 averaged signals: the first is the average of the 1st and 
+    2nd raw signals, the second is the average of the 3rd and 4th. The 5th signal is discarded, as it does not complete 
+    a full group."""
+    st.markdown(text)
+
     st.markdown(f"""##### {BACKGROUND_LABEL}""")
     text = """If a __lower__ and __upper range__ of x-values is provided, the corresponding y-values are averaged and 
     subtracted from the entire y-values to remove the background."""
     st.markdown(text)
 
     st.markdown(f"""##### {RANGE_LABEL}""")
-    text = """If a __lower__ and __upper range__ of x-values is provided, the data are limited to this range."""
+    text = """If a __lower__ or __upper range__ of x-values is provided, the data are limited to this range."""
     st.markdown(text)
 
     st.markdown(f"""##### {INTERP_LABEL}""")
@@ -1195,7 +1202,9 @@ with st.expander("Data Processing"):
     * __Full Width at Half Maximum (FWHM)__: The width of the peak measured between the two x-values where the y-value equals 
     half of the maximum y-value. This provides a useful metric of the peak’signal sharpness or spread (__subplot b__).
     
-    Similar to the max/min points, the precision of the FWHM measurement can be further refined using linear __interpolation__. """
+    Similar to the max/min points, the precision of the FWHM measurement can be further refined using linear __interpolation__. 
+    
+    * __Area__: The area under the curve. Note that a negative curve yields a negative area."""
     st.markdown(dedent(text))
     st.html(render_image(DATA_PROCESSING_PATH, 1000))
 

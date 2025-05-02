@@ -6,7 +6,7 @@ authors = [
     { name = "Emmanuel V. Péan", email = "emmanuel.pean@gmail.com" }
 ]
 license = "MIT"
-readme = "README.md"
+#readme = "README.md"
 requires-python = ">=3.12"
 
 dependencies = [
