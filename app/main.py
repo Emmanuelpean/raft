@@ -68,12 +68,13 @@ from PIL import Image
 # Set page configuration with the icon
 try:
     icon = Image.open(ICON_PATH)
-    st.set_page_config(
-        page_title="My Streamlit App",
-        page_icon=icon,
-    )
+    # st.set_page_config(
+    #     page_title="My Streamlit App",
+    #     page_icon=icon,
+    # )
 except Exception as e:
     st.error(f"Failed to load icon: {e}")
+    print(os.getcwd())
     # Fallback to text icon
     st.set_page_config(
         page_title="My Streamlit App",
