@@ -1,3 +1,4 @@
 #!/bin/bash
-pip install --upgrade setuptools
+pip install wheel
+pip install setuptools
 pip install .
