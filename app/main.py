@@ -31,7 +31,7 @@ __author__ = get_pyproject_info("project", "authors")[0]["name"]
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--profile", default=False, type=bool, help="Switch the profiler on")
-args = parser.parse_args()
+args, _ = parser.parse_known_args()
 
 # Profiler
 if args.profile:
