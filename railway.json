@@ -5,7 +5,7 @@
     "buildCommand": "python -m venv /venv && /venv/bin/pip install --upgrade pip && /venv/bin/pip install -e ."
   },
   "deploy": {
-    "startCommand": "streamlit run app.py --server.address 0.0.0.0 --server.port $PORT --server.fileWatcherType none --browser.gatherUsageStats false --client.toolbarMode minimal",
+    "startCommand": "cd app && streamlit run app.py --server.address 0.0.0.0 --server.port $PORT --server.fileWatcherType none --browser.gatherUsageStats false --client.toolbarMode minimal",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
