@@ -5,7 +5,7 @@ description = "Universal Data File Plotter"
 authors = [
     { name = "Emmanuel V. Péan", email = "emmanuel.pean@gmail.com" }
 ]
-license = { text = "MIT" }
+license = "MIT"
 readme = "README.md"
 requires-python = ">=3.12"
 
@@ -45,3 +45,6 @@ directory = "reports/coverage/htmlcov"
 
 [tool.coverage.xml]
 output = "reports/coverage/coverage.xml"
+
+[tool.setuptools.packages.find]
+exclude = ["reports*", "resources*"]
