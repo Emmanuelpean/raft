@@ -35,6 +35,7 @@ args, _ = parser.parse_known_args()
 # Profiler
 if args.profile:
     from wfork_streamlit_profiler import Profiler
+
     profiler = Profiler()
     profiler.start()
 else:
