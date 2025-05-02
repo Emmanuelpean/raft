@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import argparse
-from wfork_streamlit_profiler import Profiler
 
 from config.constants import TIMESTAMP_ID
 from config.resources import LOGO_PATH, CSS_STYLE_PATH, ICON_PATH, DATA_PROCESSING_PATH, LOGO_TEXT_PATH, FILE_TYPE_DICT
@@ -35,6 +34,7 @@ args, _ = parser.parse_known_args()
 
 # Profiler
 if args.profile:
+    from wfork_streamlit_profiler import Profiler
     profiler = Profiler()
     profiler.start()
 else:
