@@ -61,31 +61,7 @@ EXTRACTION_LABEL = "Data Extraction"
 # -------------------------------------------------------- SETUP -------------------------------------------------------
 
 # Set the app main and sidebar logos
-# st.set_page_config(__name__.upper() + " - " + __description__, page_icon=ICON_PATH, layout="wide")
-from PIL import Image
-
-
-# Set page configuration with the icon
-try:
-    print(os.getcwd())
-    print(os.listdir(os.getcwd()))
-    a = os.path.join(os.path.dirname(os.getcwd()), "resources/medias/icon.ico")
-    print(a)
-    print(ICON_PATH)
-    print(os.listdir(os.path.dirname(os.path.dirname(os.getcwd()))))
-    icon = Image.open(a)
-    # st.set_page_config(
-    #     page_title="My Streamlit App",
-    #     page_icon=icon,
-    # )
-except Exception as e:
-    st.error(f"Failed to load icon: {e}")
-    print(os.getcwd())
-    # Fallback to text icon
-    st.set_page_config(
-        page_title="My Streamlit App",
-        page_icon="🚀",
-    )
+st.set_page_config(__name__.upper() + " - " + __description__, page_icon=ICON_PATH, layout="wide")
 st.logo(LOGO_TEXT_PATH, icon_image=LOGO_PATH)
 
 # Load the custom CSS
