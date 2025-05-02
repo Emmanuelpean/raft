@@ -5,8 +5,11 @@
     "buildCommand": "python -m venv /venv && /venv/bin/pip install --upgrade pip && /venv/bin/pip install -e ."
   },
   "deploy": {
-    "startCommand": "source /venv/bin/activate && cd app && streamlit run main.py",
+    "startCommand": "source /venv/bin/activate && cd app && streamlit run main.py --server.address=0.0.0.0 --server.port=$PORT --server.enableCORS=false --server.enableXsrfProtection=false",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
+  },
+  "variables": {
+    "PORT": "8501"
   }
 }
