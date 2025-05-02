@@ -65,18 +65,9 @@ EXTRACTION_LABEL = "Data Extraction"
 from PIL import Image
 
 
-# The proper way to handle paths for both local and deployed environments
-def get_icon_path():
-    # Get the directory where the script is located
-    current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    # Path to your icon file
-    icon_path = os.path.join(current_dir, "resources/medias", "icon.ico")
-    return icon_path
-
-
 # Set page configuration with the icon
 try:
-    icon = Image.open(get_icon_path())
+    icon = Image.open(ICON_PATH)
     st.set_page_config(
         page_title="My Streamlit App",
         page_icon=icon,
