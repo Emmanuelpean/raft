@@ -5,6 +5,7 @@ import os
 import numpy as np
 import pandas as pd
 import streamlit as st
+import argparse
 from wfork_streamlit_profiler import Profiler
 
 from config.constants import TIMESTAMP_ID
@@ -25,10 +26,15 @@ __name__ = get_pyproject_info("project", "name")
 __github__ = get_pyproject_info("project", "urls", "repository")
 __date__ = get_last_commit_date_from_github(__github__, "type-hints")
 __author__ = get_pyproject_info("project", "authors")[0]["name"]
-__development__ = True
+
+# ------------------------------------------------ ARGUMENTS & PROFILER ------------------------------------------------
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--profile", default=False, type=bool, help="Switch the profiler on")
+args = parser.parse_args()
 
 # Profiler
-if __development__:
+if args.profile:
     profiler = Profiler()
     profiler.start()
 else:

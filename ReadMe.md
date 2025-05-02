@@ -29,8 +29,7 @@ fast-paced research environments where quick decisions depend on a fast understa
 
 Create and activate a virtual environment, activate it, and run:
 ```console
-$ pip install poetry
-$ poetry install
+$ pip install -e .[dev]
 ```
 
 ## Usage
@@ -38,4 +37,9 @@ To run the app locally, run:
 ```console
 $ cd app
 $ streamlit run ./main.py
+```
+
+To profile the app, run:
+```console
+$ streamlit run ./main.py -- --profile=true
 ```
