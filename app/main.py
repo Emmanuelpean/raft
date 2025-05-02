@@ -69,9 +69,11 @@ from PIL import Image
 try:
     print(os.getcwd())
     print(os.listdir(os.getcwd()))
-    print(os.listdir(os.path.dirname(os.getcwd())))
+    a = os.path.join(os.path.dirname(os.getcwd()), "resources/medias/icon.ico")
+    print(a)
+    print(ICON_PATH)
     print(os.listdir(os.path.dirname(os.path.dirname(os.getcwd()))))
-    icon = Image.open(ICON_PATH)
+    icon = Image.open(a)
     # st.set_page_config(
     #     page_title="My Streamlit App",
     #     page_icon=icon,
