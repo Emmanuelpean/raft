@@ -350,11 +350,11 @@ class SignalData(object):
         :param xmin: min x value
         :param xmax: max x value"""
 
-        if xmin is not None:
+        if isinstance(xmin, float | int | np.integer):
             index_min = np.abs(self.x.data - xmin).argmin()
         else:
             index_min = None
-        if xmax is not None:
+        if isinstance(xmax, float | int | np.integer):
             index_max = np.abs(self.x.data - xmax).argmin()
         else:
             index_max = None

@@ -78,6 +78,7 @@
 * [X] Fill data processing text
 * [X] remove mentions of poetry
 * [ ] Update the changelog
+* [ ] Fix missing icon in production
 
 ---
 

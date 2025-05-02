@@ -22,6 +22,7 @@ from utils.strings import matrix_to_string, number_to_str, generate_html_table, 
 
 __version__ = get_pyproject_info("project", "version")
 __name__ = get_pyproject_info("project", "name")
+__description__ = get_pyproject_info("project", "description")
 __github__ = get_pyproject_info("project", "urls", "repository")
 __date__ = get_last_commit_date_from_github(__github__, "type-hints")
 __author__ = get_pyproject_info("project", "authors")[0]["name"]
@@ -60,7 +61,7 @@ EXTRACTION_LABEL = "Data Extraction"
 # -------------------------------------------------------- SETUP -------------------------------------------------------
 
 # Set the app main and sidebar logos
-st.set_page_config(__name__, page_icon=ICON_PATH, layout="wide")
+st.set_page_config(__name__.upper() + " - " + __description__, page_icon=ICON_PATH, layout="wide")
 st.logo(LOGO_TEXT_PATH, icon_image=LOGO_PATH)
 
 # Load the custom CSS
