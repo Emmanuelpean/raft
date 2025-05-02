@@ -24,3 +24,18 @@ The idea came from a simple frustration: too often, valuable time is lost just t
 file. This app removes that barrier. Whether you are checking raw instrument output, exploring simulation results, or 
 comparing experimental datasets, it lets you plot and inspect the data in just a few clicks. It is especially handy in 
 fast-paced research environments where quick decisions depend on a fast understanding of the data.
+
+## Installation
+
+Create and activate a virtual environment, activate it, and run:
+```console
+$ pip install poetry
+$ poetry install
+```
+
+## Usage
+To run the app locally, run:
+```console
+$ cd app
+$ streamlit run ./main.py
+```

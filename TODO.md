@@ -76,6 +76,8 @@
 * [X] Check if get_max is sensitive to nan and inf. functions return nan if failed to compute
 * [ ] Fix missing colouring in production
 * [ ] Fill data processing text
+* [ ] remove mentions of poetry
+* [ ] Use artifacts to store the badges and reports
 
 ---
 
