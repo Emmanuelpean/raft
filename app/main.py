@@ -67,6 +67,10 @@ from PIL import Image
 
 # Set page configuration with the icon
 try:
+    print(os.getcwd())
+    print(os.listdir(os.getcwd()))
+    print(os.listdir(os.path.dirname(os.getcwd())))
+    print(os.listdir(os.path.dirname(os.path.dirname(os.getcwd()))))
     icon = Image.open(ICON_PATH)
     # st.set_page_config(
     #     page_title="My Streamlit App",
