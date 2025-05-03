@@ -8,8 +8,15 @@ import streamlit as st
 import argparse
 
 from config.constants import TIMESTAMP_ID
-from config.resources import LOGO_PATH, CSS_STYLE_PATH, ICON_PATH, DATA_PROCESSING_PATH, LOGO_TEXT_PATH, FILE_TYPE_DICT
-from config import resources
+from config.resources import (
+    LOGO_PATH,
+    CSS_STYLE_PATH,
+    ICON_PATH,
+    DATA_PROCESSING_PATH,
+    LOGO_TEXT_PATH,
+    FILE_TYPE_DICT,
+    ICON_PATH,
+)
 from data_files.data_files import FILETYPES, read_data_file
 from data_files.signal_data import Dimension, SignalData, average_signals, get_z_dim
 from data_processing.fitting import MODELS, get_model_parameters
@@ -62,7 +69,7 @@ EXTRACTION_LABEL = "Data Extraction"
 # -------------------------------------------------------- SETUP -------------------------------------------------------
 
 # Set the app main and sidebar logos
-st.set_page_config(__name__.upper() + " - " + __description__, page_icon=resources.ICON_PATH, layout="wide")
+st.set_page_config(__name__.upper() + " - " + __description__, page_icon=ICON_PATH, layout="wide")
 st.logo(LOGO_TEXT_PATH, icon_image=LOGO_PATH)
 
 # Load the custom CSS
