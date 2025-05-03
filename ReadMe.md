@@ -41,5 +41,6 @@ $ streamlit run ./main.py
 
 To profile the app, run:
 ```console
+& cd app
 $ streamlit run ./main.py -- --profile=true
 ```

@@ -612,7 +612,7 @@ def get_z_dim(
 
     if len(signals) > 1:
 
-        if key == "Filename":
+        if key == "Signal name":
             signals = sorted(signals, key=lambda s: s.get_name(True))
             return signals, z_dims0
 

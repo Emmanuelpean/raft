@@ -100,7 +100,7 @@ widgets_defaults = {
     "guess_values": None,
     "reset_settings": True,
     "precision_input": 4,
-    "sorting_key": "Filename",
+    "sorting_key": "Signal name",
     "timestamp_shift": True,
     "averaging_interacted": False,
     "averaging_n": 1,
@@ -297,14 +297,14 @@ else:
                     col2 = None
 
                 # Select the key used to sort the data
-                help_str = """Select the quantity by which to sort the data files. For example:
-                * Filename – sorts the files alphabetically by their filenames.
-                * Timestamp – sorts the files according to the timestamps extracted from their contents.
-                * Emission Wavelength - sort the files according to the emission wavelength extracted from their contents
+                help_str = """Select the quantity by which to sort the signals. For example:
+                * Signal name – sorts the signals alphabetically by their name.
+                * Timestamp – sorts the signals according to the timestamps extracted from the raw data.
+                * Emission Wavelength - sort the signals according to the emission wavelength extracted from the raw data.
                 * ..."""
                 sorting_key = col1.selectbox(
                     label="Data Sorting",
-                    options=["Filename"] + sorted(z_keys, key=lambda string: string.lower()),
+                    options=["Signal name"] + sorted(z_keys, key=lambda string: string.lower()),
                     help=dedent(help_str),
                     key="sorting_key",
                     format_func=lambda string: string.capitalize(),
@@ -320,7 +320,7 @@ else:
                 signals, z_dims = get_z_dim(signals, sss.sorting_key, sss.timestamp_shift)
 
             else:
-                signals, z_dims = get_z_dim(signals, "Filename", sss.timestamp_shift)
+                signals, z_dims = get_z_dim(signals, "Signal name", sss.timestamp_shift)
         else:
             z_dims = []
 
