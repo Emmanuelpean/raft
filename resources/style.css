@@ -20,6 +20,11 @@ img[data-testid="stLogo"] {
     height: 4rem;
     }
 
+/* Increase top padding */
+.main {
+    padding-top: 5rem !important;
+}
+
 
 /* File Uploader */
 /* Move the button to the right */

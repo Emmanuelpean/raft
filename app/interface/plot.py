@@ -2,9 +2,20 @@
 
 import plotly.colors as pc
 import plotly.graph_objects as go
+import plotly.io as pio
 import plotly.subplots as ps
 
 from utils.miscellaneous import merge_dicts
+
+# Define your custom colour list
+PASTEL_COLORS = [
+    "#1F78B4",  # stronger blue
+    "#66C2A5",  # greenish pastel
+    "#FC8D62",  # coral pastel
+]
+
+# Set it globally for all future plots
+pio.templates["plotly"].layout.colorway = PASTEL_COLORS
 
 
 def make_figure(secondary_y: bool = True) -> go.Figure:
@@ -32,12 +43,16 @@ def plot_signals(
     if isinstance(signals, (list, tuple)):
 
         # Generate the colours
-        values = [i / len(signals) for i in range(len(signals))]
-        colours = pc.sample_colorscale(colorscale, values)
+        if len(signals) > 1:
+            values = [i / len(signals) for i in range(len(signals))]
+            colours = pc.sample_colorscale(colorscale, values)
 
-        # Plot the signals
-        for signal, colour in zip(signals, colours):
-            signal.plot(figure, *args, **merge_dicts(kwargs, dict(line=dict(color=colour))))
+            # Plot the signals
+            for signal, colour in zip(signals, colours):
+                signal.plot(figure, *args, **merge_dicts(kwargs, dict(line=dict(color=colour))))
+
+        else:
+            signals[0].plot(figure, *args, **merge_dicts(kwargs, dict(line=dict(width=2.6))))
 
     else:
         signals.plot(figure, *args, **kwargs)

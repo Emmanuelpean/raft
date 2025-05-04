@@ -77,9 +77,9 @@
 * [X] Fix missing colouring in production
 * [X] Fill data processing text
 * [X] remove mentions of poetry
-* [ ] Update the changelog
-* [ ] Fix missing icon in production
-
+* [X] Update the changelog
+* [X] Fix missing icon in production
+* [X] Improve the fitting of multiple curves (display and store the p0 of each curve?)
 ---
 
 ## 🧩 Planned Features

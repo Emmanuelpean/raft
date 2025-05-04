@@ -8,15 +8,7 @@ import streamlit as st
 import argparse
 
 from config.constants import TIMESTAMP_ID
-from config.resources import (
-    LOGO_PATH,
-    CSS_STYLE_PATH,
-    ICON_PATH,
-    DATA_PROCESSING_PATH,
-    LOGO_TEXT_PATH,
-    FILE_TYPE_DICT,
-    ICON_PATH,
-)
+from config.resources import LOGO_PATH, CSS_STYLE_PATH, ICON_PATH, DATA_PROCESSING_PATH, LOGO_TEXT_PATH, FILE_TYPE_DICT
 from data_files.data_files import FILETYPES, read_data_file
 from data_files.signal_data import Dimension, SignalData, average_signals, get_z_dim
 from data_processing.fitting import MODELS, get_model_parameters
@@ -95,6 +87,8 @@ widgets_defaults = {
     "display_raw": True,
     "fitting_interacted": False,
     "fitting_model": "None",
+    "fitting_curve_select": "",
+    "fitting_apply_all": False,
     "norm_interacted": False,
     "norm_type": "None",
     "norm_a": "1",
@@ -119,6 +113,8 @@ set_default_widgets(widgets_defaults)
 # Add data and the file_uploader key to the session state
 if "data" not in sss:
     sss.data = None
+if "error_txt" not in sss:
+    sss.error_txt = ""
 if "file_uploader" not in sss:
     sss.file_uploader = "file_uploader_key0"
 
@@ -216,24 +212,39 @@ else:
 
     # If not data have been stored previously, try loading the files and store them
     if sss.data is None:
+        sss.error_txt = ""
         print("Reading data files")
-        signals, filetype = read_data_file(file, filetype_select)
 
-        # If signals have been loaded...
-        if signals:
+        # Check that the filenames are unique
+        if isinstance(file, list) and len(set([f.name.split(".")[0] for f in file])) != len(file):
+            signals, filetype = [], None
+            sss.error_txt = "Multiple files with the same filename cannot be loaded."
 
-            # Normalise them
-            signals = normalise_list(signals)
+        else:
+            signals, filetype = read_data_file(file, filetype_select)
 
-            # Check data consistency
-            if isinstance(signals, list):
-                for signal in signals[1:]:
-                    if not np.array_equal(signals[0].x.data, signal.x.data, equal_nan=True):
-                        signals, filetype = [], None
-                        break
+            # If signals have been loaded...
+            if signals:
 
-        # Store them in the session state
-        sss.data = [signals, filetype]
+                # Normalise them
+                signals = normalise_list(signals)
+
+                # Check data consistency
+                if isinstance(signals, list):
+                    for signal in signals[1:]:
+                        if not np.array_equal(signals[0].x.data, signal.x.data, equal_nan=True):
+                            signals, filetype = [], None
+                            sss.error_txt = "Data not sharing the same X-axis data cannot be loaded as of now."
+                            break
+
+            else:
+                if isinstance(file, list):
+                    sss.error_txt = "Unable to read the files."
+                else:
+                    sss.error_txt = "Unable to read the file."
+
+            # Store them in the session state
+            sss.data = [signals, filetype]
 
     # Otherwise load the data from the session state
     else:
@@ -248,11 +259,7 @@ else:
     # If the signal could not be loaded, display a warning message
     if filetype is None:
         st.markdown("###")  # some space on top for the st.logo
-        text = "Unable to read the file"
-        if isinstance(file, list):
-            st.warning(text + "s.")
-        else:
-            st.warning(text + ".")
+        st.warning(sss.error_txt)
 
     # Show the options for selecting a specific signal
     else:
@@ -627,15 +634,21 @@ else:
                 # Reset the guess value default dict is set to None
                 if sss.guess_values is None:
                     try:
+                        guess_values = [guess_function(signal.x.data, signal.y.data) for signal in signals]
                         index = int(len(signals) / 2)
-                        guess_values = guess_function(signals[index].x.data, signals[index].y.data)
+                        guess_values += [guess_function(signals[index].x.data, signals[index].y.data)]
                     except:
-                        guess_values = np.ones(len(parameters))
-                    sss.guess_values = dict(zip(parameters, guess_values))
-                    sss.default_gvs = dict(zip(parameters, [True] * len(parameters)))
+                        guess_values = [np.ones(len(parameters)) for i in range(len(signals) + 1)]
+                    sss.guess_values = [dict(zip(parameters, guessv)) for guessv in guess_values]
+                    sss.default_gvs = [dict(zip(parameters, [True] * len(parameters))) for i in range(len(signals) + 1)]
 
+                # Fitting
                 try:
-                    fits = [signal.fit(fit_function, sss.guess_values) for signal in signals]
+                    if sss.fitting_apply_all:
+                        guess_values = [sss.guess_values[-1]] * len(signals)
+                    else:
+                        guess_values = sss.guess_values[:-1]
+                    fits = [signal.fit(fit_function, guessv) for signal, guessv in zip(signals, guess_values)]
                     fit_signals, fit_params, param_errors, r_squared = [list(e) for e in zip(*fits)]
                     rel_error = np.array(param_errors) / np.array(fit_params)
                     expander_label = f"__✔ {FITTING_LABEL} ({sss.fitting_model})__"
@@ -667,6 +680,30 @@ else:
                     # Display the equation
                     st.html("Equation: " + equation)
 
+                    if len(signals) > 1:
+                        st.checkbox(
+                            label="Apply Guess Values To All Signals",
+                            key="fitting_apply_all",
+                            help="Apply the same guess values to all signals.",
+                        )
+
+                        if not sss.fitting_apply_all:
+                            names = [signal.get_name(multifile_cond) for signal in signals]
+                            signal_dict = dict(zip(names, signals))
+                            if sss.fitting_curve_select not in signal_dict:
+                                sss.fitting_curve_select = names[0]
+                            st.selectbox(
+                                label="Curve",
+                                options=names,
+                                on_change=set_session_state_value_function("fitting_interacted", True),
+                                key="fitting_curve_select",
+                            )
+                            curve_index = names.index(sss.fitting_curve_select)
+                        else:
+                            curve_index = len(signals)
+                    else:
+                        curve_index = 0
+
                     # Guess parameter and value
                     columns = st.columns(2)
 
@@ -677,22 +714,29 @@ else:
                         on_change=set_session_state_value_function("fitting_interacted", True),
                     )
 
-                    guess_value_key = sss.fitting_model + parameter + "guess_value"
+                    guess_value_key = sss.fitting_model + str(curve_index) + parameter + "guess_value"
 
+                    # If the guess value has not already been stored in the session state...
                     if guess_value_key not in sss:
-                        if sss.default_gvs[parameter]:
-                            precision = 4
+                        if sss.default_gvs[curve_index][parameter]:
+                            precision = 4  # up to 4 digits for default values
                         else:
-                            precision = 10
-                        sss[guess_value_key] = number_to_str(sss.guess_values[parameter], precision, "g")
+                            precision = 10  # up to 10 digits for user set values
+
+                        if isinstance(sss.guess_values[curve_index][parameter], str):
+                            sss[guess_value_key] = sss.guess_values[curve_index][parameter]
+                        else:
+                            sss[guess_value_key] = number_to_str(
+                                sss.guess_values[curve_index][parameter], precision, "g"
+                            )
 
                     def store_guess_value() -> None:
                         """Store the guess value as a float in the guess_values dictionary"""
 
                         set_session_state_value_function("fitting_interacted", True)
                         try:
-                            sss.guess_values[parameter] = float(sss[guess_value_key])
-                            sss.default_gvs[parameter] = False  # not default value anymore
+                            sss.guess_values[curve_index][parameter] = float(sss[guess_value_key])
+                            sss.default_gvs[curve_index][parameter] = False  # not default value anymore
                         except:
                             pass
 
@@ -978,8 +1022,8 @@ else:
                 plot_signals(
                     signals=raw_signals,
                     figure=figures[0],
-                    legendgroup="Raw Data" if len(signals) > 1 else None,
-                    legendgrouptitle_text="Raw Data" if len(signals) > 1 else None,
+                    legendgroup="Raw Data" if (s_signals or fit_signals) and len(signals) > 1 else None,
+                    legendgrouptitle_text="Raw Data" if (s_signals or fit_signals) and len(signals) > 1 else None,
                     filename=multifile_cond,
                 )
 
@@ -988,8 +1032,8 @@ else:
                 plot_signals(
                     signals=s_signals,
                     figure=figures[0],
-                    legendgroup="Smoothed Data" if len(signals) > 1 else None,
-                    legendgrouptitle_text="Smoothed Data" if len(signals) > 1 else None,
+                    legendgroup="Smoothed Data" if sss.display_raw and len(signals) > 1 else None,
+                    legendgrouptitle_text="Smoothed Data" if sss.display_raw and len(signals) > 1 else None,
                     filename=multifile_cond,
                 )
 
@@ -1001,7 +1045,7 @@ else:
                     legendgroup="Fitted Data" if len(signals) > 1 else None,
                     legendgrouptitle_text="Fitted Data" if len(signals) > 1 else None,
                     filename=multifile_cond,
-                    line=dict(dash="dot"),
+                    line=dict(dash="dash"),
                 )
 
             # Display the maximum point(s)
