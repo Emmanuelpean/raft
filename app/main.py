@@ -317,13 +317,11 @@ else:
                 * Timestamp – sorts the signals according to the timestamps extracted from the raw data.
                 * Emission Wavelength - sort the signals according to the emission wavelength extracted from the raw data.
                 * ..."""
-                sorting_key = col1.selectbox(
+                col1.selectbox(
                     label="Data Sorting",
-                    options=["Signal name"] + sorted(z_keys, key=lambda string: string.lower()),
+                    options=["None", "Signal name"] + sorted(z_keys, key=lambda string: string.lower()),
                     help=dedent(help_str),
-                    key="sorting_key",
                     format_func=lambda string: string.capitalize(),
-                    disabled=len(z_keys) == 0,
                 )
 
                 if col2:
@@ -332,7 +330,10 @@ else:
                         key="timestamp_shift",
                     )
 
-                signals, z_dims = get_z_dim(signals, sss.sorting_key, sss.timestamp_shift)
+                if sss.sorting_key != "None":
+                    signals, z_dims = get_z_dim(signals, sss.sorting_key, sss.timestamp_shift)
+                else:
+                    z_dims = [Dimension(i) for i in range(len(signals))]
 
             else:
                 signals, z_dims = get_z_dim(signals, "Signal name", sss.timestamp_shift)
@@ -409,11 +410,11 @@ else:
                 try:
                     xmin = float(sss.range_input1)
                 except:
-                    xmin = "min"
+                    xmin = "Min"
                 try:
                     xmax = float(sss.range_input2)
                 except:
-                    xmax = "max"
+                    xmax = "Max"
 
                 if isinstance(xmin, float) or isinstance(xmax, float):
                     signals = [signal.reduce_range(xmin, xmax) for signal in signals]
