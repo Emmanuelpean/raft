@@ -308,8 +308,7 @@ else:
                 if sss.sorting_key == TIMESTAMP_ID:
                     col1, col2 = st.sidebar.columns(2, vertical_alignment="bottom")
                 else:
-                    col1 = st.sidebar
-                    col2 = None
+                    col1, col2 = st.sidebar, None
 
                 # Select the key used to sort the data
                 help_str = """Select the quantity by which to sort the signals. For example:
@@ -322,6 +321,7 @@ else:
                     options=["None", "Signal name"] + sorted(z_keys, key=lambda string: string.lower()),
                     help=dedent(help_str),
                     format_func=lambda string: string.capitalize(),
+                    key="sorting_key",
                 )
 
                 if col2:
