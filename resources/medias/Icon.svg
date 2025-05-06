@@ -6,25 +6,20 @@
    id="Capa_1"
    x="0px"
    y="0px"
-   viewBox="0 0 128.05356 46.94754"
+   viewBox="0 0 50 50"
    xml:space="preserve"
-   sodipodi:docname="logo_text.svg"
+   sodipodi:docname="Icon.svg"
    inkscape:version="1.4 (86a8ad7, 2024-10-11)"
-   width="128.05356"
-   height="46.94754"
-   inkscape:export-filename="logo_text.png"
-   inkscape:export-xdpi="1000"
-   inkscape:export-ydpi="1000"
+   width="50"
+   height="50"
+   inkscape:export-filename="Icon.png"
+   inkscape:export-xdpi="122.88"
+   inkscape:export-ydpi="122.88"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg"><defs
-   id="defs59"><rect
-     x="46.567497"
-     y="9.6988859"
-     width="121.26819"
-     height="46.631729"
-     id="rect1" /></defs><sodipodi:namedview
+   id="defs59" /><sodipodi:namedview
    id="namedview57"
    pagecolor="#ffffff"
    bordercolor="#000000"
@@ -34,15 +29,16 @@
    inkscape:pagecheckerboard="0"
    inkscape:deskcolor="#d1d1d1"
    showgrid="false"
-   inkscape:zoom="1.9460999"
-   inkscape:cx="113.56046"
-   inkscape:cy="-94.805001"
+   inkscape:zoom="15.568799"
+   inkscape:cx="7.4507995"
+   inkscape:cy="24.6326"
    inkscape:window-width="2560"
    inkscape:window-height="1361"
    inkscape:window-x="-9"
    inkscape:window-y="382"
    inkscape:window-maximized="1"
-   inkscape:current-layer="Capa_1" />
+   inkscape:current-layer="Capa_1"
+   inkscape:export-bgcolor="#ffffff00" />
 
 
 
@@ -116,7 +112,8 @@
    transform="translate(-4,-9.1867576)">
 </g>
 <g
-   id="g1"><line
+   id="g1"
+   transform="translate(0,1.5262304)"><line
      style="fill:none;stroke:#be6e41;stroke-width:3.47478;stroke-linecap:round;stroke-miterlimit:10;stroke-dasharray:none;stroke-opacity:1"
      x1="25"
      y1="1.73739"
@@ -171,11 +168,4 @@
      d="m 15.012391,4.8132424 c -0.962999,0 -1.625297,0.965235 -1.279297,1.865234 l 0.002,0.0078 c 2.754997,7.1619926 2.754997,18.0919126 0,25.2539056 l -0.002,0.0078 c -0.346,0.900025 0.315298,1.86526 1.279297,1.86526 h 9.998047 V 4.8132424 Z" /><path
      id="path4624"
      style="fill:#f2ecbf"
-     d="m 34.987608,4.8132424 c 0.963,0 1.625298,0.965235 1.279297,1.865234 l -0.002,0.0078 c -2.754997,7.1619926 -2.754997,18.0919126 0,25.2539056 l 0.002,0.0078 c 0.346,0.900025 -0.315297,1.86526 -1.279297,1.86526 H 24.989561 V 4.8132424 Z" /></g><text
-   xml:space="preserve"
-   id="text1"
-   style="font-size:26.6667px;text-align:start;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect1);display:inline;fill:#6c4127;fill-opacity:1"
-   transform="translate(11.085239,-0.92880592)"><tspan
-     x="46.568359"
-     y="33.962588"
-     id="tspan1">RAFT</tspan></text></svg>
+     d="m 34.987608,4.8132424 c 0.963,0 1.625298,0.965235 1.279297,1.865234 l -0.002,0.0078 c -2.754997,7.1619926 -2.754997,18.0919126 0,25.2539056 l 0.002,0.0078 c 0.346,0.900025 -0.315297,1.86526 -1.279297,1.86526 H 24.989561 V 4.8132424 Z" /></g></svg>
