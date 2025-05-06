@@ -641,13 +641,13 @@ class TestGetZDim:
     def test_signal(self, sample_signal) -> None:
         """Input is a list of 1 signal"""
 
-        output = get_z_dim([sample_signal[0]], "Filename", False)
+        output = get_z_dim([sample_signal[0]], "Signal name", False)
         assert are_identical(output[0][-1].y.data, sample_signal[0].y.data)
 
     def test_filename(self, sample_signal) -> None:
         """Input is a list of signals"""
 
-        output = get_z_dim(sample_signal, "Filename", False)
+        output = get_z_dim(sample_signal, "Signal name", False)
         assert are_identical(output[0][-1].y.data, sample_signal[2].y.data)
 
     def test_timestamp(self, sample_signal) -> None:

@@ -144,7 +144,8 @@ class TestApp:
         self._get_widget_by_key("selectbox", "fitting_model").set_value(model).run()
         for key in kwargs:
             self._get_widget_by_key("selectbox", "parameter_model_key").set_value(key).run()
-            ss_key = model + key + "guess_value"
+            ss_key = model + "0" + key + "guess_value"
+            self._get_widget_by_key("text_input", ss_key, True)
             self._get_widget_by_key("text_input", ss_key).set_value(kwargs[key]).run()
 
     # ------------------------------------------------- DATA EXTRACTION ------------------------------------------------
@@ -358,7 +359,7 @@ class TestApp:
         assert self.at.sidebar.expander[self.FITTING_EXP_INDEX].label == f"__✔ {main.FITTING_LABEL} (Gaussian)__"
 
         # Test failed guess value
-        self._get_widget_by_key("text_input", "Gaussiancguess_value").set_value("f").run()
+        self._get_widget_by_key("text_input", "Gaussian0cguess_value").set_value("f").run()
 
     # ---------------------------------------------- DIFFERENT DATA TYPES ----------------------------------------------
 
