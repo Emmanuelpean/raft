@@ -7,10 +7,10 @@
 
 <div align="center">
 
-  [![Passing](https://github.com/Emmanuelpean/raft/actions/workflows/test.yml/badge.svg?branch=type-hints&event=push)](https://github.com/Emmanuelpean/raft/actions/workflows/test.yml)
+  [![Passing](https://github.com/Emmanuelpean/raft/actions/workflows/test.yml/badge.svg?branch=main&event=push)](https://github.com/Emmanuelpean/raft/actions/workflows/test.yml)
   [![Tests Status](./reports/tests/tests-badge.svg?dummy=8484744)](https://emmanuelpean.github.io/raft/reports/tests/report.html?sort=result)
   [![Coverage Status](./reports/coverage/coverage-badge.svg?dummy=8484744)](https://emmanuelpean.github.io/raft/reports/coverage/htmlcov/index.html)
-  [![Last Commit](https://img.shields.io/github/last-commit/emmanuelpean/raft/type-hints)](https://github.com/emmanuelpean/raft/commits/type-hints)
+  [![Last Commit](https://img.shields.io/github/last-commit/emmanuelpean/raft/main)](https://github.com/emmanuelpean/raft/commits/main)
   [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
