@@ -1297,7 +1297,7 @@ with st.expander("Data File Formats"):
 # ------------------------------------------------------ CHANGELOG -----------------------------------------------------
 
 with st.expander("Changelog"):
-    st.markdown(read_file(os.path.join(PROJECT_PATH, "CHANGELOG.md")))
+    st.markdown(read_file(os.path.join(PROJECT_PATH, "CHANGELOG.md")), unsafe_allow_html=True)
 
 # ----------------------------------------------------- DISCLAIMER -----------------------------------------------------
 
