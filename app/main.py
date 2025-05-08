@@ -61,7 +61,7 @@ EXTRACTION_LABEL = "Data Extraction"
 # -------------------------------------------------------- SETUP -------------------------------------------------------
 
 # Set the app main and sidebar logos
-st.set_page_config(__name__.upper() + " - " + __description__, page_icon=ICON_PATH, layout="wide")
+st.set_page_config(__name__.upper() + " - " + __description__, page_icon="😀", layout="wide")
 st.logo(LOGO_TEXT_PATH, icon_image=LOGO_PATH)
 
 # Load the custom CSS
