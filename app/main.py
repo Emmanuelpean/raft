@@ -24,7 +24,7 @@ __version__ = get_pyproject_info("project", "version")
 __name__ = get_pyproject_info("project", "name")
 __description__ = get_pyproject_info("project", "description")
 __github__ = get_pyproject_info("project", "urls", "repository")
-__date__ = get_last_commit_date_from_github(__github__, "type-hints")
+__date__ = get_last_commit_date_from_github(__github__)
 __author__ = get_pyproject_info("project", "authors")[0]["name"]
 
 # ------------------------------------------------ ARGUMENTS & PROFILER ------------------------------------------------
