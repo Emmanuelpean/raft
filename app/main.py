@@ -1191,7 +1191,7 @@ with st.expander("About", expanded=not file):
     comparing experimental datasets, it lets you plot and inspect the data in just a few clicks. It is especially handy in 
     fast-paced research environments where quick decisions depend on a fast understanding of the data.
 
-    App created and maintained by [{__author__}](https://emmanuelpean.streamlit.app/).  
+    App created and maintained by [{__author__}](https://emmanuelpean.me/).  
     [Version {__version__}]({__github__}) (last updated: {__date__})."""
     st.info(text)
 
