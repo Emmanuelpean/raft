@@ -1255,7 +1255,7 @@ with st.expander("Data Processing"):
     For both maximum and minimum points, the precision of the estimated positions can be enhanced using cubic __interpolation__ 
     around the peak maximum, which refines the estimate beyond the raw data resolution.
     * __Full Width at Half Maximum (FWHM)__: The width of the peak measured between the two x-values where the y-value equals 
-    half of the maximum y-value. This provides a useful metric of the peak’signal sharpness or spread (__subplot b__).
+    half of the maximum y-value. This provides a useful metric of the peak sharpness or spread (__subplot b__).
     
     Similar to the max/min points, the precision of the FWHM measurement can be further refined using linear __interpolation__. 
     
