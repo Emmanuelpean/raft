@@ -222,6 +222,7 @@ class SignalData(object):
         filename: bool = False,
         secondary_y: bool = False,
         plot_method: str = "Scattergl",
+        font_color: str = "black",
         **kwargs,
     ) -> go.Figure:
         """Plot the signal data in a plotly figure and format it
@@ -229,6 +230,7 @@ class SignalData(object):
         :param filename: argument passed to get_name
         :param secondary_y: if True, use the secondary y-axis
         :param plot_method: "Scatter" or "Scattergl"
+        :param font_color: font color
         :param kwargs: keyword arguments passed to Scatter"""
 
         # Generate a new figure if not provided
@@ -258,7 +260,7 @@ class SignalData(object):
         if len(primary_y_traces) == 1 or len(secondary_y_traces) == 1:
 
             # Set the axes settings
-            font = dict(size=16, color="black")
+            font = dict(size=16, color=font_color)
             axes_kwargs = dict(
                 automargin="left+top+bottom+right",
                 title_font=font,
@@ -267,7 +269,7 @@ class SignalData(object):
                 gridcolor="lightgray",
                 exponentformat="power",
                 tickformat=",",
-                color="black",
+                color=font_color,
             )
 
             # X-axis

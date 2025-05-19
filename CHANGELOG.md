@@ -1,3 +1,6 @@
+#### V 2.0.1 - May 2025
+* 🌗 Added dark mode.
+
 ### V 2.0.0 - May 2025
 
 ##### ✨ New Data Processing Options

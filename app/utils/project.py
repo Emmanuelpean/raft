@@ -5,6 +5,7 @@ import tomllib
 from pathlib import Path
 
 import requests
+import streamlit as st
 
 
 def get_pyproject_info(*keys: str) -> any:
@@ -19,6 +20,7 @@ def get_pyproject_info(*keys: str) -> any:
     return d
 
 
+@st.cache_resource
 def get_last_commit_date_from_github(
     repo_url: str,
     branch: str = "main",
@@ -44,5 +46,5 @@ def get_last_commit_date_from_github(
         commit_date = commit_data["commit"]["committer"]["date"]
         date = dt.datetime.strptime(commit_date, "%Y-%m-%dT%H:%M:%SZ")
         return date.strftime("%d %B %Y")
-    except Exception as e:
-        return f"Error fetching data: {e}"
+    except:
+        return f"Error fetching data"

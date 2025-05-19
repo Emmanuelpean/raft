@@ -1,11 +1,11 @@
 """Graphical user interface of Raft"""
 
+import argparse
 import os
 
 import numpy as np
 import pandas as pd
 import streamlit as st
-import argparse
 
 from config.constants import TIMESTAMP_ID
 from config.resources import LOGO_PATH, CSS_STYLE_PATH, ICON_PATH, DATA_PROCESSING_PATH, LOGO_TEXT_PATH, FILE_TYPE_DICT
@@ -61,7 +61,22 @@ EXTRACTION_LABEL = "Data Extraction"
 # -------------------------------------------------------- SETUP -------------------------------------------------------
 
 # Set the app main and sidebar logos
-st.set_page_config(__name__.upper() + " - " + __description__, page_icon=ICON_PATH, layout="wide")
+st.set_page_config(
+    __name__.upper() + " - " + __description__,
+    page_icon=ICON_PATH,
+    layout="wide",
+    menu_items=None,
+)
+
+# Theme
+try:
+    import streamlit_theme as st_theme
+
+    st.session_state.theme = st_theme.st_theme(key="st_theme_key")
+except:
+    st.session_state.theme = {"base": "light"}
+print(st.session_state.theme["base"])
+
 st.logo(LOGO_TEXT_PATH, icon_image=LOGO_PATH)
 
 # Load the custom CSS
@@ -1102,33 +1117,34 @@ else:
 
                 # Max point
                 if x_max and y_max:
-                    y_max.plot(figure=figures[figure_index], plot_method="Scatter")
-                    x_max.plot(figure=figures[figure_index], secondary_y=True, plot_method="Scatter")
+                    plot_signals(y_max, figure=figures[figure_index], plot_method="Scatter")
+                    plot_signals(x_max, figure=figures[figure_index], secondary_y=True, plot_method="Scatter")
                     figure_index += 1
                     datasets.append([x_max, y_max])
 
                 # Min point
                 if x_min and y_min:
-                    y_min.plot(figure=figures[figure_index], plot_method="Scatter")
-                    x_min.plot(figure=figures[figure_index], secondary_y=True, plot_method="Scatter")
+                    plot_signals(y_min, figure=figures[figure_index], plot_method="Scatter")
+                    plot_signals(x_min, figure=figures[figure_index], secondary_y=True, plot_method="Scatter")
                     figure_index += 1
                     datasets.append([x_min, y_min])
 
                 # FWHM
                 if fwhm:
-                    fwhm.plot(figure=figures[figure_index], plot_method="Scatter")
+                    plot_signals(fwhm, figure=figures[figure_index], plot_method="Scatter")
                     figure_index += 1
                     datasets.append([fwhm])
 
                 # Area
                 if area:
-                    area.plot(figure=figures[figure_index], plot_method="Scatter")
+                    plot_signals(area, figure=figures[figure_index], plot_method="Scatter")
                     figure_index += 1
                     datasets.append([area])
 
                 # Fit parameters
                 for key in fit_extract_signals:
-                    fit_extract_signals[key].plot(
+                    plot_signals(
+                        fit_extract_signals[key],
                         figure=figures[figure_index],
                         error_y=dict(
                             type="data",
@@ -1191,7 +1207,7 @@ with st.expander("About", expanded=not file):
     comparing experimental datasets, it lets you plot and inspect the data in just a few clicks. It is especially handy in 
     fast-paced research environments where quick decisions depend on a fast understanding of the data.
 
-    App created and maintained by [{__author__}](https://emmanuelpean.streamlit.app/).  
+    App created and maintained by [{__author__}](https://emmanuelpean.me).  
     [Version {__version__}]({__github__}) (last updated: {__date__})."""
     st.info(text)
 

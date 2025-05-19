@@ -4,6 +4,7 @@ import plotly.colors as pc
 import plotly.graph_objects as go
 import plotly.io as pio
 import plotly.subplots as ps
+import streamlit as st
 
 from utils.miscellaneous import merge_dicts
 
@@ -39,6 +40,11 @@ def plot_signals(
     :param args: positional arguments passed to the SignalData.plot method
     :param kwargs: keyword arguments passed to the SignalData.plot method"""
 
+    if st.session_state.theme["base"].lower() == "dark":
+        font_color = "white"
+    else:
+        font_color = "black"
+
     # List/tuple of signals, plot all in the same figure
     if isinstance(signals, (list, tuple)):
 
@@ -49,13 +55,13 @@ def plot_signals(
 
             # Plot the signals
             for signal, colour in zip(signals, colours):
-                signal.plot(figure, *args, **merge_dicts(kwargs, dict(line=dict(color=colour))))
+                signal.plot(figure, font_color=font_color, *args, **merge_dicts(kwargs, dict(line=dict(color=colour))))
 
         else:
-            signals[0].plot(figure, *args, **merge_dicts(kwargs, dict(line=dict(width=2.6))))
+            signals[0].plot(figure, font_color=font_color, *args, **merge_dicts(kwargs, dict(line=dict(width=2.6))))
 
     else:
-        signals.plot(figure, *args, **kwargs)
+        signals.plot(figure, font_color=font_color, *args, **kwargs)
 
     return figure
 
