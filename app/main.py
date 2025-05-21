@@ -1,11 +1,12 @@
 """Graphical user interface of Raft"""
 
+import argparse
 import os
 
 import numpy as np
 import pandas as pd
 import streamlit as st
-import argparse
+from streamlit.components.v1 import html
 
 from config.constants import TIMESTAMP_ID
 from config.resources import LOGO_PATH, CSS_STYLE_PATH, ICON_PATH, DATA_PROCESSING_PATH, LOGO_TEXT_PATH, FILE_TYPE_DICT
@@ -64,24 +65,26 @@ EXTRACTION_LABEL = "Data Extraction"
 st.set_page_config(__name__.upper() + " - " + __description__, page_icon=ICON_PATH, layout="wide")
 st.logo(LOGO_TEXT_PATH, icon_image=LOGO_PATH)
 
-st.html(
+html(
     """
 <script src="https://swetrix.org/swetrix.js" defer></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        swetrix.init('qI0OY4SztQ9p', {
-            apiURL: 'https://api.swetrix.emmanuelpean.me/log',
-        })
-        swetrix.trackViews()
+  document.addEventListener('DOMContentLoaded', function() {
+    swetrix.init('qI0OY4SztQ9p', {
+      apiURL: 'https://api.swetrix.emmanuelpean.me/log',
     })
+    swetrix.trackViews()
+  })
 </script>
+
 <noscript>
-    <img
-            src="https://api.swetrix.emmanuelpean.me/log/noscript?pid=qI0OY4SztQ9p"
-            alt=""
-            referrerpolicy="no-referrer-when-downgrade"
-    />
-</noscript>"""
+  <img
+    src="https://api.swetrix.emmanuelpean.me/log/noscript?pid=qI0OY4SztQ9p"
+    alt=""
+    referrerpolicy="no-referrer-when-downgrade"
+  />
+</noscript>""",
+    height=0,
 )
 
 # Load the custom CSS
