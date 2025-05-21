@@ -27,24 +27,6 @@ __github__ = get_pyproject_info("project", "urls", "repository")
 __date__ = get_last_commit_date_from_github(__github__)
 __author__ = get_pyproject_info("project", "authors")[0]["name"]
 
-st.html("""
-<script src="https://swetrix.org/swetrix.js" defer></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        swetrix.init('qI0OY4SztQ9p', {
-            apiURL: 'https://api.swetrix.emmanuelpean.me/log',
-        })
-        swetrix.trackViews()
-    })
-</script>
-<noscript>
-    <img
-            src="https://api.swetrix.emmanuelpean.me/log/noscript?pid=qI0OY4SztQ9p"
-            alt=""
-            referrerpolicy="no-referrer-when-downgrade"
-    />
-</noscript>""")
-
 # ------------------------------------------------ ARGUMENTS & PROFILER ------------------------------------------------
 
 parser = argparse.ArgumentParser()
@@ -81,6 +63,26 @@ EXTRACTION_LABEL = "Data Extraction"
 # Set the app main and sidebar logos
 st.set_page_config(__name__.upper() + " - " + __description__, page_icon=ICON_PATH, layout="wide")
 st.logo(LOGO_TEXT_PATH, icon_image=LOGO_PATH)
+
+st.html(
+    """
+<script src="https://swetrix.org/swetrix.js" defer></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        swetrix.init('qI0OY4SztQ9p', {
+            apiURL: 'https://api.swetrix.emmanuelpean.me/log',
+        })
+        swetrix.trackViews()
+    })
+</script>
+<noscript>
+    <img
+            src="https://api.swetrix.emmanuelpean.me/log/noscript?pid=qI0OY4SztQ9p"
+            alt=""
+            referrerpolicy="no-referrer-when-downgrade"
+    />
+</noscript>"""
+)
 
 # Load the custom CSS
 css_content = read_file(CSS_STYLE_PATH)
