@@ -27,6 +27,24 @@ __github__ = get_pyproject_info("project", "urls", "repository")
 __date__ = get_last_commit_date_from_github(__github__)
 __author__ = get_pyproject_info("project", "authors")[0]["name"]
 
+st.html("""
+<script src="https://swetrix.org/swetrix.js" defer></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        swetrix.init('qI0OY4SztQ9p', {
+            apiURL: 'https://api.swetrix.emmanuelpean.me/log',
+        })
+        swetrix.trackViews()
+    })
+</script>
+<noscript>
+    <img
+            src="https://api.swetrix.emmanuelpean.me/log/noscript?pid=qI0OY4SztQ9p"
+            alt=""
+            referrerpolicy="no-referrer-when-downgrade"
+    />
+</noscript>""")
+
 # ------------------------------------------------ ARGUMENTS & PROFILER ------------------------------------------------
 
 parser = argparse.ArgumentParser()
