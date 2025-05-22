@@ -1331,6 +1331,27 @@ with st.expander("License & Disclaimer"):
 if profiler:
     profiler.stop()
 
+# components.html(
+#     """
+#     <script src="https://swetrix.org/swetrix.js"></script>
+#     <script>
+#         swetrix.init('qI0OY4SztQ9p', {
+#             apiURL: 'https://api.swetrix.emmanuelpean.me/log',
+#         });
+#         swetrix.trackViews();
+#     </script>
+#
+#     <noscript>
+#         <img
+#             src="https://api.swetrix.emmanuelpean.me/log/noscript?pid=qI0OY4SztQ9p"
+#             alt=""
+#             referrerpolicy="no-referrer-when-downgrade"
+#         />
+#     </noscript>
+#     """,
+#     height=0,
+# )
+
 components.html(
     """
     <script src="https://swetrix.org/swetrix.js"></script>
@@ -1338,16 +1359,9 @@ components.html(
         swetrix.init('qI0OY4SztQ9p', {
             apiURL: 'https://api.swetrix.emmanuelpean.me/log',
         });
-        swetrix.trackViews();
+        swetrix.track('streamlit-page-loaded');
+        console.log('Swetrix custom event sent');
     </script>
-
-    <noscript>
-        <img
-            src="https://api.swetrix.emmanuelpean.me/log/noscript?pid=qI0OY4SztQ9p"
-            alt=""
-            referrerpolicy="no-referrer-when-downgrade"
-        />
-    </noscript>
     """,
     height=0,
 )
