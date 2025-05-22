@@ -28,25 +28,12 @@ __date__ = get_last_commit_date_from_github(__github__)
 __author__ = get_pyproject_info("project", "authors")[0]["name"]
 
 st.html("""
-<script src="https://swetrix.org/swetrix.js" defer></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        swetrix.init('qI0OY4SztQ9p', {
-            apiURL: 'https://api.swetrix.emmanuelpean.me/log',
-        })
-        swetrix.trackViews()
-    })
+  alert('JS running!');
 </script>
-<noscript>
-    <img
-            src="https://api.swetrix.emmanuelpean.me/log/noscript?pid=qI0OY4SztQ9p"
-            alt=""
-            referrerpolicy="no-referrer-when-downgrade"
-    />
-</noscript>""")
+""", height=0)
 
 import requests
-import streamlit as st
 import time
 
 @st.cache_resource
@@ -55,7 +42,7 @@ def track_pageview():
         "pid": "qI0OY4SztQ9p",
         "headers": {
             "User-Agent": "streamlit-app",
-            "Referer": "https://your-streamlit-url",
+            "Referer": "https://api.swetrix.emmanuelpean.me/raft",
         },
         "tz": time.localtime().tm_gmtoff // 60,
         "screen": "unknown"
