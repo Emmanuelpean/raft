@@ -1356,7 +1356,7 @@ components.html(
     """
     <script src="https://swetrix.org/swetrix.js"></script>
     <script>
-      swetrix.init('YOUR_PROJECT_ID', {
+      swetrix.init('qI0OY4SztQ9p', {
         apiURL: 'https://api.swetrix.emmanuelpean.me/log',
       });
       swetrix.track('streamlit-pageview', {
