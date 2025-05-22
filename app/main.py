@@ -45,7 +45,7 @@ def track_pageview():
             "Referer": "https://api.swetrix.emmanuelpean.me/raft",
         },
         "tz": time.localtime().tm_gmtoff // 60,
-        "screen": "unknown"
+        "screen": "unknown1"
     }
     try:
         requests.post("https://api.swetrix.emmanuelpean.me/log", json=payload)
