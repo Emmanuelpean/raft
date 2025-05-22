@@ -1,12 +1,11 @@
 """Graphical user interface of Raft"""
 
-import argparse
 import os
 
 import numpy as np
 import pandas as pd
 import streamlit as st
-from streamlit.components.v1 import html
+import argparse
 
 from config.constants import TIMESTAMP_ID
 from config.resources import LOGO_PATH, CSS_STYLE_PATH, ICON_PATH, DATA_PROCESSING_PATH, LOGO_TEXT_PATH, FILE_TYPE_DICT
@@ -27,6 +26,46 @@ __description__ = get_pyproject_info("project", "description")
 __github__ = get_pyproject_info("project", "urls", "repository")
 __date__ = get_last_commit_date_from_github(__github__)
 __author__ = get_pyproject_info("project", "authors")[0]["name"]
+
+st.html("""
+<script src="https://swetrix.org/swetrix.js" defer></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        swetrix.init('qI0OY4SztQ9p', {
+            apiURL: 'https://api.swetrix.emmanuelpean.me/log',
+        })
+        swetrix.trackViews()
+    })
+</script>
+<noscript>
+    <img
+            src="https://api.swetrix.emmanuelpean.me/log/noscript?pid=qI0OY4SztQ9p"
+            alt=""
+            referrerpolicy="no-referrer-when-downgrade"
+    />
+</noscript>""")
+
+import requests
+import streamlit as st
+import time
+
+@st.cache_resource
+def track_pageview():
+    payload = {
+        "pid": "qI0OY4SztQ9p",
+        "headers": {
+            "User-Agent": "streamlit-app",
+            "Referer": "https://your-streamlit-url",
+        },
+        "tz": time.localtime().tm_gmtoff // 60,
+        "screen": "unknown"
+    }
+    try:
+        requests.post("https://api.swetrix.emmanuelpean.me/log", json=payload)
+    except Exception as e:
+        st.warning(f"Swetrix tracking failed: {e}")
+
+track_pageview()
 
 # ------------------------------------------------ ARGUMENTS & PROFILER ------------------------------------------------
 
@@ -64,28 +103,6 @@ EXTRACTION_LABEL = "Data Extraction"
 # Set the app main and sidebar logos
 st.set_page_config(__name__.upper() + " - " + __description__, page_icon=ICON_PATH, layout="wide")
 st.logo(LOGO_TEXT_PATH, icon_image=LOGO_PATH)
-
-html(
-    """
-<script src="https://swetrix.org/swetrix.js" defer></script>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    swetrix.init('qI0OY4SztQ9p', {
-      apiURL: 'https://api.swetrix.emmanuelpean.me/log',
-    })
-    swetrix.trackViews()
-  })
-</script>
-
-<noscript>
-  <img
-    src="https://api.swetrix.emmanuelpean.me/log/noscript?pid=qI0OY4SztQ9p"
-    alt=""
-    referrerpolicy="no-referrer-when-downgrade"
-  />
-</noscript>""",
-    height=0,
-)
 
 # Load the custom CSS
 css_content = read_file(CSS_STYLE_PATH)
