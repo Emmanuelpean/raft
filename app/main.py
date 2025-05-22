@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import argparse
+import streamlit.components.v1 as components
 
 from config.constants import TIMESTAMP_ID
 from config.resources import LOGO_PATH, CSS_STYLE_PATH, ICON_PATH, DATA_PROCESSING_PATH, LOGO_TEXT_PATH, FILE_TYPE_DICT
@@ -65,7 +66,7 @@ st.set_page_config(__name__.upper() + " - " + __description__, page_icon=ICON_PA
 st.logo(LOGO_TEXT_PATH, icon_image=LOGO_PATH)
 
 
-st.html("""
+components.html("""
 <script>
   alert('JS running!');
 </script>
@@ -74,7 +75,6 @@ st.html("""
 import requests
 import time
 
-@st.cache_resource
 def track_pageview():
     payload = {
         "pid": "qI0OY4SztQ9p",
