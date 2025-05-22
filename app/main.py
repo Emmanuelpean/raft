@@ -65,32 +65,26 @@ EXTRACTION_LABEL = "Data Extraction"
 st.set_page_config(__name__.upper() + " - " + __description__, page_icon=ICON_PATH, layout="wide")
 st.logo(LOGO_TEXT_PATH, icon_image=LOGO_PATH)
 
-
-components.html("""
-<script>
-  alert('JS running!');
-</script>
-""")
-
-import requests
-import time
-
-def track_pageview():
-    payload = {
-        "pid": "qI0OY4SztQ9p",
-        "headers": {
-            "User-Agent": "streamlit-app",
-            "Referer": "https://emmanuelpean.me/raft",
-        },
-        "tz": time.localtime().tm_gmtoff // 60,
-        "screen": "unknown1"
-    }
-    try:
-        requests.post("https://api.swetrix.emmanuelpean.me/log", json=payload)
-    except Exception as e:
-        st.warning(f"Swetrix tracking failed: {e}")
-
-track_pageview()
+#
+# import requests
+# import time
+#
+# def track_pageview():
+#     payload = {
+#         "pid": "qI0OY4SztQ9p",
+#         "headers": {
+#             "User-Agent": "streamlit-app",
+#             "Referer": "https://emmanuelpean.me/raft",
+#         },
+#         "tz": time.localtime().tm_gmtoff // 60,
+#         "screen": "unknown1"
+#     }
+#     try:
+#         requests.post("https://api.swetrix.emmanuelpean.me/log", json=payload)
+#     except Exception as e:
+#         st.warning(f"Swetrix tracking failed: {e}")
+#
+# track_pageview()
 
 
 # Load the custom CSS
@@ -1336,3 +1330,24 @@ with st.expander("License & Disclaimer"):
 # Stop the profiler
 if profiler:
     profiler.stop()
+
+components.html(
+    """
+    <script src="https://swetrix.org/swetrix.js"></script>
+    <script>
+        swetrix.init('qI0OY4SztQ9p', {
+            apiURL: 'https://api.swetrix.emmanuelpean.me/log',
+        });
+        swetrix.trackViews();
+    </script>
+
+    <noscript>
+        <img
+            src="https://api.swetrix.emmanuelpean.me/log/noscript?pid=qI0OY4SztQ9p"
+            alt=""
+            referrerpolicy="no-referrer-when-downgrade"
+        />
+    </noscript>
+    """,
+    height=0,
+)
