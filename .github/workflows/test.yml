@@ -18,20 +18,24 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Python
+        if: "!contains(github.event.head_commit.message, '[skip tests]')"
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Update pip and install dependencies
+        if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: | 
           python -m pip install --upgrade pip
           python -m pip install .[dev]
 
       - name: Run Tests with Pytest and Coverage
+        if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: |
           coverage run -m pytest --junitxml=reports/tests/tests.xml --html=reports/tests/report.html
 
       - name: Generate badges and coverage
+        if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: |
           genbadge tests --input-file=reports/tests/tests.xml --output-file=reports/tests/tests-badge.svg
           coverage html
@@ -40,6 +44,7 @@ jobs:
           coverage html
 
       - name: Commit and push badge
+        if: "!contains(github.event.head_commit.message, '[skip tests]')"
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
