@@ -42,7 +42,7 @@ def track_pageview():
         "pid": "qI0OY4SztQ9p",
         "headers": {
             "User-Agent": "streamlit-app",
-            "Referer": "https://api.swetrix.emmanuelpean.me/raft",
+            "Referer": "https://emmanuelpean.me/raft",
         },
         "tz": time.localtime().tm_gmtoff // 60,
         "screen": "unknown1"
