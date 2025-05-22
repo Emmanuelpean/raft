@@ -27,33 +27,6 @@ __github__ = get_pyproject_info("project", "urls", "repository")
 __date__ = get_last_commit_date_from_github(__github__)
 __author__ = get_pyproject_info("project", "authors")[0]["name"]
 
-st.html("""
-<script>
-  alert('JS running!');
-</script>
-""")
-
-import requests
-import time
-
-@st.cache_resource
-def track_pageview():
-    payload = {
-        "pid": "qI0OY4SztQ9p",
-        "headers": {
-            "User-Agent": "streamlit-app",
-            "Referer": "https://emmanuelpean.me/raft",
-        },
-        "tz": time.localtime().tm_gmtoff // 60,
-        "screen": "unknown1"
-    }
-    try:
-        requests.post("https://api.swetrix.emmanuelpean.me/log", json=payload)
-    except Exception as e:
-        st.warning(f"Swetrix tracking failed: {e}")
-
-track_pageview()
-
 # ------------------------------------------------ ARGUMENTS & PROFILER ------------------------------------------------
 
 parser = argparse.ArgumentParser()
@@ -90,6 +63,35 @@ EXTRACTION_LABEL = "Data Extraction"
 # Set the app main and sidebar logos
 st.set_page_config(__name__.upper() + " - " + __description__, page_icon=ICON_PATH, layout="wide")
 st.logo(LOGO_TEXT_PATH, icon_image=LOGO_PATH)
+
+
+st.html("""
+<script>
+  alert('JS running!');
+</script>
+""")
+
+import requests
+import time
+
+@st.cache_resource
+def track_pageview():
+    payload = {
+        "pid": "qI0OY4SztQ9p",
+        "headers": {
+            "User-Agent": "streamlit-app",
+            "Referer": "https://emmanuelpean.me/raft",
+        },
+        "tz": time.localtime().tm_gmtoff // 60,
+        "screen": "unknown1"
+    }
+    try:
+        requests.post("https://api.swetrix.emmanuelpean.me/log", json=payload)
+    except Exception as e:
+        st.warning(f"Swetrix tracking failed: {e}")
+
+track_pageview()
+
 
 # Load the custom CSS
 css_content = read_file(CSS_STYLE_PATH)
