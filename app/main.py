@@ -1359,14 +1359,17 @@ components.html(
       swetrix.init('qI0OY4SztQ9p', {
         apiURL: 'https://api.swetrix.emmanuelpean.me/log',
       });
-      swetrix.track('streamlit-pageview', {
-        referer: window.location.href,
+
+      swetrix.track('pageview', {
         props: {
-          user_agent: navigator.userAgent
+          referrer: document.referrer || "none",
+          user_agent: navigator.userAgent,
+          screen: `${screen.width}x${screen.height}`,
         }
       });
-      console.log("Swetrix: sent streamlit-pageview");
+
+      console.log("Swetrix tracking triggered");
     </script>
     """,
-    height=0,
+    height=0
 )
