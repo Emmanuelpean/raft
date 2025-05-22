@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import argparse
-import streamlit.components.v1 as components
 
 from config.constants import TIMESTAMP_ID
 from config.resources import LOGO_PATH, CSS_STYLE_PATH, ICON_PATH, DATA_PROCESSING_PATH, LOGO_TEXT_PATH, FILE_TYPE_DICT
@@ -1330,46 +1329,3 @@ with st.expander("License & Disclaimer"):
 # Stop the profiler
 if profiler:
     profiler.stop()
-
-# components.html(
-#     """
-#     <script src="https://swetrix.org/swetrix.js"></script>
-#     <script>
-#         swetrix.init('qI0OY4SztQ9p', {
-#             apiURL: 'https://api.swetrix.emmanuelpean.me/log',
-#         });
-#         swetrix.trackViews();
-#     </script>
-#
-#     <noscript>
-#         <img
-#             src="https://api.swetrix.emmanuelpean.me/log/noscript?pid=qI0OY4SztQ9p"
-#             alt=""
-#             referrerpolicy="no-referrer-when-downgrade"
-#         />
-#     </noscript>
-#     """,
-#     height=0,
-# )
-
-components.html(
-    """
-    <script src="https://swetrix.org/swetrix.js"></script>
-    <script>
-      swetrix.init('qI0OY4SztQ9p', {
-        apiURL: 'https://api.swetrix.emmanuelpean.me/log',
-      });
-
-      swetrix.track('pageview', {
-        props: {
-          referrer: document.referrer || "none",
-          user_agent: navigator.userAgent,
-          screen: `${screen.width}x${screen.height}`,
-        }
-      });
-
-      console.log("Swetrix tracking triggered");
-    </script>
-    """,
-    height=0
-)
