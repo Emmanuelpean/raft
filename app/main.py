@@ -1356,11 +1356,16 @@ components.html(
     """
     <script src="https://swetrix.org/swetrix.js"></script>
     <script>
-        swetrix.init('qI0OY4SztQ9p', {
-            apiURL: 'https://api.swetrix.emmanuelpean.me/log',
-        });
-        swetrix.track('streamlit-page-loaded');
-        console.log('Swetrix custom event sent');
+      swetrix.init('YOUR_PROJECT_ID', {
+        apiURL: 'https://api.swetrix.emmanuelpean.me/log',
+      });
+      swetrix.track('streamlit-pageview', {
+        referer: window.location.href,
+        props: {
+          user_agent: navigator.userAgent
+        }
+      });
+      console.log("Swetrix: sent streamlit-pageview");
     </script>
     """,
     height=0,
