@@ -31,7 +31,7 @@ st.html("""
 <script>
   alert('JS running!');
 </script>
-""", height=0)
+""")
 
 import requests
 import time
