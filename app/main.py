@@ -64,28 +64,6 @@ EXTRACTION_LABEL = "Data Extraction"
 st.set_page_config(__name__.upper() + " - " + __description__, page_icon=ICON_PATH, layout="wide")
 st.logo(LOGO_TEXT_PATH, icon_image=LOGO_PATH)
 
-#
-# import requests
-# import time
-#
-# def track_pageview():
-#     payload = {
-#         "pid": "qI0OY4SztQ9p",
-#         "headers": {
-#             "User-Agent": "streamlit-app",
-#             "Referer": "https://emmanuelpean.me/raft",
-#         },
-#         "tz": time.localtime().tm_gmtoff // 60,
-#         "screen": "unknown1"
-#     }
-#     try:
-#         requests.post("https://api.swetrix.emmanuelpean.me/log", json=payload)
-#     except Exception as e:
-#         st.warning(f"Swetrix tracking failed: {e}")
-#
-# track_pageview()
-
-
 # Load the custom CSS
 css_content = read_file(CSS_STYLE_PATH)
 st.html(f"<style>{css_content}</style>")
