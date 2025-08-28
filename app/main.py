@@ -65,17 +65,7 @@ st.set_page_config(
     __name__.upper() + " - " + __description__,
     page_icon=ICON_PATH,
     layout="wide",
-    menu_items=None,
 )
-
-# Theme
-try:
-    import streamlit_theme as st_theme
-
-    st.session_state.theme = st_theme.st_theme(key="st_theme_key")
-except:
-    st.session_state.theme = {"base": "light"}
-print(st.session_state.theme["base"])
 
 st.logo(LOGO_TEXT_PATH, icon_image=LOGO_PATH)
 

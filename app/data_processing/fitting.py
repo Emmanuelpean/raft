@@ -2,13 +2,14 @@
 models, including polynomial, exponential, logarithmic, trigonometric, and statistical functions."""
 
 import inspect
+from typing import Callable
 
 import numpy as np
 import scipy.optimize as sco
 import scipy.special as ss
 
 
-def get_model_parameters(function: callable) -> list[str]:
+def get_model_parameters(function: Callable) -> list[str]:
     """Get a model parameters"""
 
     return list(inspect.signature(function).parameters.keys())[1:]
@@ -17,7 +18,7 @@ def get_model_parameters(function: callable) -> list[str]:
 def fit_data(
     x_data: np.ndarray,
     y_data: np.ndarray,
-    fit_function: callable,
+    fit_function: Callable,
     p0: None | dict[str, float | int] = None,
     bounds: None | dict[str, list[float | int]] = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, float] | tuple[None, None, None, None]:

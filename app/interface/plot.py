@@ -6,7 +6,7 @@ import plotly.io as pio
 import plotly.subplots as ps
 import streamlit as st
 
-from utils.miscellaneous import merge_dicts
+from app.utils.miscellaneous import merge_dicts
 
 # Define your custom colour list
 PASTEL_COLORS = [
@@ -40,7 +40,7 @@ def plot_signals(
     :param args: positional arguments passed to the SignalData.plot method
     :param kwargs: keyword arguments passed to the SignalData.plot method"""
 
-    if st.session_state.theme["base"].lower() == "dark":
+    if st.context.theme["type"] == "dark":
         font_color = "white"
     else:
         font_color = "black"
